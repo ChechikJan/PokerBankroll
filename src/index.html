@@ -728,10 +728,10 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
       const cls = s.profit > 0 ? 'pos' : (s.profit < 0 ? 'neg' : 'neutral');
       html += `<div class="ledger-card"><div class="lbl">${cur}</div><div class="val ${cls}">${fmt(s.profit)} ${SYM[cur]}</div></div>`;
     });
-    let combined = 0;
-    periodList.forEach(t=>{
-      if(t.result !== null) combined += convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, baseCurrency);
-    });
+    // Same maths as the per-currency cards, so the total always agrees with them
+    // (tickets included exactly once, converted at the current rate).
+    const total = computeStats(periodList, (amt, cur)=>convert(amt, cur, baseCurrency));
+    const combined = total.profit;
     const cls = combined > 0 ? 'pos' : (combined < 0 ? 'neg' : 'neutral');
     html += `<div class="ledger-card" style="border-color:var(--felt-bright);"><div class="lbl">Итого (${baseCurrency})</div><div class="val ${cls}">${fmt(combined)} ${SYM[baseCurrency]}</div></div>`;
     el.innerHTML = html;
