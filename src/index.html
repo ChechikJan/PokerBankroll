@@ -505,6 +505,59 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     }
   };
 
+  // ---- Repair of mis-decoded text -------------------------------------
+  // An earlier build was served without a charset, so the webview read the
+  // UTF-8 page as Windows-1251 and saved room names like "РџРѕРєРµСЂРґРѕРј".
+  // The damage is reversible: map each character back to its CP1251 byte and
+  // decode those bytes as UTF-8 again.
+  const CP1251_CHARS = "ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—™љ›њќћџ\xa0ЎўЈ¤Ґ¦§Ё©Є«¬\xad®Ї°±Ііґµ¶·ё№є»јЅѕїАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя";
+  const CP1251_CODES = [128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255];
+  const CP1251_BYTE = (()=>{
+    const m = new Map();
+    for(let i = 0; i < CP1251_CHARS.length; i++) m.set(CP1251_CHARS[i], CP1251_CODES[i]);
+    return m;
+  })();
+
+  function looksMojibake(s){
+    return typeof s === 'string' && /[РСЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—™љ›њќћџ]/.test(s) && /[РС][^\s]/.test(s);
+  }
+
+  function unmojibake(s){
+    if(!looksMojibake(s)) return s;
+    const bytes = [];
+    for(const ch of s){
+      const code = ch.codePointAt(0);
+      if(code < 128){ bytes.push(code); continue; }
+      const b = CP1251_BYTE.get(ch);
+      if(b === undefined) return s;      // not representable -> leave untouched
+      bytes.push(b);
+    }
+    try{
+      const out = new TextDecoder('utf-8', {fatal:true}).decode(new Uint8Array(bytes));
+      return /[А-Яа-яЁё]/.test(out) ? out : s;
+    }catch(err){ return s; }
+  }
+
+  // Fix room names on the tournaments and in the saved room list.
+  // Returns true when something was actually changed.
+  function repairEncoding(){
+    let changed = false;
+    tournaments.forEach(t=>{
+      const fixed = unmojibake(t.note || '');
+      if(fixed !== (t.note || '')){ t.note = fixed; changed = true; }
+    });
+    const seen = new Map();
+    rooms.forEach(r=>{
+      const fixed = unmojibake(r.name || '');
+      if(fixed !== r.name) changed = true;
+      if(!seen.has(fixed)) seen.set(fixed, {name: fixed, currency: r.currency || null});
+      else if(!seen.get(fixed).currency && r.currency) seen.get(fixed).currency = r.currency;
+    });
+    if(seen.size !== rooms.length) changed = true;
+    rooms = Array.from(seen.values());
+    return changed;
+  }
+
   function uid(){ return 't_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
 
   async function loadData(){
@@ -572,6 +625,13 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
         }
       }
     }catch(e){}
+
+    // undo any damage left by the build that ran without a declared charset
+    if(repairEncoding()){
+      repairedRows = true;
+      await saveTournaments();
+      await saveRooms();
+    }
   }
 
   function getPeriodRange(){
@@ -612,6 +672,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     return list.filter(t => (t.tags||[]).includes(tagFilter));
   }
 
+  let repairedRows = false;
   let pendingNotice = 0;
   let savesInFlight = 0;
   let lastSavedAt = null;
@@ -689,9 +750,12 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     const ticketsSpent = list.filter(paidByTicket).reduce((s,t)=> s + conv(cost(t), t.currency), 0);
     const ticketBalance = ticketsWon - ticketsSpent;
 
-    // unused ticket value counts towards the bottom line; a negative balance does not
+    // Money columns stay pure cash so they can be checked against the source
+    // spreadsheets. Unused ticket value is reported separately, and only the
+    // dedicated "с билетами" figure folds it in.
     const cashProfit = cashWon - cashCostDone;
-    const profit = cashProfit + Math.max(0, ticketBalance);
+    const profit = cashProfit;
+    const profitWithTickets = cashProfit + Math.max(0, ticketBalance);
     const roi = cashCostDone > 0 ? (profit / cashCostDone) * 100 : 0;
 
     const counted = list.filter(isCountable);
@@ -703,7 +767,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
             doneCount:countedDone.length, pendingCount:counted.length-countedDone.length,
             allCount:list.length, allDone:done.length, allPending:list.length-done.length,
             totalBuyin:cashCost, totalBuyinDone:cashCostDone,
-            cashProfit, ticketsWon, ticketsSpent, ticketBalance,
+            cashProfit, profitWithTickets, ticketsWon, ticketsSpent, ticketBalance,
             profit, roi, abi};
   }
 
@@ -802,12 +866,12 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     const roiCls = s.roi>0?'pos':(s.roi<0?'neg':'neutral');
     $('statGrid').innerHTML = `
       <div class="stat"><div class="lbl">${statSide === 'SIDE' ? 'Доп. ставок' : 'Турниров'}</div><div class="val">${statSide === 'SIDE' ? s.sideCount : s.count}${(statSide === 'ALL' && s.sideCount) ? ` <span style="font-size:11px;color:var(--text-faint);">+${s.sideCount} доп.</span>` : ''}</div></div>
-      <div class="stat"><div class="lbl">Профит (${baseCurrency})</div><div class="val ${cls}">${fmt(s.profit)} ${SYM[baseCurrency]}</div></div>
+      <div class="stat"><div class="lbl">Профит, деньги (${baseCurrency})</div><div class="val ${cls}">${fmt(s.profit)} ${SYM[baseCurrency]}</div></div>
       <div class="stat"><div class="lbl">ROI</div><div class="val ${roiCls}">${s.roi.toFixed(2)}%</div></div>
       <div class="stat"><div class="lbl">${statSide === 'SIDE' ? 'Средняя ставка' : 'ABI (средний байин)'}</div><div class="val">${fmt(statSide === 'SIDE' ? (s.allCount ? s.totalBuyin/s.allCount : 0) : s.abi)} ${SYM[baseCurrency]}</div></div>
       <div class="stat"><div class="lbl">Сумма байинов</div><div class="val neutral">${fmt(s.totalBuyin)} ${SYM[baseCurrency]}</div></div>
       <div class="stat"><div class="lbl">В игре / завершено</div><div class="val neutral">${statSide === 'SIDE' ? s.allPending : s.pendingCount} / ${statSide === 'SIDE' ? s.allDone : s.doneCount}</div></div>
-      <div class="stat"><div class="lbl">Профит без билетов</div><div class="val ${s.cashProfit>0?'pos':(s.cashProfit<0?'neg':'neutral')}">${fmt(s.cashProfit)} ${SYM[baseCurrency]}</div></div>
+      <div class="stat"><div class="lbl">Профит с билетами</div><div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div></div>
     `;
 
     // --- ticket balances: per currency, always over the whole history ---
@@ -889,7 +953,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     </tr></thead><tbody>`;
     rows.forEach(r=>{
       const st = r.st;
-      const won = st.profit + st.totalBuyinDone;
+      const won = st.cashProfit + st.totalBuyinDone;   // actual cash payouts
       const pcls = st.profit>0?'pos':(st.profit<0?'neg':'neutral');
       const rcls = st.roi>0?'pos':(st.roi<0?'neg':'neutral');
       const style = r.total ? ' style="border-top:2px solid var(--felt-bright);font-weight:600;"' : '';
@@ -1563,6 +1627,11 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     renderRates();
     $('biRangeLabel').textContent = `${biMin} — ${biMax}`;
     const dc = $('dbCount'); if(dc) dc.textContent = tournaments.length;
+    if(repairedRows){
+      const el = $('saveStatus');
+      if(el){ el.textContent = 'Названия покеррумов восстановлены после сбоя кодировки.'; el.style.color = 'var(--gold)'; }
+      repairedRows = false;
+    }
     if(pendingNotice){
       const el = $('saveStatus');
       if(el){ el.textContent = `Ваши ${pendingNotice} записей перенесены в обновлённую базу.`; el.style.color = 'var(--gold)'; }
