@@ -124,6 +124,18 @@ input:focus,select:focus{border-color:var(--felt-bright);}
 .tag-badge.tk{background:rgba(140,110,190,.18);color:#B79BE0;}
 .tag-badge.free{background:rgba(120,170,120,.18);color:#93C99A;}
 .tag-toggle.free input{accent-color:#93C99A;}
+.top-box{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;
+  padding:11px 13px;margin-top:12px;}
+.top-head{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin-bottom:9px;}
+.top-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+.top-row:last-child{border-bottom:none;}
+.top-rank{width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;
+  justify-content:center;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;font-weight:700;
+  background:var(--surface);border:1px solid var(--border);color:var(--text-dim);}
+.top-row:nth-child(2) .top-rank{border-color:var(--gold);color:var(--gold);}
+.top-room{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;}
+.top-date{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;color:var(--text-faint);flex:none;}
+.top-sum{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:14px;font-weight:600;flex:none;}
 .ticket-box{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;
   padding:11px 13px;margin-top:12px;}
 .ticket-head{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);
@@ -396,6 +408,7 @@ tr:last-child td{border-bottom:none;}
         </div>
         <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
         <div class="bd-note" id="chartNote"></div>
+        <div id="topWins"></div>
       </div>
     </div>
   </div>
@@ -483,21 +496,33 @@ const SEED_DATA = [];
 
   const $ = (id) => document.getElementById(id);
 
-  // Storage: the Rust side writes poker_data.json next to the executable,
-  // keeping poker_data.backup.json as the previous version.
+  // Storage works in both homes:
+  //  * inside the desktop app  -> Rust writes poker_data.json next to the exe
+  //  * opened as a plain file  -> the browser's own storage keeps it
   const invoke = () => (window.__TAURI__ && window.__TAURI__.core
     ? window.__TAURI__.core.invoke
     : (window.__TAURI__ ? window.__TAURI__.invoke : null));
 
+  const IS_DESKTOP = !!invoke();
+
   const store = {
-    hasHost: true,
+    hasHost: IS_DESKTOP,
     _cache: null,
     async _load(){
       if(this._cache) return this._cache;
-      const inv = invoke();
-      if(!inv){ this._cache = {}; return this._cache; }
-      try{ this._cache = await inv('load_state'); }
-      catch(err){ this._cache = {}; }
+      if(IS_DESKTOP){
+        try{ this._cache = await invoke()('load_state'); }
+        catch(err){ this._cache = {}; }
+        return this._cache;
+      }
+      const out = {};
+      try{
+        for(const k of ['tournaments','rates','rooms','seedVersion']){
+          const v = window.localStorage.getItem('pt_' + k);
+          if(v !== null) out[k] = v;
+        }
+      }catch(err){}
+      this._cache = out;
       return this._cache;
     },
     async get(key){
@@ -507,10 +532,12 @@ const SEED_DATA = [];
     async set(key, value){
       const st = await this._load();
       st[key] = value;
-      const inv = invoke();
-      if(!inv) return false;
-      try{ await inv('save_key', { key, value }); return true; }
-      catch(err){ return false; }
+      if(IS_DESKTOP){
+        try{ await invoke()('save_key', { key, value }); return true; }
+        catch(err){ return false; }
+      }
+      try{ window.localStorage.setItem('pt_' + key, value); return true; }
+      catch(err){ return false; }   // quota exceeded -> caller shows a warning
     }
   };
 
@@ -832,7 +859,14 @@ const SEED_DATA = [];
     if(tableDateFilter){
       list = list.filter(t => t.date === tableDateFilter);
     }
-    list = list.slice().sort((a,b)=> b.date.localeCompare(a.date));
+    // Newest first. Within one date the later-added row wins, so a tournament
+    // entered just now sits at the very top instead of at the end of its day.
+    const order = new Map();
+    tournaments.forEach((t, i)=> order.set(t.id, i));
+    list = list.slice().sort((a,b)=>{
+      const d = b.date.localeCompare(a.date);
+      return d !== 0 ? d : (order.get(b.id) - order.get(a.id));
+    });
     const totalMatched = list.length;
     let shown = list;
     if(!tableDateFilter && list.length > 50){
@@ -1100,6 +1134,38 @@ const SEED_DATA = [];
     }
   }
 
+  // Three biggest single-tournament wins under the filters the chart is using.
+  function renderTopWins(list, cur){
+    const box = $('topWins');
+    if(!box) return;
+    const conv = (amt, from) => chartMode === 'per' ? amt : convert(amt, from, cur);
+    const wins = list
+      .filter(t => t.result !== null)
+      .map(t=>({
+        room: (t.note || '').trim() || 'без рума',
+        date: t.date,
+        currency: t.currency,
+        profit: conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency)
+      }))
+      .filter(w => w.profit > 0)
+      .sort((a,b)=> b.profit - a.profit)
+      .slice(0, 3);
+
+    if(!wins.length){
+      box.innerHTML = '<div class="top-box"><div class="top-head">Топ-3 выигрыша</div>' +
+                      '<div class="bd-note" style="margin:0;">Выигрышей под эти фильтры нет.</div></div>';
+      return;
+    }
+    box.innerHTML = '<div class="top-box"><div class="top-head">Топ-3 выигрыша</div>' +
+      wins.map((w,i)=>`
+        <div class="top-row">
+          <div class="top-rank">${i+1}</div>
+          <div class="top-room">${escapeHtml(w.room)}</div>
+          <div class="top-date">${w.date}</div>
+          <div class="top-sum pos">+${fmt(w.profit)} ${SYM[cur]}</div>
+        </div>`).join('') + '</div>';
+  }
+
   function shortNum(v){
     const a = Math.abs(v);
     if(a >= 1000000) return (v/1000000).toFixed(1) + 'M';
@@ -1145,6 +1211,8 @@ const SEED_DATA = [];
     $('chartNote').textContent = values.length
       ? `${st.count} турниров${st.sideCount ? ' + ' + st.sideCount + ' доп. ставок' : ''} за ${dayCount} дн. · итог ${fmt(running)} ${SYM[cur]}`
       : 'Нет данных под выбранные фильтры.';
+
+    renderTopWins(list, cur);
 
     hoverIdx = null;
     chartData = {dates, values, cur, color: chartMode === 'per' ? COLOR[chartCurrency] : '#D4AF37'};
@@ -1746,12 +1814,16 @@ const SEED_DATA = [];
       pendingNotice = 0;
     }
     (async ()=>{
-      const inv = invoke();
-      let where = 'poker_data.json рядом с программой';
-      if(inv){
-        try{ where = await inv('data_path'); }catch(err){}
+      if(IS_DESKTOP){
+        let where = 'poker_data.json рядом с программой';
+        try{ where = await invoke()('data_path'); }catch(err){}
+        $('storageNote').textContent = 'База: ' + where +
+          '  (рядом лежит poker_data.backup.json — копия предыдущего состояния)';
+      } else {
+        $('storageNote').textContent = 'Режим браузера: данные хранятся в этом браузере, ' +
+          'на этом компьютере. Очистка истории браузера их удалит — делайте копию кнопкой ' +
+          '«Сохранить копию в файл».';
       }
-      $('storageNote').textContent = 'База: ' + where + '  (рядом лежит poker_data.backup.json — копия предыдущего состояния)';
     })();
     renderAll();
   })();
