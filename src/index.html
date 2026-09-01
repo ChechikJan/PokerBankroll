@@ -785,7 +785,11 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
   // entered with a ticket: the buy-in comes out of the ticket balance, not cash
   function paidByTicket(t){ return (t.tags || []).includes('TICKET'); }
 
-  function computeStats(list, converter){
+  // foldTicketsWon: treat a won ticket as the payout it really is. Used for the
+  // satellites view, where the ticket IS the prize — otherwise every satellite
+  // looks like a pure loss. Never used for the whole base, where tickets are
+  // tracked separately and folding them in would double-count.
+  function computeStats(list, converter, foldTicketsWon){
     const conv = converter || ((amt)=>amt);
     const done = list.filter(t => t.result !== null);
 
@@ -803,13 +807,18 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     // spreadsheets. Unused ticket value is reported separately, and only the
     // dedicated "с билетами" figure folds it in.
     const cashProfit = cashWon - cashCostDone;
-    const profit = cashProfit;
+    const profit = foldTicketsWon ? (cashProfit + ticketsWon) : cashProfit;
+    const paidOut = foldTicketsWon ? (cashWon + ticketsWon) : cashWon;
     const profitWithTickets = cashProfit + Math.max(0, ticketBalance);
     const roi = cashCostDone > 0 ? (profit / cashCostDone) * 100 : 0;
 
     const counted = list.filter(isCountable);
     const countedDone = done.filter(isCountable);
-    const abi = counted.length ? (cashCost/counted.length) : 0;
+    // ABI is the average stake actually played: only tournaments (never side
+    // bets) in the denominator, and a ticket entry counts at its face value —
+    // the seat cost that much even though no cash left the account.
+    const stakeCounted = counted.reduce((s,t)=> s + conv(cost(t), t.currency), 0);
+    const abi = counted.length ? (stakeCounted/counted.length) : 0;
     const sideCount = list.length - counted.length;
     const satCount = list.filter(t=>(t.tags||[]).includes('SAT')).length;
     // re-entries are full tournaments and stay inside `count`; they are only
@@ -818,8 +827,9 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     return {count:counted.length, sideCount, satCount, reCount,
             doneCount:countedDone.length, pendingCount:counted.length-countedDone.length,
             allCount:list.length, allDone:done.length, allPending:list.length-done.length,
-            totalBuyin:cashCost, totalBuyinDone:cashCostDone,
-            cashProfit, profitWithTickets, ticketsWon, ticketsSpent, ticketBalance,
+            totalBuyin:cashCost, totalBuyinDone:cashCostDone, stakeCounted,
+            cashProfit, profitWithTickets, paidOut, foldTickets: !!foldTicketsWon,
+            ticketsWon, ticketsSpent, ticketBalance,
             profit, roi, abi};
   }
 
@@ -931,12 +941,13 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     const conv = (amt, cur) => convert(amt, cur, baseCurrency);
 
     // --- summary tiles: always in baseCurrency across ALL currencies ---
-    const s = computeStats(periodList, conv);
+    const foldSat = (statSide === 'SAT');   // in the satellites view a ticket is the prize
+    const s = computeStats(periodList, conv, foldSat);
     const cls = s.profit>0?'pos':(s.profit<0?'neg':'neutral');
     const roiCls = s.roi>0?'pos':(s.roi<0?'neg':'neutral');
     $('statGrid').innerHTML = `
       <div class="stat"><div class="lbl">${statSide === 'SIDE' ? 'Доп. ставок' : 'Турниров'}</div><div class="val">${statSide === 'SIDE' ? s.sideCount : s.count}${(statSide !== 'SIDE' && s.reCount) ? ` <span style="font-size:11px;color:var(--text-faint);">(${s.reCount} повторных)</span>` : ''}${(statSide === 'ALL' && s.sideCount) ? ` <span style="font-size:11px;color:var(--text-faint);">+${s.sideCount} доп.</span>` : ''}</div></div>
-      <div class="stat"><div class="lbl">Профит, деньги (${baseCurrency})</div><div class="val ${cls}">${fmt(s.profit)} ${SYM[baseCurrency]}</div></div>
+      <div class="stat"><div class="lbl">${foldSat ? `Профит с билетами (${baseCurrency})` : `Профит, деньги (${baseCurrency})`}</div><div class="val ${cls}">${fmt(s.profit)} ${SYM[baseCurrency]}</div></div>
       <div class="stat"><div class="lbl">ROI</div><div class="val ${roiCls}">${s.roi.toFixed(2)}%</div></div>
       <div class="stat"><div class="lbl">${statSide === 'SIDE' ? 'Средняя ставка' : 'ABI (средний байин)'}</div><div class="val">${fmt(statSide === 'SIDE' ? (s.allCount ? s.totalBuyin/s.allCount : 0) : s.abi)} ${SYM[baseCurrency]}</div></div>
       <div class="stat"><div class="lbl">Сумма байинов</div><div class="val neutral">${fmt(s.totalBuyin)} ${SYM[baseCurrency]}</div></div>
@@ -954,16 +965,19 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
         let txt = `${s.count} МТТ = ` + parts.join(' + ');
         if(s.reCount) txt += `, из них ${s.reCount} повторных входов`;
         if(s.sideCount) txt += `. Плюс ${s.sideCount} доп. ставок — они в деньгах и профите, но вне счёта турниров.`;
+        txt += ` ABI считается только по турнирам (${fmt(s.stakeCounted)} ${SYM[baseCurrency]} / ${s.count}), вход по билету — по номиналу байина.`;
         compNote.textContent = txt;
       } else {
         const base = statSide === 'NOSIDE'
           ? 'Чистые турниры: без сателлитов и без доп. ставок.'
           : (statSide === 'SAT'
-              ? 'Только сателлиты. В срезе «Всё вместе» они входят в счёт турниров.'
+              ? 'Только сателлиты. Выигранный билет считается выплатой — иначе удачный сателлит выглядел бы убыточным.'
               : 'Только доп. ставки. Их деньги идут в общий профит, но в счёт турниров они не входят.');
-        compNote.textContent = base +
-          ' Билеты не привязаны к срезу — их выигрывают в одних турнирах, а тратят в других, ' +
-          'поэтому профит с билетами считается только по всей базе.';
+        compNote.textContent = statSide === 'SAT'
+          ? base + ` Билетов выиграно на ${fmt(s.ticketsWon)} ${SYM[baseCurrency]}, они уже включены в профит и ROI. ` +
+            'В срезе «Всё вместе» билеты не складываются с деньгами, чтобы не посчитать их дважды.'
+          : base + ' Билеты не привязаны к срезу — их выигрывают в одних турнирах, а тратят в других, ' +
+            'поэтому профит с билетами считается только по всей базе.';
       }
     }
 
@@ -993,7 +1007,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
       ['EUR','USD','RUB'].forEach(cur=>{
         const sub = periodList.filter(t=>t.currency===cur);
         if(!sub.length) return;
-        const st = computeStats(sub, null);
+        const st = computeStats(sub, null, foldSat);
         rows.push({name: cur + ' ' + SYM[cur], st, cur});
       });
     } else if(statView === 'ROOM'){
@@ -1021,7 +1035,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
           return bi >= lo && bi < hi;
         });
         if(!sub.length) return;
-        const st = computeStats(sub, usd);
+        const st = computeStats(sub, usd, foldSat);
         rows.push({name, st, cur:'USD'});
       });
       const allUsd = computeStats(periodList, usd);
@@ -1031,7 +1045,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
       ['EUR','USD','RUB'].forEach(cur=>{
         const sub = periodList.filter(t=>t.currency===cur);
         if(!sub.length) return;
-        const st = computeStats(sub, null);
+        const st = computeStats(sub, null, foldSat);
         rows.push({name: cur + ' ' + SYM[cur], st, cur});
       });
       // side bets sit outside the per-currency МТТ counts, so give them their
@@ -1056,7 +1070,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     </tr></thead><tbody>`;
     rows.forEach(r=>{
       const st = r.st;
-      const won = st.cashProfit + st.totalBuyinDone;   // actual cash payouts
+      const won = st.profit + st.totalBuyinDone;   // cash, plus ticket value in the satellites view
       const pcls = st.profit>0?'pos':(st.profit<0?'neg':'neutral');
       const rcls = st.roi>0?'pos':(st.roi<0?'neg':'neutral');
       const style = r.total ? ' style="border-top:2px solid var(--felt-bright);font-weight:600;"'
