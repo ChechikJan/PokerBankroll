@@ -151,6 +151,7 @@ input:focus,select:focus{border-color:var(--felt-bright);}
 .ticket-cell.rub{border-left:3px solid var(--rub);}
 .tc-cur{font-size:9px;color:var(--text-faint);letter-spacing:.07em;margin-bottom:3px;}
 .tc-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:15px;font-weight:600;}
+.tc-flow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;color:var(--text-faint);margin-top:3px;}
 .tag-toggle.tk input{accent-color:#B79BE0;}
 .btn{background:var(--felt);color:#EEF5EF;border:none;border-radius:7px;padding:9px 18px;font-weight:600;
   font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:13px;cursor:pointer;}
@@ -375,6 +376,7 @@ tr:last-child td{border-bottom:none;}
           <div class="tab" data-side="SIDE">Доп. ставки</div>
         </div>
         <div class="stat-grid" id="statGrid"></div>
+        <div class="bd-note" id="countNote" style="margin-top:10px;"></div>
         <div id="ticketPanel"></div>
         <div id="statBreakdown"></div>
       </div>
@@ -825,11 +827,14 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
   // so their balance is always computed over the whole history, unfiltered.
   function ticketBalances(){
     const bal = {EUR:0, USD:0, RUB:0};
+    const won = {EUR:0, USD:0, RUB:0};
+    const spent = {EUR:0, USD:0, RUB:0};
     tournaments.forEach(t=>{
-      if(t.result !== null) bal[t.currency] += (t.ticket || 0);
-      if(paidByTicket(t))   bal[t.currency] -= cost(t);
+      if(t.result !== null){ won[t.currency] += (t.ticket || 0); }
+      if(paidByTicket(t)){ spent[t.currency] += cost(t); }
     });
-    return bal;
+    ['EUR','USD','RUB'].forEach(k=> bal[k] = won[k] - spent[k]);
+    return Object.assign(bal, {_won: won, _spent: spent});
   }
 
   function renderLedger(){
@@ -936,8 +941,31 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
       <div class="stat"><div class="lbl">${statSide === 'SIDE' ? 'Средняя ставка' : 'ABI (средний байин)'}</div><div class="val">${fmt(statSide === 'SIDE' ? (s.allCount ? s.totalBuyin/s.allCount : 0) : s.abi)} ${SYM[baseCurrency]}</div></div>
       <div class="stat"><div class="lbl">Сумма байинов</div><div class="val neutral">${fmt(s.totalBuyin)} ${SYM[baseCurrency]}</div></div>
       <div class="stat"><div class="lbl">В игре / завершено</div><div class="val neutral">${statSide === 'SIDE' ? s.allPending : s.pendingCount} / ${statSide === 'SIDE' ? s.allDone : s.doneCount}</div></div>
-      <div class="stat"><div class="lbl">Профит с билетами</div><div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div></div>
+      ${statSide === 'ALL' ? `<div class="stat"><div class="lbl">Профит с билетами</div><div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div></div>` : ''}
     `;
+
+    // --- how the headline count is put together ---
+    const compNote = $('countNote');
+    if(compNote){
+      if(statSide === 'ALL'){
+        const plain = s.count - s.satCount;
+        const parts = [`${plain} турниров`];
+        if(s.satCount) parts.push(`${s.satCount} сателлитов`);
+        let txt = `${s.count} МТТ = ` + parts.join(' + ');
+        if(s.reCount) txt += `, из них ${s.reCount} повторных входов`;
+        if(s.sideCount) txt += `. Плюс ${s.sideCount} доп. ставок — они в деньгах и профите, но вне счёта турниров.`;
+        compNote.textContent = txt;
+      } else {
+        const base = statSide === 'NOSIDE'
+          ? 'Чистые турниры: без сателлитов и без доп. ставок.'
+          : (statSide === 'SAT'
+              ? 'Только сателлиты. В срезе «Всё вместе» они входят в счёт турниров.'
+              : 'Только доп. ставки. Их деньги идут в общий профит, но в счёт турниров они не входят.');
+        compNote.textContent = base +
+          ' Билеты не привязаны к срезу — их выигрывают в одних турнирах, а тратят в других, ' +
+          'поэтому профит с билетами считается только по всей базе.';
+      }
+    }
 
     // --- ticket balances: per currency, always over the whole history ---
     const tb = ticketBalances();
@@ -949,9 +977,11 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
           ? `<div class="ticket-row">` + ['EUR','USD','RUB'].map(cur=>{
               const v = tb[cur];
               const cl = v>0?'pos':(v<0?'neg':'neutral');
+              const w = tb._won[cur], sp = tb._spent[cur];
               return `<div class="ticket-cell ${cur.toLowerCase()}">
                         <div class="tc-cur">${cur}</div>
                         <div class="tc-val ${cl}">${fmt(v)} ${SYM[cur]}</div>
+                        ${(w || sp) ? `<div class="tc-flow">выиграно ${fmt(w)} · потрачено ${fmt(sp)}</div>` : ''}
                       </div>`;
             }).join('') + `</div>`
           : `<div class="bd-note" style="margin:0;">Билетов пока нет.</div>`}
@@ -1004,6 +1034,14 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
         const st = computeStats(sub, null);
         rows.push({name: cur + ' ' + SYM[cur], st, cur});
       });
+      // side bets sit outside the per-currency МТТ counts, so give them their
+      // own line — then every column of the table adds up to the total row
+      if(statSide === 'ALL'){
+        const sideOnly = periodList.filter(t=>!isCountable(t));
+        if(sideOnly.length){
+          rows.push({name: 'Доп. ставки', st: computeStats(sideOnly, conv), cur: baseCurrency, muted: true});
+        }
+      }
       rows.push({name: 'ИТОГО в ' + baseCurrency, st: s, cur: baseCurrency, total: true});
     }
 
@@ -1021,11 +1059,12 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
       const won = st.cashProfit + st.totalBuyinDone;   // actual cash payouts
       const pcls = st.profit>0?'pos':(st.profit<0?'neg':'neutral');
       const rcls = st.roi>0?'pos':(st.roi<0?'neg':'neutral');
-      const style = r.total ? ' style="border-top:2px solid var(--felt-bright);font-weight:600;"' : '';
+      const style = r.total ? ' style="border-top:2px solid var(--felt-bright);font-weight:600;"'
+                    : (r.muted ? ' style="opacity:.75;"' : '');
       html += `<tr${style}>
         <td>${escapeHtml(r.name)}</td>
         <td style="color:var(--text-faint);">${r.cur}${r.converted ? '*' : ''}</td>
-        <td>${st.count}${st.reCount ? `<span style="color:var(--text-faint);font-size:10px;"> (${st.reCount})</span>` : ''}</td>
+        <td>${r.muted ? `<span style="color:var(--text-faint);">${st.sideCount} шт.</span>` : st.count}${(!r.muted && st.reCount) ? `<span style="color:var(--text-faint);font-size:10px;"> (${st.reCount})</span>` : ''}</td>
         <td>${fmt(st.totalBuyin)}</td>
         <td>${fmt(won)}</td>
         <td class="${pcls}">${st.profit>0?'+':''}${fmt(st.profit)}</td>
