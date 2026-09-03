@@ -103,27 +103,46 @@ input:focus,select:focus{border-color:var(--felt-bright);}
   font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;margin-right:4px;letter-spacing:.03em;}
 .tag-badge.sat{background:rgba(212,175,55,.16);color:var(--gold);}
 .tag-badge.side{background:rgba(108,142,191,.16);color:#8FB3E8;}
-.room-btns{display:flex;flex-wrap:wrap;gap:7px;}
-.room-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);
-  border-radius:7px;padding:7px 12px;font-size:12.5px;font-family:'Inter',system-ui,sans-serif;
-  cursor:pointer;display:flex;align-items:center;gap:6px;line-height:1;}
-.room-btn:hover{color:var(--text);border-color:var(--text-faint);}
-.room-btn .cur{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;opacity:.75;}
-.room-btn.active{border-color:var(--felt-bright);background:rgba(62,141,100,.14);color:var(--text);}
-.room-btn.eur.active{border-color:var(--eur);background:rgba(108,142,191,.14);}
-.room-btn.usd.active{border-color:var(--usd);background:rgba(76,175,125,.14);}
-.room-btn.rub.active{border-color:var(--rub);background:rgba(199,154,75,.14);}
-.room-btn.add{border-style:dashed;color:var(--text-faint);}
+.room-btns{display:flex;flex-wrap:wrap;gap:9px;}
+.room-btn{
+  border-radius:9px;padding:10px 15px;font-size:13px;
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  cursor:pointer;display:flex;align-items:center;gap:7px;line-height:1;
+  color:var(--text-dim);
+  background:linear-gradient(180deg,#2B3430 0%,#212926 100%);
+  border:1px solid #3A443F;
+  box-shadow:0 3px 6px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.07);
+  transition:transform .1s ease, box-shadow .1s ease, filter .15s ease;
+  user-select:none;
+}
+.room-btn:hover{transform:translateY(-1px);filter:brightness(1.15);
+  box-shadow:0 5px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.1);}
+.room-btn:active{transform:translateY(1px);box-shadow:inset 0 3px 7px rgba(0,0,0,.5);}
+.room-btn .cur{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;opacity:.8;
+  padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.28);}
+.room-btn.add{border-style:dashed;color:var(--text-faint);box-shadow:none;background:transparent;}
 .room-btn.add.editing{border-style:solid;border-color:var(--gold);color:var(--gold);}
-.room-btn.eur{border-color:rgba(108,142,191,.55);color:var(--eur);}
-.room-btn.usd{border-color:rgba(76,175,125,.55);color:var(--usd);}
-.room-btn.rub{border-color:rgba(199,154,75,.55);color:var(--rub);}
-.room-btn.eur.active{background:rgba(108,142,191,.22);border-color:var(--eur);color:#CFDCF0;}
-.room-btn.usd.active{background:rgba(76,175,125,.22);border-color:var(--usd);color:#CDEEDD;}
-.room-btn.rub.active{background:rgba(199,154,75,.22);border-color:var(--rub);color:#F0E0BF;}
+
+/* each pokerroom carries the colour of the currency it is played in */
+.room-btn.eur{color:#AFC6E6;border-color:#40587B;
+  background:linear-gradient(180deg,#2B3A50 0%,#1F2A3A 100%);}
+.room-btn.usd{color:#A9E0C3;border-color:#2F6B4C;
+  background:linear-gradient(180deg,#254A38 0%,#1B3529 100%);}
+.room-btn.rub{color:#E7CE9B;border-color:#7A5F2E;
+  background:linear-gradient(180deg,#463719 0%,#332812 100%);}
+.room-btn.active{border-width:2px;padding:9px 14px;}
+.room-btn.eur.active{border-color:var(--eur);color:#DCE8F8;
+  box-shadow:0 0 0 1px rgba(108,142,191,.35), 0 4px 9px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.16);}
+.room-btn.usd.active{border-color:var(--usd);color:#DFF6EA;
+  box-shadow:0 0 0 1px rgba(76,175,125,.35), 0 4px 9px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.16);}
+.room-btn.rub.active{border-color:var(--rub);color:#F8ECD2;
+  box-shadow:0 0 0 1px rgba(199,154,75,.35), 0 4px 9px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.16);}
+.room-btn:not(.eur):not(.usd):not(.rub).active{border-color:var(--felt-bright);color:var(--text);}
 .tag-badge.tk{background:rgba(140,110,190,.18);color:#B79BE0;}
 .tag-badge.free{background:rgba(120,170,120,.18);color:#93C99A;}
 .tag-badge.re{background:rgba(200,120,90,.18);color:#E2A184;}
+.tag-badge.fl{background:rgba(90,150,190,.18);color:#8CC2E0;}
+.tag-toggle.fl input{accent-color:#8CC2E0;}
 .tag-toggle.re input{accent-color:#E2A184;}
 .tag-toggle.free input{accent-color:#93C99A;}
 .top-box{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;
@@ -153,14 +172,29 @@ input:focus,select:focus{border-color:var(--felt-bright);}
 .tc-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:15px;font-weight:600;}
 .tc-flow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;color:var(--text-faint);margin-top:3px;}
 .tag-toggle.tk input{accent-color:#B79BE0;}
-.btn{background:var(--felt);color:#EEF5EF;border:none;border-radius:7px;padding:9px 18px;font-weight:600;
-  font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:13px;cursor:pointer;}
-.btn:hover{background:var(--felt-bright);}
-.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text-dim);}
-.btn.ghost:hover{color:var(--text);border-color:var(--text-dim);}
-.btn.danger{background:transparent;color:var(--rust);border:1px solid var(--rust);}
-.btn.danger:hover{background:var(--rust);color:#fff;}
-.btn.tiny{padding:4px 10px;font-size:11px;}
+.btn{
+  color:#EEF5EF;border:1px solid #3F9A6E;border-radius:9px;padding:10px 20px;font-weight:600;
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:13px;cursor:pointer;
+  background:linear-gradient(180deg,#3B8961 0%,#2A6446 100%);
+  box-shadow:0 3px 6px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.18);
+  transition:transform .1s ease, box-shadow .1s ease, filter .15s ease;
+}
+.btn:hover{filter:brightness(1.12);transform:translateY(-1px);
+  box-shadow:0 5px 11px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.22);}
+.btn:active{transform:translateY(1px);box-shadow:inset 0 3px 7px rgba(0,0,0,.5);}
+.btn.ghost{
+  color:var(--text-dim);border-color:#3A443F;
+  background:linear-gradient(180deg,#2B3430 0%,#212926 100%);
+  box-shadow:0 2px 5px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.btn.ghost:hover{color:var(--text);border-color:#4A554F;}
+.btn.danger{
+  color:#F2C4BB;border-color:#8E3B2E;
+  background:linear-gradient(180deg,#7C3427 0%,#5A251B 100%);
+  box-shadow:0 3px 6px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.btn.danger:hover{filter:brightness(1.15);color:#fff;}
+.btn.tiny{padding:6px 12px;font-size:11px;border-radius:7px;}
 
 /* table */
 table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -193,8 +227,24 @@ tr:last-child td{border-bottom:none;}
 .range-row input{width:100px;}
 
 .tabs{display:flex;gap:6px;margin-bottom:12px;}
-.tab{padding:6px 14px;border-radius:20px;background:var(--surface-2);color:var(--text-dim);font-size:12px;cursor:pointer;border:1px solid transparent;}
-.tab.active{background:rgba(62,141,100,.16);color:var(--felt-bright);border-color:var(--felt-bright);}
+.tab{
+  padding:9px 18px;border-radius:22px;font-size:12.5px;cursor:pointer;
+  color:var(--text-dim);
+  background:linear-gradient(180deg,#2B3430 0%,#212926 100%);
+  border:1px solid #3A443F;
+  box-shadow:0 2px 4px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+  transition:transform .1s ease, box-shadow .1s ease, background .15s ease;
+  user-select:none;
+}
+.tab:hover{color:var(--text);transform:translateY(-1px);
+  box-shadow:0 4px 8px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08);}
+.tab:active{transform:translateY(1px);box-shadow:inset 0 2px 5px rgba(0,0,0,.45);}
+.tab.active{
+  color:#DFF3E6;
+  background:linear-gradient(180deg,#3E8D64 0%,#2C6B4A 100%);
+  border-color:#4EA377;
+  box-shadow:0 3px 7px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.18);
+}
 .chart-wrap{height:230px;position:relative;}
 
 /* modal */
@@ -314,6 +364,7 @@ tr:last-child td{border-bottom:none;}
             <label class="tag-toggle tk"><input type="checkbox" id="fTagTicket">Вход по билету</label>
             <label class="tag-toggle free"><input type="checkbox" id="fTagFree">Фриролл</label>
             <label class="tag-toggle re"><input type="checkbox" id="fTagRe">Ре-энтри</label>
+            <label class="tag-toggle fl"><input type="checkbox" id="fTagFlight">Флайт</label>
           </div>
         </div>
         <button class="btn" id="addBtn">Добавить турнир</button>
@@ -341,6 +392,7 @@ tr:last-child td{border-bottom:none;}
           <div class="tab" data-tag="TICKET">По билету</div>
           <div class="tab" data-tag="FREE">Фрироллы</div>
           <div class="tab" data-tag="RE">Ре-энтри</div>
+          <div class="tab" data-tag="FLIGHT">Флайты</div>
         </div>
         <div class="chip-row" id="statusTabs" style="margin-bottom:10px;flex-wrap:wrap;gap:8px;">
           <div class="tab active" data-status="ALL">Все</div>
@@ -437,6 +489,7 @@ tr:last-child td{border-bottom:none;}
         <label class="tag-toggle tk"><input type="checkbox" id="eTagTicket">Вход по билету</label>
         <label class="tag-toggle free"><input type="checkbox" id="eTagFree">Фриролл</label>
         <label class="tag-toggle re"><input type="checkbox" id="eTagRe">Ре-энтри</label>
+        <label class="tag-toggle fl"><input type="checkbox" id="eTagFlight">Флайт</label>
       </div>
     </div>
     <div class="modal-actions">
@@ -499,7 +552,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     {name:'Покердом', currency:'RUB'}
   ];
   let rooms = DEFAULT_ROOMS.map(r=>({...r}));
-  const TAG_LABEL = {SAT:'Сателлит', SIDE:'Доп. ставка', TICKET:'Билет', FREE:'Фриролл', RE:'Ре-энтри'};
+  const TAG_LABEL = {SAT:'Сателлит', SIDE:'Доп. ставка', TICKET:'Билет', FREE:'Фриролл', RE:'Ре-энтри', FLIGHT:'Флайт'};
 
   const $ = (id) => document.getElementById(id);
 
@@ -824,7 +877,8 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     // re-entries are full tournaments and stay inside `count`; they are only
     // reported separately so the split original/repeat stays visible
     const reCount = counted.filter(t=>(t.tags||[]).includes('RE')).length;
-    return {count:counted.length, sideCount, satCount, reCount,
+    const flightCount = counted.filter(t=>(t.tags||[]).includes('FLIGHT')).length;
+    return {count:counted.length, sideCount, satCount, reCount, flightCount,
             doneCount:countedDone.length, pendingCount:counted.length-countedDone.length,
             allCount:list.length, allDone:done.length, allPending:list.length-done.length,
             totalBuyin:cashCost, totalBuyinDone:cashCostDone, stakeCounted,
@@ -909,7 +963,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
         ? '<span class="pending">ожидается</span>'
         : `<span class="${profit>0?'pos':(profit<0?'neg':'neutral')} mono">${profit>0?'+':''}${fmt(profit)}</span>`;
       const tagsHtml = (t.tags && t.tags.length)
-        ? t.tags.map(tg=>`<span class="tag-badge ${tg==='SAT'?'sat':(tg==='TICKET'?'tk':(tg==='FREE'?'free':(tg==='RE'?'re':'side')))}">${TAG_LABEL[tg]}</span>`).join('')
+        ? t.tags.map(tg=>`<span class="tag-badge ${tg==='SAT'?'sat':(tg==='TICKET'?'tk':(tg==='FREE'?'free':(tg==='RE'?'re':(tg==='FLIGHT'?'fl':'side'))))}">${TAG_LABEL[tg]}</span>`).join('')
         : '<span class="pending">—</span>';
       return `<tr>
         <td class="mono">${t.date || '—'}</td>
@@ -963,7 +1017,10 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
         const parts = [`${plain} турниров`];
         if(s.satCount) parts.push(`${s.satCount} сателлитов`);
         let txt = `${s.count} МТТ = ` + parts.join(' + ');
-        if(s.reCount) txt += `, из них ${s.reCount} повторных входов`;
+        const inner = [];
+        if(s.reCount) inner.push(`${s.reCount} повторных входов`);
+        if(s.flightCount) inner.push(`${s.flightCount} флайтов`);
+        if(inner.length) txt += `, из них ` + inner.join(' и ');
         if(s.sideCount) txt += `. Плюс ${s.sideCount} доп. ставок — они в деньгах и профите, но вне счёта турниров.`;
         txt += ` ABI считается только по турнирам (${fmt(s.stakeCounted)} ${SYM[baseCurrency]} / ${s.count}), вход по билету — по номиналу байина.`;
         compNote.textContent = txt;
@@ -1501,6 +1558,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     if($('fTagTicket').checked) tags.push('TICKET');
     if($('fTagFree').checked) tags.push('FREE');
     if($('fTagRe').checked) tags.push('RE');
+    if($('fTagFlight').checked) tags.push('FLIGHT');
     tournaments.push({
       id: uid(), date, currency: formCurrency, buyin, rebuy,
       result, ticket, note: formRoom.trim(), tags, imported: false
@@ -1509,7 +1567,8 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     $('fBuyin').value=''; $('fRebuy').value=''; $('fResult').value=''; $('fTicket').value='';
     $('fUnknown').checked = true; $('fResultField').style.opacity=.35; $('fResult').disabled=true;
     $('fTagSat').checked = false; $('fTagSide').checked = false; $('fTagTicket').checked = false;
-    $('fTagFree').checked = false; $('fTagRe').checked = false; applyFreeroll();
+    $('fTagFree').checked = false; $('fTagRe').checked = false;
+    $('fTagFlight').checked = false; applyFreeroll();
     renderAll();
   });
 
@@ -1821,6 +1880,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     $('eTagTicket').checked = !!(t.tags && t.tags.includes('TICKET'));
     $('eTagFree').checked = !!(t.tags && t.tags.includes('FREE'));
     $('eTagRe').checked = !!(t.tags && t.tags.includes('RE'));
+    $('eTagFlight').checked = !!(t.tags && t.tags.includes('FLIGHT'));
     $('eBuyin').disabled = $('eTagFree').checked;
     $('eRebuy').disabled = $('eTagFree').checked;
     $('editModal').classList.add('open');
@@ -1841,6 +1901,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     if($('eTagTicket').checked) tags.push('TICKET');
     if($('eTagFree').checked) tags.push('FREE');
     if($('eTagRe').checked) tags.push('RE');
+    if($('eTagFlight').checked) tags.push('FLIGHT');
     const newRoom = $('eNote').value === '__ADD__' ? (t.note || '') : $('eNote').value;
     const newRoomCur = roomCurrency(newRoom);
     if(newRoomCur) t.currency = newRoomCur;
