@@ -72,20 +72,28 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
 .panel h2{font-family:'Fraunces',Georgia,'Times New Roman',serif;font-size:15px;font-weight:600;margin:0 0 14px;color:var(--text);}
 .panel h2 .n{color:var(--text-faint);font-weight:400;font-size:12px;}
 .bank-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
-.bank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:11px;margin-top:14px;}
+.bank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-top:14px;}
 @media(max-width:640px){.bank-grid{grid-template-columns:1fr 1fr;}}
 .bank-card{background:linear-gradient(180deg,#232B27 0%,#1D2422 100%);
   border:1px solid var(--border);border-radius:10px;padding:12px 14px;
   box-shadow:0 2px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);}
 .bank-card.wide{grid-column:span 2;}
-.bank-card .bk-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;
-  color:var(--text-faint);margin-bottom:6px;}
-.bank-card .bk-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:21px;font-weight:600;
-  line-height:1.15;}
-.bank-card .bk-sub{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;
-  color:var(--text-faint);margin-top:5px;}
-.bank-card.hero{border-color:var(--felt-bright);
-  background:linear-gradient(180deg,#26362E 0%,#1D2A24 100%);}
+.bank-card .bk-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-faint);margin-bottom:6px;overflow-wrap:anywhere;}
+.bank-card .bk-val{font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:clamp(15px, 1.5vw, 21px);font-weight:600;line-height:1.15;overflow-wrap:anywhere;}
+.bank-card .bk-sub{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9.5px;
+  color:var(--text-faint);margin-top:5px;overflow-wrap:anywhere;}
+.bank-card{border-left-width:3px;}
+.bank-card.eur{border-left-color:var(--eur);background:linear-gradient(180deg,#232C36 0%,#1C2229 100%);}
+.bank-card.usd{border-left-color:var(--usd);background:linear-gradient(180deg,#212F28 0%,#1A241F 100%);}
+.bank-card.rub{border-left-color:var(--rub);background:linear-gradient(180deg,#2E2A20 0%,#221F18 100%);}
+.bank-card.info{border-left-color:#9B87D6;background:linear-gradient(180deg,#282438 0%,#1E1B2A 100%);}
+.bank-card.info .bk-val{color:#C6B8F0;}
+.bank-card.hero{border-left-width:4px;box-shadow:0 3px 10px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.07);}
+.bank-card.hero.eur{border-left-color:var(--eur);}
+.bank-card.hero.usd{border-left-color:var(--usd);}
+.bank-card.hero.rub{border-left-color:var(--rub);}
 .rb-head{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);
   margin:18px 0 9px;}
 .room-bank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));gap:10px;}
@@ -96,11 +104,12 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
 .room-bank.eur{border-left-color:var(--eur);}
 .room-bank.usd{border-left-color:var(--usd);}
 .room-bank.rub{border-left-color:var(--rub);}
-.rb-name{font-size:12.5px;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+.rb-name{font-size:12.5px;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:6px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .rb-cur{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;color:var(--text-faint);
   background:rgba(0,0,0,.3);padding:2px 5px;border-radius:4px;}
-.rb-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:17px;font-weight:600;}
-.rb-sub{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9.5px;color:var(--text-faint);margin-top:4px;}
+.rb-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:clamp(14px,1.3vw,17px);font-weight:600;overflow-wrap:anywhere;}
+.rb-sub{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;color:var(--text-faint);margin-top:4px;overflow-wrap:anywhere;}
 .cash-list{max-height:230px;overflow-y:auto;margin:10px 0;}
 .cash-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);
   font-size:12px;}
@@ -196,6 +205,10 @@ select{text-overflow:ellipsis;}
 .tag-badge.fl{background:rgba(90,150,190,.18);color:#8CC2E0;}
 .tag-badge.cas{background:rgba(190,90,150,.18);color:#E093BE;}
 .tag-badge.custom{background:rgba(150,150,170,.18);color:#B9BCCB;}
+.tag-badge.trn{background:rgba(120,130,200,.18);color:#A3ACE8;}
+.tag-badge.rake{background:rgba(120,190,140,.18);color:#96D6A8;}
+.tag-toggle.trn input{accent-color:#A3ACE8;}
+.tag-toggle.rake input{accent-color:#96D6A8;}
 .tag-toggle.cas input{accent-color:#E093BE;}
 .tag-toggle.custom input{accent-color:#B9BCCB;}
 .tag-del{margin-left:6px;color:var(--rust);font-weight:700;cursor:pointer;padding:0 3px;}
@@ -484,6 +497,8 @@ tr:last-child td{border-bottom:none;}
           <div class="tab" data-side="SAT">Сателлиты</div>
           <div class="tab" data-side="SIDE">Доп. ставки</div>
           <div class="tab" data-side="CASINO">Казино</div>
+          <div class="tab" data-side="TRAIN">Тренировки</div>
+          <div class="tab" data-side="RAKE">Рейкбек</div>
         </div>
         <div class="stat-grid" id="statGrid"></div>
         <div class="bd-note" id="countNote" style="margin-top:10px;"></div>
@@ -680,8 +695,24 @@ const SEED_DATA = [];
     {id:'FREE',   label:'Фриролл',        cls:'free', filter:'Фрироллы'},
     {id:'RE',     label:'Ре-энтри',       cls:'re',   filter:'Ре-энтри'},
     {id:'FLIGHT', label:'Флайт',          cls:'fl',   filter:'Флайты'},
-    {id:'CASINO', label:'Казино',         cls:'cas',  filter:'Казино'}
+    {id:'CASINO', label:'Казино',         cls:'cas',  filter:'Казино'},
+    {id:'TRAIN',  label:'Тренировка',      cls:'trn',  filter:'Тренировки'},
+    {id:'RAKE',   label:'Рейкбек',         cls:'rake', filter:'Рейкбек'}
   ];
+
+  // Tags whose money counts in the bankroll and in the overall profit, but which
+  // are not tournaments: they stay out of the count, out of ABI and out of the
+  // tournament ROI.
+  const OUTSIDE_TAGS = [
+    {id:'SIDE',   plural:'доп. ставок',     row:'Доп. ставки'},
+    {id:'CASINO', plural:'записей казино',  row:'Казино'},
+    {id:'TRAIN',  plural:'тренировок',      row:'Тренировки'},
+    {id:'RAKE',   plural:'начислений рейкбека', row:'Рейкбек'}
+  ];
+  function isOutside(t){
+    const tags = t.tags || [];
+    return OUTSIDE_TAGS.some(o => tags.includes(o.id));
+  }
   let customTags = [];   // [{id, label}] — заведённые пользователем
 
   function allTags(){ return BUILTIN_TAGS.concat(customTags); }
@@ -1003,7 +1034,7 @@ const SEED_DATA = [];
   // their money still lands in the overall profit and the overall ROI.
   function isSide(t){ return (t.tags || []).includes('SIDE'); }
   function isCasino(t){ return (t.tags || []).includes('CASINO'); }
-  function isCountable(t){ return !isSide(t) && !isCasino(t); }
+  function isCountable(t){ return !isOutside(t); }
 
   // entered with a ticket: the buy-in comes out of the ticket balance, not cash
   function paidByTicket(t){ return (t.tags || []).includes('TICKET'); }
@@ -1044,12 +1075,15 @@ const SEED_DATA = [];
     const abi = counted.length ? (stakeCounted/counted.length) : 0;
     const sideCount = list.filter(isSide).length;
     const casinoCount = list.filter(isCasino).length;
+    const outCounts = {};
+    OUTSIDE_TAGS.forEach(o=>{ outCounts[o.id] = list.filter(t=>(t.tags||[]).includes(o.id)).length; });
+    const outsideCount = list.length - counted.length;
     const satCount = list.filter(t=>(t.tags||[]).includes('SAT')).length;
     // re-entries are full tournaments and stay inside `count`; they are only
     // reported separately so the split original/repeat stays visible
     const reCount = counted.filter(t=>(t.tags||[]).includes('RE')).length;
     const flightCount = counted.filter(t=>(t.tags||[]).includes('FLIGHT')).length;
-    return {count:counted.length, sideCount, casinoCount, satCount, reCount, flightCount,
+    return {count:counted.length, sideCount, casinoCount, outCounts, outsideCount, satCount, reCount, flightCount,
             doneCount:countedDone.length, pendingCount:counted.length-countedDone.length,
             allCount:list.length, allDone:done.length, allPending:list.length-done.length,
             totalBuyin:cashCost, totalBuyinDone:cashCostDone, stakeCounted,
@@ -1192,32 +1226,32 @@ const SEED_DATA = [];
 
     const cards = [];
     if(b){
-      cards.push(`<div class="bank-card hero wide"><div class="bk-lbl">Общий банкролл</div>
+      cards.push(`<div class="bank-card hero ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Общий банкролл</div>
         <div class="bk-val ${sign(b.current - b.start)}">${fmt(b.current)} ${sym}</div>
         <div class="bk-sub">старт ${fmt(b.start)} ${sym} с ${b.date} · профит ${b.profit>0?'+':''}${fmt(b.profit)}${(b.dep||b.wd)?` · ввод ${fmt(b.dep)} · вывод ${fmt(b.wd)}`:''}</div></div>`);
     } else {
-      cards.push(`<div class="bank-card wide"><div class="bk-lbl">Банкролл не задан</div>
+      cards.push(`<div class="bank-card info"><div class="bk-lbl">Банкролл не задан</div>
         <div class="bk-val neutral">— —</div>
         <div class="bk-sub">нажмите «Стартовый банкролл» и укажите сумму и дату</div></div>`);
     }
-    cards.push(`<div class="bank-card"><div class="bk-lbl">Изменение БР ${lbl}</div>
+    cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Изменение БР ${lbl}</div>
       <div class="bk-val ${sign(m.change)}">${m.change>0?'+':''}${fmt(m.change)} ${sym}</div>
       <div class="bk-sub">${(m.dep || m.wd)
         ? `профит ${fmt(m.profit)} · ввод ${fmt(m.dep)} · вывод ${fmt(m.wd)}`
         : 'только игровой результат'}</div></div>`);
-    cards.push(`<div class="bank-card"><div class="bk-lbl">Турниров ${lbl}</div>
+    cards.push(`<div class="bank-card info"><div class="bk-lbl">Турниров ${lbl}</div>
       <div class="bk-val">${m.n}</div>
       <div class="bk-sub">средний байин ${fmt(m.abi)} ${sym}</div></div>`);
-    cards.push(`<div class="bank-card"><div class="bk-lbl">Загрузка ${lbl}</div>
+    cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Загрузка ${lbl}</div>
       <div class="bk-val neutral">${fmt(m.buyins)} ${sym}</div>
       <div class="bk-sub">сумма байинов</div></div>`);
-    cards.push(`<div class="bank-card"><div class="bk-lbl">ROI ${lbl}</div>
+    cards.push(`<div class="bank-card info"><div class="bk-lbl">ROI ${lbl}</div>
       <div class="bk-val ${sign(m.roi)}">${m.roi.toFixed(2)}%</div>
       <div class="bk-sub">от суммы байинов</div></div>`);
-    cards.push(`<div class="bank-card"><div class="bk-lbl">Депозит общий ${lbl}</div>
+    cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Депозит общий ${lbl}</div>
       <div class="bk-val neutral">${fmt(m.dep)} ${sym}</div>
       <div class="bk-sub">${m.roomDep ? `на румы переведено ${fmt(m.roomDep)}` : 'извне в банкролл'}</div></div>`);
-    cards.push(`<div class="bank-card"><div class="bk-lbl">Вывод общий ${lbl}</div>
+    cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Вывод общий ${lbl}</div>
       <div class="bk-val ${m.wd>0?'pos':'neutral'}">${fmt(m.wd)} ${sym}</div>
       <div class="bk-sub">${m.roomWd ? `с румов снято ${fmt(m.roomWd)}` : 'из банкролла наружу'}</div></div>`);
     box.innerHTML = cards.join('');
@@ -1341,7 +1375,7 @@ const SEED_DATA = [];
   function renderStats(){
     let periodList = filterByTag(filterByPeriod(tournaments));
     if(statSide === 'SIDE')        periodList = periodList.filter(isSide);
-    else if(statSide === 'CASINO') periodList = periodList.filter(isCasino);
+    else if(OUTSIDE_TAGS.some(o=>o.id === statSide)) periodList = periodList.filter(t=>(t.tags||[]).includes(statSide));
     else if(statSide === 'SAT')    periodList = periodList.filter(t=>(t.tags||[]).includes('SAT'));
     else if(statSide === 'NOSIDE') periodList = periodList.filter(t=>isCountable(t) && !(t.tags||[]).includes('SAT'));
     const conv = (amt, cur) => convert(amt, cur, baseCurrency);
@@ -1352,7 +1386,7 @@ const SEED_DATA = [];
     const cls = s.profit>0?'pos':(s.profit<0?'neg':'neutral');
     const roiCls = s.roi>0?'pos':(s.roi<0?'neg':'neutral');
     $('statGrid').innerHTML = `
-      <div class="stat"><div class="lbl">${statSide === 'SIDE' ? 'Доп. ставок' : (statSide === 'CASINO' ? 'Записей казино' : 'Турниров')}</div><div class="val">${statSide === 'SIDE' ? s.sideCount : (statSide === 'CASINO' ? s.casinoCount : s.count)}${(statSide !== 'SIDE' && statSide !== 'CASINO' && s.reCount) ? ` <span style="font-size:11px;color:var(--text-faint);">(${s.reCount} повторных)</span>` : ''}${(statSide === 'ALL' && (s.sideCount || s.casinoCount)) ? ` <span style="font-size:11px;color:var(--text-faint);">+${s.sideCount ? s.sideCount + ' доп.' : ''}${(s.sideCount && s.casinoCount) ? ', ' : ''}${s.casinoCount ? s.casinoCount + ' казино' : ''}</span>` : ''}</div></div>
+      <div class="stat"><div class="lbl">${OUTSIDE_TAGS.some(o=>o.id===statSide) ? 'Записей' : 'Турниров'}</div><div class="val">${OUTSIDE_TAGS.some(o=>o.id===statSide) ? s.outsideCount : s.count}${(!OUTSIDE_TAGS.some(o=>o.id===statSide) && s.reCount) ? ` <span style="font-size:11px;color:var(--text-faint);">(${s.reCount} повторных)</span>` : ''}${(statSide === 'ALL' && s.outsideCount) ? ` <span style="font-size:11px;color:var(--text-faint);">+${s.outsideCount} вне счёта</span>` : ''}</div></div>
       <div class="stat"><div class="lbl">${foldSat ? `Профит с билетами (${baseCurrency})` : `Профит, деньги (${baseCurrency})`}</div><div class="val ${cls}">${fmt(s.profit)} ${SYM[baseCurrency]}</div></div>
       <div class="stat"><div class="lbl">ROI</div><div class="val ${roiCls}">${s.roi.toFixed(2)}%</div></div>
       <div class="stat"><div class="lbl">${statSide === 'SIDE' ? 'Средняя ставка' : 'ABI (средний байин)'}</div><div class="val">${fmt(statSide === 'SIDE' ? (s.allCount ? s.totalBuyin/s.allCount : 0) : s.abi)} ${SYM[baseCurrency]}</div></div>
@@ -1374,9 +1408,8 @@ const SEED_DATA = [];
         if(s.flightCount) inner.push(`${s.flightCount} флайтов`);
         if(inner.length) txt += `, из них ` + inner.join(' и ');
         const outside = [];
-        if(s.sideCount) outside.push(`${s.sideCount} доп. ставок`);
-        if(s.casinoCount) outside.push(`${s.casinoCount} записей казино`);
-        if(outside.length) txt += `. Плюс ` + outside.join(' и ') +
+        OUTSIDE_TAGS.forEach(o=>{ if(s.outCounts[o.id]) outside.push(`${s.outCounts[o.id]} ${o.plural}`); });
+        if(outside.length) txt += `. Плюс ` + outside.join(', ') +
           ` — они в общем профите и общем ROI, но вне счёта турниров, ABI и ROI турниров.`;
         txt += ` ABI считается только по турнирам (${fmt(s.stakeCounted)} ${SYM[baseCurrency]} / ${s.count}), вход по билету — по номиналу байина.`;
         compNote.textContent = txt;
@@ -1385,9 +1418,7 @@ const SEED_DATA = [];
           ? 'Чистые турниры: без сателлитов и без доп. ставок.'
           : (statSide === 'SAT'
               ? 'Только сателлиты. Выигранный билет считается выплатой — иначе удачный сателлит выглядел бы убыточным.'
-              : (statSide === 'CASINO'
-                  ? 'Только казино. Деньги идут в общий профит и общий ROI, но в счёт турниров, ABI и ROI турниров не входят.'
-                  : 'Только доп. ставки. Их деньги идут в общий профит, но в счёт турниров они не входят.'));
+              : 'Деньги идут в общий банкролл, общий профит и общий ROI, но в счёт турниров, ABI и ROI турниров не входят.');
         compNote.textContent = statSide === 'SAT'
           ? base + ` Билетов выиграно на ${fmt(s.ticketsWon)} ${SYM[baseCurrency]}, они уже включены в профит и ROI. ` +
             'В срезе «Всё вместе» билеты не складываются с деньгами, чтобы не посчитать их дважды.'
@@ -1466,14 +1497,12 @@ const SEED_DATA = [];
       // side bets sit outside the per-currency МТТ counts, so give them their
       // own line — then every column of the table adds up to the total row
       if(statSide === 'ALL'){
-        const sideOnly = periodList.filter(isSide);
-        if(sideOnly.length){
-          rows.push({name: 'Доп. ставки', st: computeStats(sideOnly, conv), cur: baseCurrency, muted: true, outCount: sideOnly.length});
-        }
-        const casinoOnly = periodList.filter(isCasino);
-        if(casinoOnly.length){
-          rows.push({name: 'Казино', st: computeStats(casinoOnly, conv), cur: baseCurrency, muted: true, outCount: casinoOnly.length});
-        }
+        OUTSIDE_TAGS.forEach(o=>{
+          const sub = periodList.filter(t=>(t.tags||[]).includes(o.id));
+          if(!sub.length) return;
+          rows.push({name: o.row, st: computeStats(sub, conv), cur: baseCurrency,
+                     muted: true, outCount: sub.length});
+        });
       }
       rows.push({name: 'ИТОГО в ' + baseCurrency, st: s, cur: baseCurrency, total: true});
     }
