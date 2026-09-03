@@ -1097,7 +1097,7 @@ const SEED_DATA = [];
       if(f.type === 'WD') wd += v; else dep += v;
     });
 
-    return {cur, start, profit, dep, wd, current: start + profit + dep - wd};
+    return {cur, date: from, start, profit, dep, wd, current: start + profit + dep - wd};
   }
 
   // One line per pokerroom: its own starting sum, its own results, its own
@@ -1192,12 +1192,9 @@ const SEED_DATA = [];
 
     const cards = [];
     if(b){
-      cards.push(`<div class="bank-card"><div class="bk-lbl">Стартовый банкролл</div>
-        <div class="bk-val neutral">${fmt(b.start)} ${sym}</div>
-        <div class="bk-sub">с ${b.date}</div></div>`);
-      cards.push(`<div class="bank-card hero"><div class="bk-lbl">Общий банкролл</div>
+      cards.push(`<div class="bank-card hero wide"><div class="bk-lbl">Общий банкролл</div>
         <div class="bk-val ${sign(b.current - b.start)}">${fmt(b.current)} ${sym}</div>
-        <div class="bk-sub">старт ${fmt(b.start)} · профит ${b.profit>0?'+':''}${fmt(b.profit)}${(b.dep||b.wd)?` · ввод ${fmt(b.dep)} · вывод ${fmt(b.wd)}`:''}</div></div>`);
+        <div class="bk-sub">старт ${fmt(b.start)} ${sym} с ${b.date} · профит ${b.profit>0?'+':''}${fmt(b.profit)}${(b.dep||b.wd)?` · ввод ${fmt(b.dep)} · вывод ${fmt(b.wd)}`:''}</div></div>`);
     } else {
       cards.push(`<div class="bank-card wide"><div class="bk-lbl">Банкролл не задан</div>
         <div class="bk-val neutral">— —</div>
@@ -1205,7 +1202,9 @@ const SEED_DATA = [];
     }
     cards.push(`<div class="bank-card"><div class="bk-lbl">Изменение БР ${lbl}</div>
       <div class="bk-val ${sign(m.change)}">${m.change>0?'+':''}${fmt(m.change)} ${sym}</div>
-      <div class="bk-sub">профит ${fmt(m.profit)} · ввод ${fmt(m.dep)} · вывод ${fmt(m.wd)}</div></div>`);
+      <div class="bk-sub">${(m.dep || m.wd)
+        ? `профит ${fmt(m.profit)} · ввод ${fmt(m.dep)} · вывод ${fmt(m.wd)}`
+        : 'только игровой результат'}</div></div>`);
     cards.push(`<div class="bank-card"><div class="bk-lbl">Турниров ${lbl}</div>
       <div class="bk-val">${m.n}</div>
       <div class="bk-sub">средний байин ${fmt(m.abi)} ${sym}</div></div>`);
@@ -1214,13 +1213,13 @@ const SEED_DATA = [];
       <div class="bk-sub">сумма байинов</div></div>`);
     cards.push(`<div class="bank-card"><div class="bk-lbl">ROI ${lbl}</div>
       <div class="bk-val ${sign(m.roi)}">${m.roi.toFixed(2)}%</div>
-      <div class="bk-sub">профит ${fmt(m.profit)} ${sym}</div></div>`);
+      <div class="bk-sub">от суммы байинов</div></div>`);
     cards.push(`<div class="bank-card"><div class="bk-lbl">Депозит общий ${lbl}</div>
       <div class="bk-val neutral">${fmt(m.dep)} ${sym}</div>
-      <div class="bk-sub">на румы переведено ${fmt(m.roomDep)}</div></div>`);
+      <div class="bk-sub">${m.roomDep ? `на румы переведено ${fmt(m.roomDep)}` : 'извне в банкролл'}</div></div>`);
     cards.push(`<div class="bank-card"><div class="bk-lbl">Вывод общий ${lbl}</div>
       <div class="bk-val ${m.wd>0?'pos':'neutral'}">${fmt(m.wd)} ${sym}</div>
-      <div class="bk-sub">с румов снято ${fmt(m.roomWd)}</div></div>`);
+      <div class="bk-sub">${m.roomWd ? `с румов снято ${fmt(m.roomWd)}` : 'из банкролла наружу'}</div></div>`);
     box.innerHTML = cards.join('');
 
     renderRoomBanks();
