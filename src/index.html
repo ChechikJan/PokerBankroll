@@ -85,10 +85,21 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
 .bank-card .bk-sub{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9.5px;
   color:var(--text-faint);margin-top:5px;overflow-wrap:anywhere;}
 .bank-card{border-left-width:3px;}
-.bank-card.eur{border-left-color:var(--eur);background:linear-gradient(180deg,#232C36 0%,#1C2229 100%);}
-.bank-card.usd{border-left-color:var(--usd);background:linear-gradient(180deg,#212F28 0%,#1A241F 100%);}
-.bank-card.rub{border-left-color:var(--rub);background:linear-gradient(180deg,#2E2A20 0%,#221F18 100%);}
-.bank-card.info{border-left-color:#9B87D6;background:linear-gradient(180deg,#282438 0%,#1E1B2A 100%);}
+.bank-card.eur{border-color:#354863;border-left-color:var(--eur);
+  background:linear-gradient(180deg,#26344A 0%,#1C2634 100%);}
+.bank-card.eur .bk-val{color:#C4D6F0;}
+.bank-card.usd{border-color:#2A5F44;border-left-color:var(--usd);
+  background:linear-gradient(180deg,#214234 0%,#182F26 100%);}
+.bank-card.usd .bk-val{color:#C3EAD5;}
+.bank-card.rub{border-color:#6B5429;border-left-color:var(--rub);
+  background:linear-gradient(180deg,#3E3117 0%,#2C2311 100%);}
+.bank-card.rub .bk-val{color:#EFDCB2;}
+.bank-card.info{border-color:#4A4070;border-left-color:#9B87D6;
+  background:linear-gradient(180deg,#2C2742 0%,#211D31 100%);}
+.bank-card.info .bk-val{color:#CDBFF5;}
+/* a gain or a loss still wins over the currency tint */
+.bank-card .bk-val.pos{color:var(--felt-bright);}
+.bank-card .bk-val.neg{color:var(--rust);}
 .bank-card.info .bk-val{color:#C6B8F0;}
 .bank-card.hero{border-left-width:4px;box-shadow:0 3px 10px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.07);}
 .bank-card.hero.eur{border-left-color:var(--eur);}
@@ -101,9 +112,12 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
 .room-bank{background:linear-gradient(180deg,#232B27 0%,#1D2422 100%);border:1px solid var(--border);
   border-left-width:3px;border-radius:9px;padding:10px 12px;
   box-shadow:0 2px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);}
-.room-bank.eur{border-left-color:var(--eur);}
-.room-bank.usd{border-left-color:var(--usd);}
-.room-bank.rub{border-left-color:var(--rub);}
+.room-bank.eur{border-color:#354863;border-left-color:var(--eur);
+  background:linear-gradient(180deg,#26344A 0%,#1C2634 100%);}
+.room-bank.usd{border-color:#2A5F44;border-left-color:var(--usd);
+  background:linear-gradient(180deg,#214234 0%,#182F26 100%);}
+.room-bank.rub{border-color:#6B5429;border-left-color:var(--rub);
+  background:linear-gradient(180deg,#3E3117 0%,#2C2311 100%);}
 .rb-name{font-size:12.5px;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:6px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .rb-cur{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;color:var(--text-faint);
@@ -1775,8 +1789,10 @@ const SEED_DATA = [];
     box('etag', 'eTagBox', '');
 
     // freeroll needs its own handler again after a redraw
-    const ff = $('ftag_FREE');
-    if(ff) ff.addEventListener('change', applyFreeroll);
+    ['FREE','RAKE'].forEach(id=>{
+      const el = $('ftag_' + id);
+      if(el) el.addEventListener('change', applyFreeroll);
+    });
 
     if($('addTagBtn')) $('addTagBtn').addEventListener('click', addCustomTag);
     if($('editTagBtn')) $('editTagBtn').addEventListener('click', ()=>{ tagEditMode = !tagEditMode; renderTagUI(); });
@@ -2210,9 +2226,17 @@ const SEED_DATA = [];
   });
 
   // --- freeroll: buy-in is always 0 ---
+  // Entries that cannot have a buy-in: a freeroll costs nothing, and rakeback
+  // is money coming in rather than a seat being bought.
+  function noBuyinTag(prefix){
+    return ['FREE','RAKE'].some(id=>{
+      const el = $(prefix + '_' + id);
+      return el && el.checked;
+    });
+  }
+
   function applyFreeroll(){
-    const box = $('ftag_FREE');
-    const on = box ? box.checked : false;
+    const on = noBuyinTag('ftag');
     $('fBuyin').disabled = on;
     $('fRebuy').disabled = on;
     if(on){ $('fBuyin').value = '0'; $('fRebuy').value = ''; }
@@ -2220,8 +2244,8 @@ const SEED_DATA = [];
     $('fRebuy').style.opacity = on ? .4 : 1;
   }
   document.addEventListener('change', (ev)=>{
-    if(ev.target && ev.target.id === 'etag_FREE'){
-      const on = ev.target.checked;
+    if(ev.target && (ev.target.id === 'etag_FREE' || ev.target.id === 'etag_RAKE')){
+      const on = noBuyinTag('etag');
       $('eBuyin').disabled = on;
       $('eRebuy').disabled = on;
       if(on){ $('eBuyin').value = '0'; $('eRebuy').value = ''; }
@@ -2484,7 +2508,7 @@ const SEED_DATA = [];
     $('eTicket').value = t.ticket ? t.ticket : '';
     $('eResult').value = t.result !== null ? t.result : '';
     setTags('etag', t.tags);
-    $('eBuyin').disabled = $('etag_FREE') ? $('etag_FREE').checked : false;
+    $('eBuyin').disabled = noBuyinTag('etag');
     $('eRebuy').disabled = $('eBuyin').disabled;
     $('editModal').classList.add('open');
   }
