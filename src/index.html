@@ -71,6 +71,43 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;}
 .panel h2{font-family:'Fraunces',Georgia,'Times New Roman',serif;font-size:15px;font-weight:600;margin:0 0 14px;color:var(--text);}
 .panel h2 .n{color:var(--text-faint);font-weight:400;font-size:12px;}
+.bank-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.bank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:11px;margin-top:14px;}
+@media(max-width:640px){.bank-grid{grid-template-columns:1fr 1fr;}}
+.bank-card{background:linear-gradient(180deg,#232B27 0%,#1D2422 100%);
+  border:1px solid var(--border);border-radius:10px;padding:12px 14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);}
+.bank-card.wide{grid-column:span 2;}
+.bank-card .bk-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--text-faint);margin-bottom:6px;}
+.bank-card .bk-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:21px;font-weight:600;
+  line-height:1.15;}
+.bank-card .bk-sub{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;
+  color:var(--text-faint);margin-top:5px;}
+.bank-card.hero{border-color:var(--felt-bright);
+  background:linear-gradient(180deg,#26362E 0%,#1D2A24 100%);}
+.rb-head{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);
+  margin:18px 0 9px;}
+.room-bank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));gap:10px;}
+@media(max-width:640px){.room-bank-grid{grid-template-columns:1fr 1fr;}}
+.room-bank{background:linear-gradient(180deg,#232B27 0%,#1D2422 100%);border:1px solid var(--border);
+  border-left-width:3px;border-radius:9px;padding:10px 12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);}
+.room-bank.eur{border-left-color:var(--eur);}
+.room-bank.usd{border-left-color:var(--usd);}
+.room-bank.rub{border-left-color:var(--rub);}
+.rb-name{font-size:12.5px;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+.rb-cur{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;color:var(--text-faint);
+  background:rgba(0,0,0,.3);padding:2px 5px;border-radius:4px;}
+.rb-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:17px;font-weight:600;}
+.rb-sub{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9.5px;color:var(--text-faint);margin-top:4px;}
+.cash-list{max-height:230px;overflow-y:auto;margin:10px 0;}
+.cash-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);
+  font-size:12px;}
+.cash-row:last-child{border-bottom:none;}
+.cash-row .cf-date{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:var(--text-faint);}
+.cash-row .cf-sum{margin-left:auto;font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600;}
+.modal.wide{max-width:520px;}
 
 .rate-row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;}
 .field{display:flex;flex-direction:column;gap:5px;}
@@ -270,19 +307,32 @@ tr:last-child td{border-bottom:none;}
   </div>
 
   <div class="panel">
-    <h2>Период</h2>
-    <div class="chip-row" id="periodTabs" style="flex-wrap:wrap;gap:8px;">
-      <div class="tab active" data-period="ALL">Всё время</div>
-      <div class="tab" data-period="DAY">День</div>
-      <div class="tab" data-period="WEEK">Неделя</div>
-      <div class="tab" data-period="MONTH">Месяц</div>
-      <div class="tab" data-period="YEAR">Год</div>
-      <div class="tab" data-period="CUSTOM">Свой период</div>
+    <div class="bank-head">
+      <h2 style="margin:0;">Банкролл</h2>
+      <div class="chip-row" id="periodTabs" style="flex-wrap:wrap;gap:8px;">
+        <div class="tab" data-period="DAY">Сегодня</div>
+        <div class="tab" data-period="WEEK">Неделя</div>
+        <div class="tab" data-period="MONTH">Месяц</div>
+        <div class="tab" data-period="YEAR">Год</div>
+        <div class="tab" data-period="CUSTOM">Свой период</div>
+        <div class="tab active" data-period="ALL">Всё время</div>
+      </div>
     </div>
-    <div class="rate-row" id="customPeriodRow" style="display:none;margin-top:12px;">
+    <div class="rate-row" id="customPeriodRow" style="display:none;margin:12px 0 0;">
       <div class="field"><label>С</label><input type="date" id="periodFrom"></div>
       <div class="field"><label>По</label><input type="date" id="periodTo"></div>
       <button class="btn ghost" id="applyCustomPeriod">Применить</button>
+    </div>
+
+    <div class="bank-grid" id="bankGrid"></div>
+
+    <div class="rb-head">Банкроллы по румам</div>
+    <div class="room-bank-grid" id="roomBankGrid"></div>
+
+    <div class="rate-row" style="margin-top:14px;">
+      <button class="btn ghost" id="editBankroll">Стартовый банкролл</button>
+      <button class="btn ghost" id="openCashflow">Депозиты и выводы</button>
+      <div class="bd-note" id="bankNote" style="margin:0;flex:1;min-width:220px;"></div>
     </div>
   </div>
 
@@ -472,6 +522,63 @@ tr:last-child td{border-bottom:none;}
   </div>
 </div>
 
+<div class="modal-bg" id="bankModal">
+  <div class="modal">
+    <h3>Стартовый банкролл</h3>
+    <div class="field"><label>Дата отсчёта</label><input type="date" id="bkDate"></div>
+    <div class="field"><label>Сумма</label><input type="number" step="0.01" id="bkAmount"></div>
+    <div class="field"><label>Валюта</label>
+      <select id="bkCurrency">
+        <option value="EUR">EUR €</option>
+        <option value="USD" selected>USD $</option>
+        <option value="RUB">RUB ₽</option>
+      </select>
+    </div>
+    <div class="bd-note" style="margin-top:4px;">
+      Общий банкролл = стартовый + профит с этой даты. Переводы на румы его не меняют.
+    </div>
+    <div class="rb-head" style="margin:16px 0 8px;">Стартовые суммы на румах</div>
+    <div id="bkRoomList"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="bkCancel">Отмена</button>
+      <button class="btn" id="bkSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="cashModal">
+  <div class="modal wide">
+    <h3>Депозиты и выводы</h3>
+    <div class="form-grid" style="grid-template-columns:repeat(4,1fr);">
+      <div class="field wide"><label>Покеррум</label><select id="cfRoom"></select></div>
+      <div class="field"><label>Дата</label><input type="date" id="cfDate"></div>
+      <div class="field"><label>Тип</label>
+        <select id="cfType">
+          <option value="DEP">Депозит</option>
+          <option value="WD">Вывод</option>
+        </select>
+      </div>
+      <div class="field"><label>Сумма</label><input type="number" step="0.01" id="cfAmount" placeholder="0.00"></div>
+      <div class="field"><label>Валюта</label>
+        <select id="cfCurrency">
+          <option value="EUR">EUR €</option>
+          <option value="USD" selected>USD $</option>
+          <option value="RUB">RUB ₽</option>
+        </select>
+      </div>
+    </div>
+    <div class="bd-note" style="margin:2px 0 10px;">
+      <b>Общий банкролл</b> — деньги пришли извне или ушли из покера совсем: меняют общий банкролл.<br>
+      <b>Перевод на рум</b> — деньги переложены между вашими же счетами: меняют баланс рума, общий банкролл не трогают.
+    </div>
+    <button class="btn" id="cfAdd">Добавить операцию</button>
+    <div class="cash-list" id="cashList"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cfClose">Закрыть</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="editModal">
   <div class="modal">
     <h3>Редактировать турнир</h3>
@@ -529,6 +636,9 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
   let statusFilter = 'ALL';
   let statView = 'TOTAL';
   let statSide = 'ALL';
+  let bankroll = null;      // {date, amount, currency}
+  let cashflow = [];        // [{id, date, type:'DEP'|'WD', amount, currency, room}]
+  let roomBank = {};        // {roomName: {amount, currency}} — стартовые суммы на румах
   let chartRoom = 'ALL';
   let biMin = 0, biMax = 25000;
   const BI_MAX = 25000;
@@ -710,6 +820,15 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     }catch(e){ rates = {...DEFAULT_RATES}; }
 
     try{
+      const bv = await store.get('bankroll');
+      if(bv) bankroll = JSON.parse(bv);
+      const cv = await store.get('cashflow');
+      if(cv) cashflow = JSON.parse(cv) || [];
+      const rb = await store.get('roomBank');
+      if(rb) roomBank = JSON.parse(rb) || {};
+    }catch(e){}
+
+    try{
       const v = await store.get('rooms');
       if(v){
         const saved = JSON.parse(v);
@@ -736,10 +855,24 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     }
   }
 
-  function getPeriodRange(){
-    const now = new Date();
+  // A poker day runs from 12:00 to 12:00: a session that starts in the evening
+  // and ends after midnight still belongs to the day it began on.
+  const DAY_START_HOUR = 12;
+  function pokerNow(){
+    const d = new Date();
+    if(d.getHours() < DAY_START_HOUR) d.setDate(d.getDate() - 1);
+    d.setHours(12, 0, 0, 0);
+    return d;
+  }
+  function dstr(d){
     const pad = (n)=> String(n).padStart(2,'0');
-    const toStr = (d)=> d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  }
+  function pokerToday(){ return dstr(pokerNow()); }
+
+  function getPeriodRange(){
+    const now = pokerNow();
+    const toStr = dstr;
     if(period === 'ALL') return {from:null, to:null};
     if(period === 'DAY'){ const s = toStr(now); return {from:s, to:s}; }
     if(period === 'WEEK'){
@@ -899,6 +1032,187 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     });
     ['EUR','USD','RUB'].forEach(k=> bal[k] = won[k] - spent[k]);
     return Object.assign(bal, {_won: won, _spent: spent});
+  }
+
+  // Total bankroll: only play results move it. Moving money onto a room or off
+  // it is an internal transfer — the total is unchanged, only the room shifts.
+  function bankrollState(){
+    const cur = baseCurrency;
+    if(!bankroll) return null;
+    const from = bankroll.date;
+    const start = convert(bankroll.amount, bankroll.currency, cur);
+
+    let profit = 0;
+    tournaments.forEach(t=>{
+      if(t.result === null) return;
+      if(from && t.date < from) return;
+      profit += convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur);
+    });
+
+    // Only money that entered or left the whole bankroll counts here.
+    // Entries tied to a pokerroom are internal transfers.
+    let dep = 0, wd = 0;
+    cashflow.forEach(f=>{
+      if(from && f.date < from) return;
+      if((f.room || '').trim()) return;          // room entry -> transfer
+      const v = convert(f.amount, f.currency, cur);
+      if(f.type === 'WD') wd += v; else dep += v;
+    });
+
+    return {cur, start, profit, dep, wd, current: start + profit + dep - wd};
+  }
+
+  // One line per pokerroom: its own starting sum, its own results, its own
+  // deposits and withdrawals.
+  function roomBankrollStates(){
+    const from = bankroll ? bankroll.date : null;
+    const acc = {};
+    const touch = (name)=>{
+      if(!acc[name]){
+        const rc = roomCurrency(name) || baseCurrency;
+        const st = roomBank[name];
+        acc[name] = {
+          name,
+          cur: rc,
+          start: st ? convert(st.amount, st.currency, rc) : 0,
+          hasStart: !!st,
+          profit: 0, dep: 0, wd: 0, n: 0
+        };
+      }
+      return acc[name];
+    };
+
+    Object.keys(roomBank).forEach(touch);
+    tournaments.forEach(t=>{
+      const name = (t.note || '').trim();
+      if(!name) return;
+      if(from && t.date < from) return;
+      const r = touch(name);
+      if(isCountable(t)) r.n++;
+      if(t.result !== null){
+        r.profit += convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, r.cur);
+      }
+    });
+    cashflow.forEach(f=>{
+      const name = (f.room || '').trim();
+      if(!name) return;
+      if(from && f.date < from) return;
+      const r = touch(name);
+      const v = convert(f.amount, f.currency, r.cur);
+      if(f.type === 'WD') r.wd += v; else r.dep += v;
+    });
+
+    return Object.values(acc)
+      .map(r=> Object.assign(r, {current: r.start + r.profit + r.dep - r.wd}))
+      .sort((a,b)=> b.n - a.n || a.name.localeCompare(b.name,'ru'));
+  }
+
+  // The same figures, but limited to the selected period.
+  function periodMoney(){
+    const cur = baseCurrency;
+    const {from, to} = getPeriodRange();
+    const inRange = (d)=> (!from || d >= from) && (!to || d <= to);
+
+    let profit = 0, buyins = 0, tickets = 0, n = 0;
+    tournaments.forEach(t=>{
+      if(!inRange(t.date)) return;
+      if(isCountable(t)) n++;
+      if(!paidByTicket(t)) buyins += convert(cost(t), t.currency, cur);
+      if(t.result !== null){
+        profit += convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur);
+        tickets += convert(t.ticket || 0, t.currency, cur);
+      }
+    });
+
+    // general deposits and withdrawals only; room entries are transfers
+    let dep = 0, wd = 0, roomDep = 0, roomWd = 0;
+    cashflow.forEach(f=>{
+      if(!inRange(f.date)) return;
+      const v = convert(f.amount, f.currency, cur);
+      const isRoom = !!(f.room || '').trim();
+      if(f.type === 'WD'){ isRoom ? roomWd += v : wd += v; }
+      else              { isRoom ? roomDep += v : dep += v; }
+    });
+
+    const roi = buyins > 0 ? (profit / buyins) * 100 : 0;
+    const abi = n > 0 ? (buyins / n) : 0;
+    return {cur, profit, buyins, tickets, dep, wd, roomDep, roomWd, n, roi, abi,
+            change: profit + dep - wd};
+  }
+
+  const PERIOD_LABEL = {ALL:'всё время', DAY:'сегодня', WEEK:'за неделю',
+                        MONTH:'за месяц', YEAR:'за год', CUSTOM:'за период'};
+
+  function renderBankroll(){
+    const box = $('bankGrid');
+    if(!box) return;
+    const b = bankrollState();
+    const m = periodMoney();
+    const cur = baseCurrency, sym = SYM[cur];
+    const sign = (v)=> (v > 0 ? 'pos' : (v < 0 ? 'neg' : 'neutral'));
+    const lbl = PERIOD_LABEL[period] || 'за период';
+
+    const cards = [];
+    if(b){
+      cards.push(`<div class="bank-card"><div class="bk-lbl">Стартовый банкролл</div>
+        <div class="bk-val neutral">${fmt(b.start)} ${sym}</div>
+        <div class="bk-sub">с ${b.date}</div></div>`);
+      cards.push(`<div class="bank-card hero"><div class="bk-lbl">Общий банкролл</div>
+        <div class="bk-val ${sign(b.current - b.start)}">${fmt(b.current)} ${sym}</div>
+        <div class="bk-sub">старт ${fmt(b.start)} · профит ${b.profit>0?'+':''}${fmt(b.profit)}${(b.dep||b.wd)?` · ввод ${fmt(b.dep)} · вывод ${fmt(b.wd)}`:''}</div></div>`);
+    } else {
+      cards.push(`<div class="bank-card wide"><div class="bk-lbl">Банкролл не задан</div>
+        <div class="bk-val neutral">— —</div>
+        <div class="bk-sub">нажмите «Стартовый банкролл» и укажите сумму и дату</div></div>`);
+    }
+    cards.push(`<div class="bank-card"><div class="bk-lbl">Изменение БР ${lbl}</div>
+      <div class="bk-val ${sign(m.change)}">${m.change>0?'+':''}${fmt(m.change)} ${sym}</div>
+      <div class="bk-sub">профит ${fmt(m.profit)} · ввод ${fmt(m.dep)} · вывод ${fmt(m.wd)}</div></div>`);
+    cards.push(`<div class="bank-card"><div class="bk-lbl">Турниров ${lbl}</div>
+      <div class="bk-val">${m.n}</div>
+      <div class="bk-sub">средний байин ${fmt(m.abi)} ${sym}</div></div>`);
+    cards.push(`<div class="bank-card"><div class="bk-lbl">Загрузка ${lbl}</div>
+      <div class="bk-val neutral">${fmt(m.buyins)} ${sym}</div>
+      <div class="bk-sub">сумма байинов</div></div>`);
+    cards.push(`<div class="bank-card"><div class="bk-lbl">ROI ${lbl}</div>
+      <div class="bk-val ${sign(m.roi)}">${m.roi.toFixed(2)}%</div>
+      <div class="bk-sub">профит ${fmt(m.profit)} ${sym}</div></div>`);
+    cards.push(`<div class="bank-card"><div class="bk-lbl">Депозит общий ${lbl}</div>
+      <div class="bk-val neutral">${fmt(m.dep)} ${sym}</div>
+      <div class="bk-sub">на румы переведено ${fmt(m.roomDep)}</div></div>`);
+    cards.push(`<div class="bank-card"><div class="bk-lbl">Вывод общий ${lbl}</div>
+      <div class="bk-val ${m.wd>0?'pos':'neutral'}">${fmt(m.wd)} ${sym}</div>
+      <div class="bk-sub">с румов снято ${fmt(m.roomWd)}</div></div>`);
+    box.innerHTML = cards.join('');
+
+    renderRoomBanks();
+
+    const note = $('bankNote');
+    if(note){
+      note.textContent = 'Игровые сутки идут с 12:00 до 12:00 следующего дня — «сегодня» это ' +
+        pokerToday() + '. Общий банкролл меняют профит и общие ввод/вывод; переводы на румы — только балансы румов.';
+    }
+  }
+
+  function renderRoomBanks(){
+    const box = $('roomBankGrid');
+    if(!box) return;
+    const rooms = roomBankrollStates().filter(r => r.hasStart || r.n || r.dep || r.wd);
+    if(!rooms.length){
+      box.innerHTML = '<div class="bd-note" style="margin:0;">Балансы румов появятся, когда вы зададите ' +
+                      'стартовые суммы или проведёте операции по румам.</div>';
+      return;
+    }
+    const sign = (v)=> (v > 0 ? 'pos' : (v < 0 ? 'neg' : 'neutral'));
+    box.innerHTML = rooms.map(r=>{
+      const cls = (r.cur || '').toLowerCase();
+      return `<div class="room-bank ${cls}">
+        <div class="rb-name">${escapeHtml(r.name)}<span class="rb-cur">${r.cur}</span></div>
+        <div class="rb-val ${sign(r.current)}">${fmt(r.current)} ${SYM[r.cur]}</div>
+        <div class="rb-sub">старт ${fmt(r.start)} · профит ${r.profit>0?'+':''}${fmt(r.profit)}</div>
+        <div class="rb-sub">ввод ${fmt(r.dep)} · вывод ${fmt(r.wd)} · турниров ${r.n}</div>
+      </div>`;
+    }).join('');
   }
 
   function renderLedger(){
@@ -1400,6 +1714,17 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
         `<button type="button" class="room-btn${tableRoomFilter==='__NONE__'?' active':''}" data-troom="__NONE__">без рума</button>`;
     }
 
+    const cf = $('cfRoom');
+    if(cf){
+      const prev = cf.value;
+      cf.innerHTML = '<option value="">Общий банкролл (ввод / вывод денег)</option>' +
+        list.map(r=>{
+          const suffix = r.currency ? ` (${r.currency})` : '';
+          return `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)} — перевод${suffix}</option>`;
+        }).join('');
+      if(prev && names.includes(prev)) cf.value = prev;
+    }
+
     const s = $('chartRoomSelect');
     s.innerHTML = '<option value="ALL">Все румы</option>' + opts + '<option value="__NONE__">— без покеррума —</option>';
     s.value = chartRoom;
@@ -1513,6 +1838,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
   function renderAll(){
     const dc = $('dbCount'); if(dc) dc.textContent = tournaments.length;
     fillRoomSelects();
+    renderBankroll();
     renderLedger();
     renderTable();
     renderStats();
@@ -1536,7 +1862,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
   $('fResultField').style.opacity = .35;
   $('fResult').disabled = true;
 
-  $('fDate').valueAsDate = new Date();
+  $('fDate').value = pokerToday();
 
   $('addBtn').addEventListener('click', async ()=>{
     const date = $('fDate').value;
@@ -1795,6 +2121,116 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
     renderTable();
   });
 
+  // --- bankroll ---
+  async function saveBankroll(){
+    try{ await store.set('bankroll', JSON.stringify(bankroll)); }catch(e){}
+  }
+  async function saveRoomBank(){
+    try{ await store.set('roomBank', JSON.stringify(roomBank)); }catch(e){}
+  }
+  async function saveCashflow(){
+    try{ await store.set('cashflow', JSON.stringify(cashflow)); }catch(e){}
+  }
+
+  function renderBankRoomInputs(){
+    const box = $('bkRoomList');
+    if(!box) return;
+    const list = knownRooms();
+    box.innerHTML = list.length
+      ? list.map(r=>{
+          const st = roomBank[r.name];
+          const cur = st ? st.currency : (r.currency || baseCurrency);
+          return `<div class="cash-row">
+            <span style="flex:1;">${escapeHtml(r.name)}</span>
+            <input type="number" step="0.01" style="width:110px;" data-bkroom="${escapeHtml(r.name)}"
+                   value="${st ? st.amount : ''}" placeholder="0.00">
+            <span class="cf-date">${cur}</span>
+          </div>`;
+        }).join('')
+      : '<div class="bd-note" style="margin:0;">Румов пока нет.</div>';
+  }
+
+  $('editBankroll').addEventListener('click', ()=>{
+    renderBankRoomInputs();
+    $('bkDate').value = bankroll ? bankroll.date : pokerToday();
+    $('bkAmount').value = bankroll ? bankroll.amount : '';
+    $('bkCurrency').value = bankroll ? bankroll.currency : baseCurrency;
+    $('bankModal').classList.add('open');
+  });
+  $('bkCancel').addEventListener('click', ()=> $('bankModal').classList.remove('open'));
+  $('bankModal').addEventListener('click', (e)=>{ if(e.target.id==='bankModal') $('bankModal').classList.remove('open'); });
+  $('bkSave').addEventListener('click', async ()=>{
+    const date = $('bkDate').value;
+    const amount = parseFloat($('bkAmount').value);
+    if(!date || isNaN(amount)){ alert('Укажите дату и сумму стартового банкролла'); return; }
+    bankroll = {date, amount, currency: $('bkCurrency').value};
+    // per-room starting sums
+    const next = {};
+    document.querySelectorAll('[data-bkroom]').forEach(inp=>{
+      const v = parseFloat(inp.value);
+      if(isNaN(v)) return;
+      const name = inp.getAttribute('data-bkroom');
+      const prev = roomBank[name];
+      next[name] = {amount: v, currency: prev ? prev.currency : (roomCurrency(name) || baseCurrency)};
+    });
+    roomBank = next;
+    await saveBankroll();
+    await saveRoomBank();
+    $('bankModal').classList.remove('open');
+    renderBankroll();
+  });
+
+  // --- deposits and withdrawals ---
+  function renderCashList(){
+    const box = $('cashList');
+    if(!box) return;
+    const list = cashflow.slice().sort((a,b)=> b.date.localeCompare(a.date));
+    box.innerHTML = list.length
+      ? list.map(f=>`
+          <div class="cash-row">
+            <span class="cf-date">${f.date}</span>
+            <span>${f.type === 'WD' ? 'Вывод' : 'Депозит'}</span>
+            <span style="color:${(f.room||'').trim() ? 'var(--text-dim)' : 'var(--gold)'};">${
+              (f.room||'').trim() ? escapeHtml(f.room) : 'общий'}</span>
+            <span class="cf-sum ${f.type === 'WD' ? 'pos' : 'neutral'}">${fmt(f.amount)} ${SYM[f.currency]}</span>
+            <button class="btn ghost tiny" data-cf="${f.id}">×</button>
+          </div>`).join('')
+      : '<div class="bd-note" style="margin:0;">Операций пока нет.</div>';
+    box.querySelectorAll('[data-cf]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        cashflow = cashflow.filter(x=>x.id !== btn.getAttribute('data-cf'));
+        await saveCashflow();
+        renderCashList(); renderBankroll();
+      });
+    });
+  }
+
+  $('cfRoom').addEventListener('change', ()=>{
+    const v = $('cfRoom').value;
+    const rc = v ? roomCurrency(v) : baseCurrency;
+    if(rc) $('cfCurrency').value = rc;
+  });
+
+  $('openCashflow').addEventListener('click', ()=>{
+    $('cfDate').value = pokerToday();
+    const rc = roomCurrency($('cfRoom').value);
+    $('cfCurrency').value = rc || baseCurrency;
+    renderCashList();
+    $('cashModal').classList.add('open');
+  });
+  $('cfClose').addEventListener('click', ()=> $('cashModal').classList.remove('open'));
+  $('cashModal').addEventListener('click', (e)=>{ if(e.target.id==='cashModal') $('cashModal').classList.remove('open'); });
+  $('cfAdd').addEventListener('click', async ()=>{
+    const date = $('cfDate').value;
+    const amount = parseFloat($('cfAmount').value);
+    if(!date || isNaN(amount) || amount <= 0){ alert('Укажите дату и сумму больше нуля'); return; }
+    cashflow.push({id: uid(), date, type: $('cfType').value, amount,
+                   currency: $('cfCurrency').value, room: $('cfRoom').value || ''});
+    await saveCashflow();
+    $('cfAmount').value = '';
+    renderCashList(); renderBankroll();
+  });
+
   // --- table: room filter ---
   $('tableRoomBtns').addEventListener('click', (ev)=>{
     const btn = ev.target.closest('.room-btn');
@@ -1831,7 +2267,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
       document.querySelectorAll('#periodTabs .tab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');
       $('customPeriodRow').style.display = period === 'CUSTOM' ? 'flex' : 'none';
-      if(period !== 'CUSTOM') renderAll();
+      if(period !== 'CUSTOM') renderAll(); else renderBankroll();
     });
   });
   $('applyCustomPeriod').addEventListener('click', ()=>{
@@ -1861,7 +2297,7 @@ const SEED_DATA = [["2026-01-01","EUR",10,0,0,0,"","Winamax"],["2026-01-01","EUR
   });
   $('baseCurrencySelect').addEventListener('change', ()=>{
     baseCurrency = $('baseCurrencySelect').value;
-    renderLedger(); renderStats(); renderChart();
+    renderBankroll(); renderLedger(); renderStats(); renderChart();
   });
 
   // --- edit modal ---
