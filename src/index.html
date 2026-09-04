@@ -125,14 +125,14 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
 .rb-val{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:clamp(14px,1.3vw,17px);font-weight:600;overflow-wrap:anywhere;}
 .rb-sub{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;color:var(--text-faint);margin-top:4px;overflow-wrap:anywhere;}
 .cash-list{max-height:230px;overflow-y:auto;margin:10px 0;}
-.cash-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);
+.cash-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--border);
   font-size:12px;}
 .cash-row:last-child{border-bottom:none;}
 .cash-row .cf-date{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:var(--text-faint);}
 .cash-row .cf-sum{margin-left:auto;font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600;}
 .modal.wide{max-width:520px;}
 
-.rate-row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;}
+.rate-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;}
 .field{display:flex;flex-direction:column;gap:5px;}
 .field label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;}
 input[type=number], input[type=text], input[type=date], select{
@@ -162,7 +162,7 @@ select{text-overflow:ellipsis;}
 .modal .form-grid{grid-template-columns:1fr 1fr;}
 .modal .form-grid .wide{grid-column:span 2;}
 .modal{max-height:88vh;overflow-y:auto;}
-.result-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim);margin:6px 0 12px;}
+.result-toggle{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--text-dim);margin:6px 0 12px;}
 .result-toggle input{accent-color:var(--felt-bright);}
 .tag-toggle-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
 .tag-toggle{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--text-dim);
@@ -234,6 +234,7 @@ select{text-overflow:ellipsis;}
   padding:11px 13px;margin-top:12px;}
 .top-head{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin-bottom:9px;}
 .top-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+.top-row .top-room{min-width:60px;}
 .top-row:last-child{border-bottom:none;}
 .top-rank{width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;
   justify-content:center;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;font-weight:700;
@@ -248,6 +249,7 @@ select{text-overflow:ellipsis;}
   margin-bottom:9px;}
 .ticket-head span{text-transform:none;letter-spacing:0;opacity:.75;}
 .ticket-row{display:flex;gap:9px;flex-wrap:wrap;}
+.ticket-cell{min-width:0;}
 .ticket-cell{flex:1;min-width:88px;background:var(--surface);border:1px solid var(--border);
   border-radius:7px;padding:7px 10px;}
 .ticket-cell.eur{border-left:3px solid var(--eur);}
@@ -299,19 +301,19 @@ tr:last-child td{border-bottom:none;}
 .stat{background:var(--surface-2);border-radius:8px;padding:10px 12px;}
 .stat .lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
 .stat .val{font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-size:16px;font-weight:600;}
-.bd-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px;}
-.bd-table th{text-align:right;color:var(--text-faint);font-weight:500;text-transform:uppercase;font-size:9px;
+.bd-table{width:100%;min-width:520px;border-collapse:collapse;font-size:12px;margin-top:12px;}
+.bd-table th{text-align:right;color:var(--text-faint);font-weight:500;text-transform:uppercase;font-size:9px;white-space:nowrap;
   letter-spacing:.06em;padding:6px;border-bottom:1px solid var(--border);}
 .bd-table th:first-child{text-align:left;}
-.bd-table td{padding:7px 6px;border-bottom:1px solid var(--border);text-align:right;
+.bd-table td{padding:7px 6px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;
   font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-variant-numeric:tabular-nums;}
 .bd-table td:first-child{text-align:left;font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
 .bd-table tr:last-child td{border-bottom:none;}
 .bd-note{color:var(--text-faint);font-size:11px;margin-top:10px;line-height:1.5;}
-.range-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
+.range-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;}
 .range-row input{width:100px;}
 
-.tabs{display:flex;gap:6px;margin-bottom:12px;}
+.tabs{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
 .tab{
   padding:8px 15px;border-radius:22px;font-size:12.5px;cursor:pointer;white-space:nowrap;
   color:var(--text-dim);
@@ -338,7 +340,7 @@ tr:last-child td{border-bottom:none;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;width:100%;max-width:420px;}
 .modal h3{font-family:'Fraunces',Georgia,'Times New Roman',serif;margin:0 0 16px;font-size:17px;}
 .modal .field{margin-bottom:12px;}
-.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px;}
 </style>
 
 <div class="app">
@@ -348,7 +350,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">чистая · 03.09.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">чистая · 04.09.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -517,7 +519,7 @@ tr:last-child td{border-bottom:none;}
         <div class="stat-grid" id="statGrid"></div>
         <div class="bd-note" id="countNote" style="margin-top:10px;"></div>
         <div id="ticketPanel"></div>
-        <div id="statBreakdown"></div>
+        <div id="statBreakdown" style="overflow-x:auto;"></div>
       </div>
 
       <div class="panel">
@@ -1789,7 +1791,7 @@ const SEED_DATA = [];
     box('etag', 'eTagBox', '');
 
     // freeroll needs its own handler again after a redraw
-    ['FREE','RAKE'].forEach(id=>{
+    ['FREE','RAKE','TRAIN'].forEach(id=>{
       const el = $('ftag_' + id);
       if(el) el.addEventListener('change', applyFreeroll);
     });
@@ -2078,9 +2080,16 @@ const SEED_DATA = [];
     const ticketRaw = parseFloat($('fTicket').value);
     const ticket = isNaN(ticketRaw) || ticketRaw < 0 ? 0 : ticketRaw;
     const tags = readTags('ftag');
+    // a training entry is a plain USD cost: no rebuy, no ticket, result fixed at 0
+    const isTrain = tags.includes('TRAIN');
     tournaments.push({
-      id: uid(), date, currency: formCurrency, buyin, rebuy,
-      result, ticket, note: formRoom.trim(), tags, imported: false
+      id: uid(), date,
+      currency: isTrain ? 'USD' : formCurrency,
+      buyin,
+      rebuy: isTrain ? 0 : rebuy,
+      result: isTrain ? 0 : result,
+      ticket: isTrain ? 0 : ticket,
+      note: formRoom.trim(), tags, imported: false
     });
     await saveTournaments();
     $('fBuyin').value=''; $('fRebuy').value=''; $('fResult').value=''; $('fTicket').value='';
@@ -2235,21 +2244,60 @@ const SEED_DATA = [];
     });
   }
 
+  function tagOn(prefix, id){
+    const el = $(prefix + '_' + id);
+    return !!(el && el.checked);
+  }
+
+  // A training session only has a cost: the buy-in is what you paid, the result
+  // is always zero, and it is billed in USD.
   function applyFreeroll(){
-    const on = noBuyinTag('ftag');
-    $('fBuyin').disabled = on;
-    $('fRebuy').disabled = on;
-    if(on){ $('fBuyin').value = '0'; $('fRebuy').value = ''; }
-    $('fBuyin').style.opacity = on ? .4 : 1;
-    $('fRebuy').style.opacity = on ? .4 : 1;
+    const noBuyin = noBuyinTag('ftag');
+    const train = tagOn('ftag', 'TRAIN');
+
+    $('fBuyin').disabled = noBuyin;
+    $('fRebuy').disabled = noBuyin || train;
+    if(noBuyin){ $('fBuyin').value = '0'; $('fRebuy').value = ''; }
+    if(train){ $('fRebuy').value = ''; }
+    $('fBuyin').style.opacity = noBuyin ? .4 : 1;
+    $('fRebuy').style.opacity = (noBuyin || train) ? .4 : 1;
+
+    // result is fixed at 0 for a training entry
+    const res = $('fResult'), unk = $('fUnknown');
+    if(train){
+      unk.checked = false;
+      unk.disabled = true;
+      res.value = '0';
+      res.disabled = true;
+      $('fResultField').style.opacity = .4;
+      $('fTicket').value = '';
+      $('fTicket').disabled = true;
+      $('fTicketField').style.opacity = .4;
+      formCurrency = 'USD';
+      document.querySelectorAll('#fCurrencyChips .chip-btn').forEach(b=>{
+        b.classList.toggle('active', b.getAttribute('data-cur') === 'USD');
+      });
+    } else {
+      unk.disabled = false;
+      res.disabled = unk.checked;
+      $('fResultField').style.opacity = unk.checked ? .35 : 1;
+      $('fTicket').disabled = false;
+      $('fTicketField').style.opacity = 1;
+    }
+  }
+
+  function applyEditLocks(){
+    const noBuyin = noBuyinTag('etag');
+    const train = tagOn('etag', 'TRAIN');
+    $('eBuyin').disabled = noBuyin;
+    $('eRebuy').disabled = noBuyin || train;
+    if(noBuyin){ $('eBuyin').value = '0'; $('eRebuy').value = ''; }
+    if(train){ $('eRebuy').value = ''; $('eResult').value = '0'; $('eTicket').value = ''; }
+    $('eResult').disabled = train;
+    $('eTicket').disabled = train;
   }
   document.addEventListener('change', (ev)=>{
-    if(ev.target && (ev.target.id === 'etag_FREE' || ev.target.id === 'etag_RAKE')){
-      const on = noBuyinTag('etag');
-      $('eBuyin').disabled = on;
-      $('eRebuy').disabled = on;
-      if(on){ $('eBuyin').value = '0'; $('eRebuy').value = ''; }
-    }
+    if(ev.target && /^etag_(FREE|RAKE|TRAIN)$/.test(ev.target.id || '')) applyEditLocks();
   });
 
   // --- pokerroom selects ---
@@ -2508,8 +2556,7 @@ const SEED_DATA = [];
     $('eTicket').value = t.ticket ? t.ticket : '';
     $('eResult').value = t.result !== null ? t.result : '';
     setTags('etag', t.tags);
-    $('eBuyin').disabled = noBuyinTag('etag');
-    $('eRebuy').disabled = $('eBuyin').disabled;
+    applyEditLocks();
     $('editModal').classList.add('open');
   }
   $('cancelEdit').addEventListener('click', ()=> $('editModal').classList.remove('open'));
@@ -2526,12 +2573,14 @@ const SEED_DATA = [];
     const newRoom = $('eNote').value === '__ADD__' ? (t.note || '') : $('eNote').value;
     const newRoomCur = roomCurrency(newRoom);
     if(newRoomCur) t.currency = newRoomCur;
+    if(tags.includes('TRAIN')){ t.currency = 'USD'; }
     const eRebuyRaw = parseFloat($('eRebuy').value);
     t.date = date; t.note = newRoom.trim(); t.buyin = buyin;
     t.rebuy = isNaN(eRebuyRaw) || eRebuyRaw < 0 ? 0 : eRebuyRaw;
     const eTicketRaw = parseFloat($('eTicket').value);
     t.ticket = isNaN(eTicketRaw) || eTicketRaw < 0 ? 0 : eTicketRaw;
     t.result = rv === '' ? null : parseFloat(rv);
+    if(tags.includes('TRAIN')){ t.rebuy = 0; t.ticket = 0; t.result = 0; }
     t.tags = tags;
     await saveTournaments();
     $('editModal').classList.remove('open');
