@@ -295,6 +295,7 @@ tr:last-child td{border-bottom:none;}
 .pending{color:var(--text-faint);font-style:italic;}
 .row-actions{display:flex;gap:6px;}
 .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
+#tableMore .btn{font-size:12px;padding:9px 16px;}
 
 /* stats */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
@@ -350,7 +351,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">чистая · 04.09.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">чистая · 05.09.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -495,6 +496,7 @@ tr:last-child td{border-bottom:none;}
           </table>
         </div>
         <div class="empty" id="emptyMsg" style="display:none;">Пока нет турниров — добавьте первый выше.</div>
+        <div id="tableMore"></div>
       </div>
     </div>
 
@@ -673,6 +675,10 @@ const SEED_DATA = [];
   let tagFilter = 'ALL';
   let tableDateFilter = null;
   let tableRoomFilter = 'ALL';
+  // The list is collapsed so the panel keeps the same height as the charts
+  // column next to it; the rest sits behind one click.
+  const COLLAPSED_ROWS = 14;
+  let tableExpanded = false;
   let statusFilter = 'ALL';
   let statView = 'TOTAL';
   let statSide = 'ALL';
@@ -1358,7 +1364,20 @@ const SEED_DATA = [];
       ? `(${totalMatched} за ${tableDateFilter})`
       : (totalMatched > 50 ? `(последние 50 из ${totalMatched})` : `(${totalMatched})`);
     $('emptyMsg').style.display = shown.length ? 'none' : 'block';
-    $('tourBody').innerHTML = shown.map(t=>{
+
+    const hidden = Math.max(0, shown.length - COLLAPSED_ROWS);
+    const visible = (!tableExpanded && hidden) ? shown.slice(0, COLLAPSED_ROWS) : shown;
+    const more = $('tableMore');
+    if(more){
+      more.innerHTML = hidden
+        ? `<button class="btn ghost" id="toggleRows" style="width:100%;margin-top:10px;">${
+            tableExpanded ? 'Свернуть список' : 'Показать ещё ' + hidden}</button>`
+        : '';
+      const btn = $('toggleRows');
+      if(btn) btn.addEventListener('click', ()=>{ tableExpanded = !tableExpanded; renderTable(); });
+    }
+
+    $('tourBody').innerHTML = visible.map(t=>{
       const profit = t.result !== null ? (t.result - (paidByTicket(t) ? 0 : cost(t))) : null;
       const profitHtml = profit === null
         ? '<span class="pending">ожидается</span>'
