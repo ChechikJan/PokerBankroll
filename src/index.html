@@ -1560,9 +1560,11 @@ const SEED_DATA = [];
     </tr></thead><tbody>`;
     rows.forEach(r=>{
       const st = r.st;
-      // cash paid out stays cash; ticket value is reported in its own column
+      // cash paid out stays cash; the tickets column shows what is still
+      // unspent, so a ticket that was played disappears from it. The rakeback
+      // and satellite views keep the full amount received instead.
       const won = st.cashProfit + st.totalBuyinDone;
-      const tw = st.ticketsWon;
+      const tw = foldSat ? st.ticketsWon : st.ticketBalance;
       const pcls = st.profit>0?'pos':(st.profit<0?'neg':'neutral');
       const rcls = st.roi>0?'pos':(st.roi<0?'neg':'neutral');
       const style = r.total ? ' style="border-top:2px solid var(--felt-bright);font-weight:600;"'
@@ -1589,8 +1591,8 @@ const SEED_DATA = [];
     }
     // the tickets column means different things depending on the view
     html += foldSat
-      ? '<div class="bd-note" style="margin-top:6px;">Колонка «Билеты» уже входит в профит этого среза: профит = выплаты + билеты − байины.</div>'
-      : '<div class="bd-note" style="margin-top:6px;">Колонка «Билеты» показана справочно и в профит не входит — билеты учитываются отдельно, в балансе билетов.</div>';
+      ? '<div class="bd-note" style="margin-top:6px;">Колонка «Билеты» — всё полученное за период, она уже входит в профит этого среза: профит = выплаты + билеты − байины.</div>'
+      : '<div class="bd-note" style="margin-top:6px;">Колонка «Билеты» — непогашенный остаток: отыгранный билет из неё уходит. В профит не входит. Вход по билету засчитывается в ABI по номиналу байина.</div>';
     $('statBreakdown').innerHTML = html;
   }
 
