@@ -351,7 +351,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">чистая · 05.09.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">чистая · 06.09.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -1416,7 +1416,9 @@ const SEED_DATA = [];
     const conv = (amt, cur) => convert(amt, cur, baseCurrency);
 
     // --- summary tiles: always in baseCurrency across ALL currencies ---
-    const foldSat = (statSide === 'SAT');   // in the satellites view a ticket is the prize
+    // Satellites pay out in tickets, and rakeback often arrives as a ticket too.
+    // In those two views a won ticket is the payout, so it belongs in the profit.
+    const foldSat = (statSide === 'SAT' || statSide === 'RAKE');
     const s = computeStats(periodList, conv, foldSat);
     const cls = s.profit>0?'pos':(s.profit<0?'neg':'neutral');
     const roiCls = s.roi>0?'pos':(s.roi<0?'neg':'neutral');
@@ -1453,9 +1455,11 @@ const SEED_DATA = [];
           ? 'Чистые турниры: без сателлитов и без доп. ставок.'
           : (statSide === 'SAT'
               ? 'Только сателлиты. Выигранный билет считается выплатой — иначе удачный сателлит выглядел бы убыточным.'
-              : 'Деньги идут в общий банкролл, общий профит и общий ROI, но в счёт турниров, ABI и ROI турниров не входят.');
-        compNote.textContent = statSide === 'SAT'
-          ? base + ` Билетов выиграно на ${fmt(s.ticketsWon)} ${SYM[baseCurrency]}, они уже включены в профит и ROI. ` +
+              : (statSide === 'RAKE'
+                  ? 'Только рейкбек. Билеты считаются наравне с деньгами — рейкбек часто приходит именно билетом.'
+                  : 'Деньги идут в общий банкролл, общий профит и общий ROI, но в счёт турниров, ABI и ROI турниров не входят.'));
+        compNote.textContent = foldSat
+          ? base + ` Билетов получено на ${fmt(s.ticketsWon)} ${SYM[baseCurrency]}, они уже включены в профит. ` +
             'В срезе «Всё вместе» билеты не складываются с деньгами, чтобы не посчитать их дважды.'
           : base + ' Билеты не привязаны к срезу — их выигрывают в одних турнирах, а тратят в других, ' +
             'поэтому профит с билетами считается только по всей базе.';
