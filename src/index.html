@@ -656,6 +656,7 @@ tr:last-child td{border-bottom:none;}
     </div>
     <div class="bd-note" id="cfExplain" style="margin:2px 0 10px;"></div>
     <button class="btn" id="cfAdd">Добавить операцию</button>
+    <div class="rb-head" id="cashListHead" style="margin:14px 0 4px;"></div>
     <div class="cash-list" id="cashList"></div>
     <div class="modal-actions">
       <button class="btn ghost" id="cfClose">Закрыть</button>
@@ -1380,6 +1381,22 @@ const SEED_DATA = [];
     }).join('');
   }
 
+  // The same as ticketBalances(), but only inside the selected period — this is
+  // what actually feeds "профит с билетами".
+  function periodTicketBalances(){
+    const {from, to} = getPeriodRange();
+    const inRange = (d)=> (!from || d >= from) && (!to || d <= to);
+    const won = {EUR:0, USD:0, RUB:0}, spent = {EUR:0, USD:0, RUB:0};
+    tournaments.forEach(t=>{
+      if(!inRange(t.date)) return;
+      if(t.result !== null) won[t.currency] += (t.ticket || 0);
+      if(paidByTicket(t))   spent[t.currency] += cost(t);
+    });
+    const bal = {};
+    ['EUR','USD','RUB'].forEach(k=> bal[k] = won[k] - spent[k]);
+    return {bal, won, spent};
+  }
+
   function renderLedger(){
     const el = $('ledger');
     const periodList = filterByTag(filterByPeriod(tournaments));
@@ -1500,6 +1517,7 @@ const SEED_DATA = [];
     // Satellites pay out in tickets, and rakeback often arrives as a ticket too.
     // In those two views a won ticket is the payout, so it belongs in the profit.
     const foldSat = (statSide === 'SAT' || statSide === 'RAKE');
+    const lblPeriod = PERIOD_LABEL[period] || 'за период';
     const s = computeStats(periodList, conv, foldSat);
     const cls = s.profit>0?'pos':(s.profit<0?'neg':'neutral');
     const roiCls = s.roi>0?'pos':(s.roi<0?'neg':'neutral');
@@ -1513,7 +1531,7 @@ const SEED_DATA = [];
            <div class="stat"><div class="lbl">Из них билетами</div><div class="val ${s.ticketsWon>0?'pos':'neutral'}">${fmt(s.ticketsWon)} ${SYM[baseCurrency]}</div></div>`
         : `<div class="stat"><div class="lbl">Сумма байинов</div><div class="val neutral">${fmt(s.totalBuyin)} ${SYM[baseCurrency]}</div></div>`}
       <div class="stat"><div class="lbl">В игре / завершено</div><div class="val neutral">${statSide === 'SIDE' ? s.allPending : s.pendingCount} / ${statSide === 'SIDE' ? s.allDone : s.doneCount}</div></div>
-      ${statSide === 'ALL' ? `<div class="stat"><div class="lbl">Профит с билетами</div><div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div></div>` : ''}
+      ${statSide === 'ALL' ? `<div class="stat"><div class="lbl">Профит с билетами</div><div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div><div class="stat-sub">${fmt(s.profit)} + ${fmt(Math.max(0, s.ticketBalance))} билетами ${period === 'ALL' ? '' : lblPeriod}</div></div>` : ''}
     `;
 
     // --- how the headline count is put together ---
@@ -1552,19 +1570,27 @@ const SEED_DATA = [];
 
     // --- ticket balances: per currency, always over the whole history ---
     const tb = ticketBalances();
+    const pt = periodTicketBalances();
     const tRows = ['EUR','USD','RUB'].filter(cur=>tb[cur] !== 0);
     $('ticketPanel').innerHTML = `
       <div class="ticket-box">
-        <div class="ticket-head">Баланс билетов <span>за всё время</span></div>
+        <div class="ticket-head">Баланс билетов <span>за всё время — в «профит с билетами» идёт только остаток выбранного периода</span></div>
         ${tRows.length
           ? `<div class="ticket-row">` + ['EUR','USD','RUB'].map(cur=>{
               const v = tb[cur];
               const cl = v>0?'pos':(v<0?'neg':'neutral');
               const w = tb._won[cur], sp = tb._spent[cur];
+              const pv = pt.bal[cur], pw = pt.won[cur], ps = pt.spent[cur];
+              const pcl = pv>0?'pos':(pv<0?'neg':'neutral');
               return `<div class="ticket-cell ${cur.toLowerCase()}">
                         <div class="tc-cur">${cur}</div>
                         <div class="tc-val ${cl}">${fmt(v)} ${SYM[cur]}</div>
                         ${(w || sp) ? `<div class="tc-flow">выиграно ${fmt(w)} · потрачено ${fmt(sp)}</div>` : ''}
+                        ${(period !== 'ALL' && (pw || ps))
+                          ? `<div class="tc-flow" style="border-top:1px solid var(--border);margin-top:5px;padding-top:5px;">
+                               ${lblPeriod}: <b class="${pcl}">${pv>0?'+':''}${fmt(pv)}</b><br>
+                               выиграно ${fmt(pw)} · потрачено ${fmt(ps)}</div>`
+                          : ''}
                       </div>`;
             }).join('') + `</div>`
           : `<div class="bd-note" style="margin:0;">Билетов пока нет.</div>`}
@@ -2665,18 +2691,27 @@ const SEED_DATA = [];
   function renderCashList(){
     const box = $('cashList');
     if(!box) return;
-    const list = cashflow.slice().sort((a,b)=> b.date.localeCompare(a.date));
+    // only what belongs to the destination this window was opened for
+    const list = cashflow
+      .filter(f => (f.room || '').trim() === cfRoomValue)
+      .slice()
+      .sort((a,b)=> b.date.localeCompare(a.date));
+    const head = $('cashListHead');
+    if(head){
+      head.textContent = cfRoomValue
+        ? 'Операции по руму ' + cfRoomValue
+        : 'Общие операции банкролла';
+    }
     box.innerHTML = list.length
       ? list.map(f=>`
           <div class="cash-row">
             <span class="cf-date">${f.date}</span>
             <span>${f.type === 'WD' ? 'Вывод' : 'Депозит'}</span>
-            <span style="color:${(f.room||'').trim() ? 'var(--text-dim)' : 'var(--gold)'};">${
-              (f.room||'').trim() ? escapeHtml(f.room) : 'общий'}</span>
+
             <span class="cf-sum ${f.type === 'WD' ? 'pos' : 'neutral'}">${fmt(f.amount)} ${SYM[f.currency]}</span>
             <button class="btn ghost tiny" data-cf="${f.id}">×</button>
           </div>`).join('')
-      : '<div class="bd-note" style="margin:0;">Операций пока нет.</div>';
+      : `<div class="bd-note" style="margin:0;">${cfRoomValue ? 'По этому руму операций пока нет.' : 'Общих операций пока нет.'}</div>`;
     box.querySelectorAll('[data-cf]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         cashflow = cashflow.filter(x=>x.id !== btn.getAttribute('data-cf'));
