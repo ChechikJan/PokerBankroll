@@ -1683,8 +1683,11 @@ const SEED_DATA = [];
     const inRange = (d)=> (!from || d >= from) && (!to || d <= to);
 
     let profit = 0, buyins = 0, tickets = 0, n = 0;
+    let gprofit = 0, exp = 0;      // игра отдельно от текущих расходов
     tournaments.forEach(t=>{
       if(!inRange(t.date)) return;
+      if(isExpense(t)) exp += convert(cost(t) - (t.result || 0), t.currency, cur);
+      else if(t.result !== null) gprofit += convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur);
       if(isCountable(t)) n++;
       if(!paidByTicket(t)) buyins += convert(cost(t), t.currency, cur);
       if(t.result !== null){
@@ -1706,6 +1709,7 @@ const SEED_DATA = [];
     const roi = buyins > 0 ? (profit / buyins) * 100 : 0;
     const abi = n > 0 ? (buyins / n) : 0;
     return {cur, profit, buyins, tickets, dep, wd, roomDep, roomWd, n, roi, abi,
+            gprofit, exp, net: gprofit - exp,
             change: profit + dep - wd};
   }
 
@@ -1755,15 +1759,11 @@ const SEED_DATA = [];
         <div class="bk-sub">румы ${fmt(p.rooms)} + кошельки ${fmt(p.wall)}${p.other ? ' − расходы ' + fmt(-p.other) : ''}</div>
         <div class="bk-sub">${parts.length ? parts.join(' · ') : 'пока пусто'}</div>
         ${outParts.length ? `<div class="bk-sub" style="color:var(--text-faint);">не в счёт: ${outParts.join(' · ')} (${fmt(p.out)} ${sym})</div>` : ''}</div>`);
-      if(b) cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Профит с ${b.date}</div>
-        <div class="bk-val ${sign(b.profit)}">${b.profit>0?'+':''}${fmt(b.profit)} ${sym}</div>
-        <div class="bk-sub">стартовый банкролл ${fmt(b.start)} ${sym}</div></div>`);
+      cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Профит в покере ${lbl}</div>
+        <div class="bk-val ${sign(m.net)}">${m.net>0?'+':''}${fmt(m.net)} ${sym}</div>
+        <div class="bk-sub">турниры ${m.gprofit>0?'+':''}${fmt(m.gprofit)}${m.exp ? ` − расходы ${fmt(m.exp)}` : ''}</div>
+        <div class="bk-sub">все теги · депозиты и выводы не в счёт</div></div>`);
     }
-    cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Изменение БР ${lbl}</div>
-      <div class="bk-val ${sign(m.change)}">${m.change>0?'+':''}${fmt(m.change)} ${sym}</div>
-      <div class="bk-sub">${(m.dep || m.wd)
-        ? `профит ${fmt(m.profit)} · ввод ${fmt(m.dep)} · вывод ${fmt(m.wd)}`
-        : 'только игровой результат'}</div></div>`);
     cards.push(`<div class="bank-card info"><div class="bk-lbl">Турниров ${lbl}</div>
       <div class="bk-val">${m.n}</div>
       <div class="bk-sub">средний байин ${fmt(m.abi)} ${sym}</div></div>`);
