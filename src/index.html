@@ -221,6 +221,14 @@ details.gb-panel[open] > summary{margin-bottom:4px;}
 .bal-row{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;margin-bottom:8px;}
 .bal-row .bl{font-size:12px;color:var(--text-dim);}
 .bal-row .bl b{display:block;color:var(--text);font-size:13px;}
+.modal-bg .modal{max-height:92vh;overflow-y:auto;}
+.top-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:-8px 0 18px;}
+.xls-prev{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;}
+.xls-prev th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);font-weight:500;
+  text-align:right;padding:5px 8px;border-bottom:1px solid var(--border);}
+.xls-prev td{padding:5px 8px;border-bottom:1px solid var(--border);text-align:right;
+  font-family:'IBM Plex Mono',ui-monospace,monospace;}
+.xls-prev th:first-child,.xls-prev td:first-child{text-align:left;}
 .op-preview{font-size:12px;color:var(--text-dim);margin:2px 0 6px;}
 .op-preview b{color:var(--text);}
 .cf-fee{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;color:var(--rust);}
@@ -466,6 +474,17 @@ tr:last-child td{border-bottom:none;}
     <div class="ledger" id="ledger"></div>
   </div>
 
+  <div class="top-tools">
+    <button class="btn ghost" id="exportBtn">Сохранить копию в файл</button>
+    <button class="btn ghost" id="importBtn">Загрузить из файла</button>
+    <button class="btn ghost" id="xlsBtn">Загрузить из Excel</button>
+    <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
+    <input type="file" id="xlsFile" accept=".xlsx,.csv" style="display:none;">
+    <button class="btn ghost" id="reloadSeed" style="display:none;">Загрузить данные из Excel заново</button>
+    <div style="flex:1;"></div>
+    <button class="btn danger" id="clearAll">Очистить все данные</button>
+  </div>
+
   <details class="panel gb-panel" id="gbPanel" open>
     <summary class="gb-sum">
       <h2 style="margin:0;">Общий банкролл</h2>
@@ -619,12 +638,6 @@ tr:last-child td{border-bottom:none;}
       </div>
       <div class="rate-derived">1 EUR ≈ <b id="derivedEurRub">—</b> RUB</div>
       <button class="btn" id="saveRates">Сохранить курс</button>
-      <div style="flex:1;"></div>
-      <button class="btn ghost" id="exportBtn">Сохранить копию в файл</button>
-      <button class="btn ghost" id="importBtn">Загрузить из файла</button>
-      <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
-      <button class="btn ghost" id="reloadSeed" style="display:none;">Загрузить данные из Excel заново</button>
-      <button class="btn danger" id="clearAll">Очистить все данные</button>
     </div>
     <div class="rb-head" style="margin-top:16px;">Криптовалюты и свои курсы <span style="text-transform:none;letter-spacing:0;">— цена 1 единицы в USD, по ней крипта из кошельков входит в общий банкролл</span></div>
     <div class="asset-rates" id="assetRates"></div>
@@ -846,6 +859,41 @@ tr:last-child td{border-bottom:none;}
     <div class="modal-actions">
       <button class="btn ghost" id="balCancel">Отмена</button>
       <button class="btn" id="balSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="xlsModal">
+  <div class="modal wide">
+    <h3>Импорт из Excel</h3>
+    <div class="cf-where" id="xlsInfo"></div>
+    <div class="field">
+      <label>Покеррум</label>
+      <div class="room-btns" id="xlsRoomBtns"></div>
+      <input type="text" id="xlsNewRoom" placeholder="или впишите новый рум" maxlength="30" style="margin-top:9px;max-width:260px;">
+    </div>
+    <div class="field">
+      <label>Валюта</label>
+      <div class="chip-row" id="xlsCurChips">
+        <button type="button" class="chip-btn eur small" data-xlscur="EUR"><span>€</span></button>
+        <button type="button" class="chip-btn usd small" data-xlscur="USD"><span>$</span></button>
+        <button type="button" class="chip-btn rub small" data-xlscur="RUB"><span>₽</span></button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Теги для всех записей <span style="color:var(--text-faint);text-transform:none;letter-spacing:0;">(необязательно — например «Сателлит» или «Доп. ставка» для ласт лонгеров)</span></label>
+      <div id="iTagBox"></div>
+    </div>
+    <div class="result-toggle" style="margin:6px 0 10px;">
+      <input type="checkbox" id="xlsSkipDup" checked>
+      <label for="xlsSkipDup">Пропустить записи, которые уже есть в базе (та же дата, рум, валюта, байин, ребай и результат)</label>
+    </div>
+    <div class="rb-head" style="margin:6px 0 2px;">Первые строки файла</div>
+    <div id="xlsPreview"></div>
+    <div class="bd-note" id="xlsSummary" style="margin:10px 0 0;"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="xlsCancel">Отмена</button>
+      <button class="btn" id="xlsGo">Импортировать</button>
     </div>
   </div>
 </div>
@@ -2809,7 +2857,7 @@ const SEED_DATA = [];
 
       let html = '';
       TAG_GROUPS.forEach(g=>{
-        if(g.id === 'expense' && prefix === 'ftag') return;   // they have their own panel
+        if(g.id === 'expense' && (prefix === 'ftag' || prefix === 'itag')) return;   // they have their own panel
         const items = g.id === 'custom' ? customTags : BUILTIN_TAGS.filter(t=>t.group === g.id);
         if(!items.length && g.id !== 'custom') return;
         if(g.id === 'custom' && !items.length && !extra) return;
@@ -2823,6 +2871,7 @@ const SEED_DATA = [];
       `<button type="button" class="room-btn add tiny-tag" id="addTagBtn">+ свой тег</button>` +
       `<button type="button" class="room-btn add tiny-tag${tagEditMode?' editing':''}" id="editTagBtn">${tagEditMode?'готово':'изменить'}</button>`);
     box('etag', 'eTagBox', '');
+    box('itag', 'iTagBox', '');
 
     // freeroll needs its own handler again after a redraw
     ['FREE','RAKE','TRAIN','MINING','SERVER'].forEach(id=>{
@@ -3175,6 +3224,243 @@ const SEED_DATA = [];
     a.download = `poker-backup-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  });
+
+  // ================= Import from Excel (.xlsx / .csv) =================
+  // Layout of the sheets: A — day (only on the first row of the day), B — buy-in,
+  // C — rebuy/add-on, D — prize. Sheet "data" is used if it exists.
+  let xlsRows = null, xlsRoom = '', xlsCur = 'USD', xlsName = '', xlsSkipped = 0;
+
+  async function readZip(buf){
+    const dv = new DataView(buf), u8 = new Uint8Array(buf), dec = new TextDecoder('utf-8');
+    let eocd = -1;
+    for(let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 70000); i--){
+      if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+    }
+    if(eocd < 0) throw new Error('Это не файл .xlsx');
+    const count = dv.getUint16(eocd + 10, true);
+    let p = dv.getUint32(eocd + 16, true);
+    const files = {};
+    for(let k = 0; k < count; k++){
+      if(dv.getUint32(p, true) !== 0x02014b50) break;
+      const method = dv.getUint16(p + 10, true);
+      const csize = dv.getUint32(p + 20, true);
+      const nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+      const off = dv.getUint32(p + 42, true);
+      files[dec.decode(u8.subarray(p + 46, p + 46 + nlen))] = {method, csize, off};
+      p += 46 + nlen + elen + clen;
+    }
+    const read = async (name)=>{
+      const f = files[name];
+      if(!f) return null;
+      const ln = dv.getUint16(f.off + 26, true), le = dv.getUint16(f.off + 28, true);
+      const start = f.off + 30 + ln + le;
+      const data = u8.subarray(start, start + f.csize);
+      if(f.method === 0) return dec.decode(data);
+      if(typeof DecompressionStream === 'undefined') throw new Error('Эта версия браузера не умеет распаковывать .xlsx — сохраните лист как CSV');
+      const out = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+      return dec.decode(out);
+    };
+    return {files, read};
+  }
+
+  async function parseXlsx(buf){
+    const z = await readZip(buf);
+    const px = (t)=> new DOMParser().parseFromString(t, 'application/xml');
+    const shared = [];
+    const ss = await z.read('xl/sharedStrings.xml');
+    if(ss) Array.from(px(ss).getElementsByTagName('si')).forEach(si=>
+      shared.push(Array.from(si.getElementsByTagName('t')).map(t=>t.textContent).join('')));
+    let target = null;
+    const wb = await z.read('xl/workbook.xml'), rels = await z.read('xl/_rels/workbook.xml.rels');
+    if(wb && rels){
+      const sheets = Array.from(px(wb).getElementsByTagName('sheet'));
+      const pick = sheets.find(sh=> (sh.getAttribute('name') || '').trim().toLowerCase() === 'data') || sheets[0];
+      const rid = pick && (pick.getAttribute('r:id') ||
+        pick.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'));
+      const rel = Array.from(px(rels).getElementsByTagName('Relationship')).find(r=>r.getAttribute('Id') === rid);
+      if(rel){
+        const t = rel.getAttribute('Target');
+        target = t.startsWith('/') ? t.slice(1) : 'xl/' + t.replace(/^\.\//, '');
+      }
+    }
+    if(!target || !z.files[target]) target = Object.keys(z.files).filter(n=>/^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort()[0];
+    if(!target) throw new Error('В файле не найден лист с данными');
+    const doc = px(await z.read(target));
+    const grid = [];
+    Array.from(doc.getElementsByTagName('row')).forEach(row=>{
+      const g = {r: Number(row.getAttribute('r')) || grid.length + 1, A: null, B: null, C: null, D: null};
+      Array.from(row.getElementsByTagName('c')).forEach(c=>{
+        const col = (c.getAttribute('r') || '').replace(/\d+/g, '');
+        if(!(col in g) || col === 'r') return;
+        const t = c.getAttribute('t'), v = c.getElementsByTagName('v')[0];
+        if(t === 's') g[col] = v ? shared[Number(v.textContent)] : null;
+        else if(t === 'inlineStr'){ const is = c.getElementsByTagName('t')[0]; g[col] = is ? is.textContent : null; }
+        else if(t === 'e') g[col] = null;
+        else if(t === 'str') g[col] = v ? v.textContent : null;
+        else g[col] = v ? Number(v.textContent) : null;
+      });
+      grid.push(g);
+    });
+    return grid;
+  }
+
+  function parseCsv(text){
+    const lines = text.replace(/^﻿/, '').split(/\r?\n/);
+    const head = lines.find(l=>l.trim()) || '';
+    const delim = head.includes('\t') ? '\t' : head.split(';').length > head.split(',').length ? ';' : ',';
+    return lines.map((l,i)=>{
+      const c = l.split(delim).map(x=>x.replace(/^"|"$/g, '').trim());
+      return {r: i + 1, A: c[0] || null, B: c[1] || null, C: c[2] || null, D: c[3] || null};
+    });
+  }
+
+  function xNum(v){
+    if(v === null || v === undefined || v === '') return null;
+    if(typeof v === 'number') return isFinite(v) ? v : null;
+    const n = parseFloat(String(v).replace(/\s/g, '').replace(',', '.'));
+    return isNaN(n) ? null : n;
+  }
+  function xDate(v, year){
+    if(v === null || v === undefined || v === '') return null;
+    if(typeof v === 'number' || /^\d{5}(\.\d+)?$/.test(String(v))){
+      const n = Number(v);
+      if(n > 20000 && n < 80000) return new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86400000).toISOString().slice(0, 10);
+      return null;
+    }
+    const t = String(v).trim();
+    const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(t);
+    if(iso) return iso[0];
+    const m = /^(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?$/.exec(t);
+    if(m){
+      let y = m[3] ? Number(m[3]) : (year || new Date().getFullYear());
+      if(y < 100) y += 2000;
+      return `${y}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+    }
+    return null;
+  }
+  function gridToRows(grid){
+    const rows = [];
+    let date = null;
+    xlsSkipped = 0;
+    grid.sort((a,b)=> a.r - b.r).forEach(g=>{
+      const d = xDate(g.A, date ? Number(date.slice(0, 4)) : null);
+      if(d) date = d;
+      const bi = xNum(g.B), rb = xNum(g.C), res = xNum(g.D);
+      if(bi === null && res === null) return;          // empty line, header, totals
+      if(!date){ xlsSkipped++; return; }
+      rows.push({date, buyin: bi || 0, rebuy: rb || 0, result: res || 0});
+    });
+    return rows;
+  }
+
+  function xlsTargetRoom(){ return $('xlsNewRoom').value.trim() || xlsRoom; }
+  function xlsSig(date, cur, bi, rb, res, room){ return [date, cur, +bi || 0, +rb || 0, +res || 0, room].join('~'); }
+  function xlsPlan(){
+    const room = xlsTargetRoom();
+    const skip = $('xlsSkipDup').checked;
+    const have = {};
+    if(skip) tournaments.forEach(t=>{
+      const k = xlsSig(t.date, t.currency, t.buyin, t.rebuy, t.result, (t.note || '').trim());
+      have[k] = (have[k] || 0) + 1;
+    });
+    let dup = 0;
+    const fresh = xlsRows.filter(r=>{
+      if(!skip) return true;
+      const k = xlsSig(r.date, xlsCur, r.buyin, r.rebuy, r.result, room);
+      if(have[k]){ have[k]--; dup++; return false; }
+      return true;
+    });
+    return {room, fresh, dup};
+  }
+
+  function renderXls(){
+    if(!xlsRows) return;
+    $('xlsRoomBtns').innerHTML = knownRooms().map(r=>
+      `<button type="button" class="room-btn ${(r.currency || '').toLowerCase()} ${xlsRoom === r.name && !$('xlsNewRoom').value.trim() ? 'active' : ''}" data-xlsroom="${escapeHtml(r.name)}">${escapeHtml(r.name)}<span class="cur">${r.currency || ''}</span></button>`).join('');
+    document.querySelectorAll('#xlsCurChips [data-xlscur]').forEach(b=>
+      b.classList.toggle('active', b.getAttribute('data-xlscur') === xlsCur));
+    const dates = xlsRows.map(r=>r.date).sort();
+    const sum = (k)=> xlsRows.reduce((s,r)=> s + r[k], 0);
+    $('xlsInfo').innerHTML = `<b>${escapeHtml(xlsName)}</b> — найдено записей: <b>${xlsRows.length}</b>` +
+      (dates.length ? ` · с ${dates[0]} по ${dates[dates.length - 1]}` : '') +
+      ` · байины ${fmt(sum('buyin'))} · ребаи ${fmt(sum('rebuy'))} · призовые ${fmt(sum('result'))}` +
+      (xlsSkipped ? ` · <span style="color:var(--rust)">без даты пропущено: ${xlsSkipped}</span>` : '');
+    $('xlsPreview').innerHTML = `<table class="xls-prev"><tr><th>Дата</th><th>Байин</th><th>Ребай</th><th>Результат</th></tr>` +
+      xlsRows.slice(0, 6).map(r=>`<tr><td>${r.date}</td><td>${fmt(r.buyin)}</td><td>${fmt(r.rebuy)}</td><td>${fmt(r.result)}</td></tr>`).join('') +
+      `</table>`;
+    const p = xlsPlan();
+    $('xlsSummary').innerHTML = !p.room ? 'Выберите покеррум.'
+      : `Будет добавлено <b>${p.fresh.length}</b> записей в ${escapeHtml(p.room)}, ${xlsCur}` +
+        (p.dup ? ` · уже есть в базе и будут пропущены: ${p.dup}` : '') + '.';
+    $('xlsGo').textContent = `Импортировать ${p.fresh.length}`;
+    $('xlsGo').disabled = !p.room || !p.fresh.length;
+  }
+
+  $('xlsBtn').addEventListener('click', ()=>{ $('xlsFile').value = ''; $('xlsFile').click(); });
+  $('xlsFile').addEventListener('change', async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    try{
+      const grid = /\.csv$/i.test(file.name) ? parseCsv(await file.text()) : await parseXlsx(await file.arrayBuffer());
+      xlsRows = gridToRows(grid);
+    }catch(err){
+      alert('Не удалось прочитать файл: ' + (err && err.message ? err.message : err) +
+            '\n\nПоддерживаются .xlsx и .csv (старый формат .xls — пересохраните в Excel как .xlsx).');
+      return;
+    }
+    if(!xlsRows.length){ alert('В файле не найдено строк с байином или результатом.\n\nОжидается: A — дата, B — байин, C — ребай/аддон, D — призовые.'); return; }
+    xlsName = file.name;
+    const n = file.name.toLowerCase();
+    xlsCur = /eur|евро/.test(n) ? 'EUR' : /rub|руб/.test(n) ? 'RUB' : /usd|дол/.test(n) ? 'USD' : (formCurrency || 'USD');
+    xlsRoom = '';
+    $('xlsNewRoom').value = '';
+    document.querySelectorAll('#iTagBox input[type=checkbox]').forEach(i=> i.checked = false);
+    if(/сат|sat/.test(n) && $('itag_SAT')) $('itag_SAT').checked = true;
+    renderTagUI();
+    renderXls();
+    $('xlsModal').classList.add('open');
+  });
+  $('xlsModal').addEventListener('click', (e)=>{
+    if(e.target.id === 'xlsModal'){ $('xlsModal').classList.remove('open'); return; }
+    const rb = e.target.closest('[data-xlsroom]');
+    if(rb){
+      xlsRoom = rb.getAttribute('data-xlsroom');
+      $('xlsNewRoom').value = '';
+      const c = roomCurrency(xlsRoom);
+      if(c) xlsCur = c;
+      renderXls();
+      return;
+    }
+    const cb = e.target.closest('[data-xlscur]');
+    if(cb){ xlsCur = cb.getAttribute('data-xlscur'); renderXls(); }
+  });
+  $('xlsNewRoom').addEventListener('input', ()=>{
+    const r = knownRooms().find(x=>x.name.toLowerCase() === $('xlsNewRoom').value.trim().toLowerCase());
+    if(r){ xlsRoom = r.name; $('xlsNewRoom').value = ''; if(r.currency) xlsCur = r.currency; }
+    renderXls();
+  });
+  $('xlsSkipDup').addEventListener('change', renderXls);
+  $('xlsCancel').addEventListener('click', ()=> $('xlsModal').classList.remove('open'));
+  $('xlsGo').addEventListener('click', async ()=>{
+    const p = xlsPlan();
+    if(!p.room || !p.fresh.length) return;
+    const tags = Array.from(document.querySelectorAll('#iTagBox input[type=checkbox]:checked')).map(i=>i.getAttribute('data-tag'));
+    const known = knownRooms().find(r=>r.name === p.room);
+    if(!known || !known.currency){
+      const ex = rooms.find(r=>r.name === p.room);
+      if(ex) ex.currency = xlsCur; else rooms.push({name: p.room, currency: xlsCur});
+      await saveRooms();
+    }
+    p.fresh.forEach(r=> tournaments.push({
+      id: uid(), date: r.date, currency: xlsCur, buyin: r.buyin, rebuy: r.rebuy, result: r.result,
+      ticket: 0, note: p.room, tags: tags.slice(), imported: false, source: 'xlsx'
+    }));
+    await saveTournaments();
+    $('xlsModal').classList.remove('open');
+    xlsRows = null;
+    renderAll();
+    alert(`Добавлено записей: ${p.fresh.length}` + (p.dup ? `\nПропущено как уже существующие: ${p.dup}` : ''));
   });
 
   $('importBtn').addEventListener('click', ()=> $('importFile').click());
