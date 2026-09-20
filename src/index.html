@@ -631,7 +631,6 @@ tr:last-child td{border-bottom:none;}
     <div class="room-bank-grid" id="roomBankGrid"></div>
 
     <div class="rate-row" style="margin-top:14px;">
-      <button class="btn ghost" id="editBankroll">Стартовый банкролл</button>
       <div class="bd-note" id="bankNote" style="margin:0;flex:1;min-width:220px;"></div>
     </div>
   </div>
@@ -1756,9 +1755,9 @@ const SEED_DATA = [];
         <div class="bk-sub">румы ${fmt(p.rooms)} + кошельки ${fmt(p.wall)}${p.other ? ' − расходы ' + fmt(-p.other) : ''}</div>
         <div class="bk-sub">${parts.length ? parts.join(' · ') : 'пока пусто'}</div>
         ${outParts.length ? `<div class="bk-sub" style="color:var(--text-faint);">не в счёт: ${outParts.join(' · ')} (${fmt(p.out)} ${sym})</div>` : ''}</div>`);
-      if(b) cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Стартовый банкролл</div>
-        <div class="bk-val neutral">${fmt(b.start)} ${sym}</div>
-        <div class="bk-sub">с ${b.date} · профит ${b.profit>0?'+':''}${fmt(b.profit)} ${sym}</div></div>`);
+      if(b) cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Профит с ${b.date}</div>
+        <div class="bk-val ${sign(b.profit)}">${b.profit>0?'+':''}${fmt(b.profit)} ${sym}</div>
+        <div class="bk-sub">стартовый банкролл ${fmt(b.start)} ${sym}</div></div>`);
     }
     cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Изменение БР ${lbl}</div>
       <div class="bk-val ${sign(m.change)}">${m.change>0?'+':''}${fmt(m.change)} ${sym}</div>
@@ -3856,7 +3855,7 @@ const SEED_DATA = [];
       : '<div class="bd-note" style="margin:0;">Румов пока нет.</div>';
   }
 
-  $('editBankroll').addEventListener('click', ()=>{
+  if($('editBankroll')) $('editBankroll').addEventListener('click', ()=>{
     renderBankRoomInputs();
     $('bkDate').value = bankroll ? bankroll.date : pokerToday();
     $('bkAmount').value = bankroll ? bankroll.amount : '';
