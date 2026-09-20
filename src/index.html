@@ -216,12 +216,16 @@ details.gb-panel[open] > summary{margin-bottom:4px;}
 .ar-item input.missing{border-color:#E07A64;}
 .ar-item.add{border-style:dashed;border-color:var(--border);background:transparent;}
 .ar-item.add input{width:120px;}
+.ar-pok{border:1px solid var(--border);background:transparent;color:var(--text-faint);border-radius:999px;
+  font-size:9.5px;letter-spacing:.06em;padding:2px 7px;cursor:pointer;font-family:inherit;}
+.ar-pok.on{border-color:var(--felt-bright);color:#A9E0C3;background:rgba(60,160,110,.18);}
 .ar-del{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:14px;padding:0 3px;}
 .ar-del:hover{color:#E8A999;}
 .bal-row{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;margin-bottom:8px;}
 .bal-row .bl{font-size:12px;color:var(--text-dim);}
 .bal-row .bl b{display:block;color:var(--text);font-size:13px;}
 .modal-bg .modal{max-height:92vh;overflow-y:auto;}
+.period-panel .bank-head{align-items:center;}
 .top-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:-8px 0 18px;}
 .xls-prev{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;}
 .xls-prev th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);font-weight:500;
@@ -468,7 +472,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">чистая · 20.09.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">чистая · 21.09.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -480,7 +484,7 @@ tr:last-child td{border-bottom:none;}
     <button class="btn ghost" id="xlsBtn">Загрузить из Excel</button>
     <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
     <input type="file" id="xlsFile" accept=".xlsx,.csv" style="display:none;">
-    <button class="btn ghost" id="reloadSeed" style="display:none;">Загрузить данные из Excel заново</button>
+    <button class="btn ghost" id="reloadSeed" style="display:none;">Восстановить исходные данные</button>
     <div style="flex:1;"></div>
     <button class="btn danger" id="clearAll">Очистить все данные</button>
   </div>
@@ -596,9 +600,9 @@ tr:last-child td{border-bottom:none;}
     <div class="cash-list" id="xList"></div>
   </div>
 
-  <div class="panel">
+  <div class="panel period-panel">
     <div class="bank-head">
-      <h2 style="margin:0;">Покер</h2>
+      <h2 style="margin:0;">Период</h2>
       <div class="chip-row" id="periodTabs" style="flex-wrap:wrap;gap:8px;">
         <div class="tab" data-period="DAY">Сегодня</div>
         <div class="tab" data-period="WEEK">Неделя</div>
@@ -612,6 +616,13 @@ tr:last-child td{border-bottom:none;}
       <div class="field"><label>С</label><input type="date" id="periodFrom"></div>
       <div class="field"><label>По</label><input type="date" id="periodTo"></div>
       <button class="btn ghost" id="applyCustomPeriod">Применить</button>
+    </div>
+    <div class="bd-note" id="periodNote" style="margin:10px 0 0;"></div>
+  </div>
+
+  <div class="panel">
+    <div class="bank-head">
+      <h2 style="margin:0;">Покер</h2>
     </div>
 
     <div class="bank-grid" id="bankGrid"></div>
@@ -641,6 +652,7 @@ tr:last-child td{border-bottom:none;}
     </div>
     <div class="rb-head" style="margin-top:16px;">Криптовалюты и свои курсы <span style="text-transform:none;letter-spacing:0;">— цена 1 единицы в USD, по ней крипта из кошельков входит в общий банкролл</span></div>
     <div class="asset-rates" id="assetRates"></div>
+    <div class="bd-note" style="margin-top:8px;">Кнопка «БР» у курса — считать ли эту криптовалюту в покерном банкролле. Выключенная остаётся только в общем банкролле.</div>
     <div class="bd-note" id="storageNote"></div>
     <div class="bd-note mono" id="saveStatus" style="margin-top:4px;"></div>
     <div style="display:none;">
@@ -1475,6 +1487,8 @@ const SEED_DATA = [];
   const DEFAULT_CRYPTO = ['ETH','XAUT','BTC','SOL'];
   function isFiat(c){ return FIAT.includes(c); }
   function assetRate(c){ return (rates.assets && Number(rates.assets[c])) || 0; }   // USD for 1 unit
+  // fiat always counts; crypto counts unless it was switched off in "Курс обмена"
+  function inPoker(c){ return FIAT.includes(c) || !(rates.assetsPoker && rates.assetsPoker[c] === false); }
   function usdPer(c){
     if(c === 'USD') return 1;
     if(c === 'EUR') return rates.eurUsd;
@@ -1699,6 +1713,27 @@ const SEED_DATA = [];
   const PERIOD_LABEL = {ALL:'всё время', DAY:'сегодня', WEEK:'за неделю',
                         MONTH:'за месяц', YEAR:'за год', CUSTOM:'за период'};
 
+  // The poker bankroll: every currency there is — fiat and crypto —
+  // on the poker rooms and in the wallets, counted in the base currency.
+  function pokerBankrollState(g){
+    const cur = baseCurrency;
+    let rooms = 0, wall = 0, other = 0, total = 0, out = 0;
+    const per = {}, excl = {};
+    g.breakdown.forEach(r=>{
+      if(inPoker(r.cur)){
+        rooms += convert(r.rooms, r.cur, cur);
+        wall  += convert(r.wallets, r.cur, cur);
+        other += convert(r.other, r.cur, cur);
+        total += r.base;
+        per[r.cur] = r.total;
+      } else {
+        out += r.base;
+        excl[r.cur] = r.total;
+      }
+    });
+    return {cur, rooms, wall, other, per, excl, out, total};
+  }
+
   function renderBankroll(){
     const box = $('bankGrid');
     if(!box) return;
@@ -1709,14 +1744,21 @@ const SEED_DATA = [];
     const lbl = PERIOD_LABEL[period] || 'за период';
 
     const cards = [];
-    if(b){
+    {
+      const p = pokerBankrollState(generalState());
+      const order = (c)=> isFiat(c) ? FIAT.indexOf(c) : 10;
+      const list = (obj)=> Object.keys(obj).filter(c=>Math.abs(obj[c]) > 1e-9)
+        .sort((a,b)=> order(a) - order(b) || Math.abs(convert(obj[b], b, cur)) - Math.abs(convert(obj[a], a, cur)))
+        .map(c=>`${fmtA(obj[c], c)} ${SYM[c]}`);
+      const parts = list(p.per), outParts = list(p.excl);
       cards.push(`<div class="bank-card hero ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Покерный банкролл</div>
-        <div class="bk-val ${sign(b.current - b.start)}">${fmt(b.current)} ${sym}</div>
-        <div class="bk-sub">старт ${fmt(b.start)} ${sym} с ${b.date} · профит ${b.profit>0?'+':''}${fmt(b.profit)}${(b.dep||b.wd)?` · ввод ${fmt(b.dep)} · вывод ${fmt(b.wd)}`:''}</div></div>`);
-    } else {
-      cards.push(`<div class="bank-card info"><div class="bk-lbl">Банкролл не задан</div>
-        <div class="bk-val neutral">— —</div>
-        <div class="bk-sub">нажмите «Стартовый банкролл» и укажите сумму и дату</div></div>`);
+        <div class="bk-val ${sign(p.total)}">${fmt(p.total)} ${sym}</div>
+        <div class="bk-sub">румы ${fmt(p.rooms)} + кошельки ${fmt(p.wall)}${p.other ? ' − расходы ' + fmt(-p.other) : ''}</div>
+        <div class="bk-sub">${parts.length ? parts.join(' · ') : 'пока пусто'}</div>
+        ${outParts.length ? `<div class="bk-sub" style="color:var(--text-faint);">не в счёт: ${outParts.join(' · ')} (${fmt(p.out)} ${sym})</div>` : ''}</div>`);
+      if(b) cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Стартовый банкролл</div>
+        <div class="bk-val neutral">${fmt(b.start)} ${sym}</div>
+        <div class="bk-sub">с ${b.date} · профит ${b.profit>0?'+':''}${fmt(b.profit)} ${sym}</div></div>`);
     }
     cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Изменение БР ${lbl}</div>
       <div class="bk-val ${sign(m.change)}">${m.change>0?'+':''}${fmt(m.change)} ${sym}</div>
@@ -1753,10 +1795,19 @@ const SEED_DATA = [];
     renderRoomBanks();
     renderGeneral();
 
+    const pn = $('periodNote');
+    if(pn){
+      const {from, to} = getPeriodRange();
+      pn.textContent = 'Игровые сутки идут с 12:00 до 12:00 следующего дня — «сегодня» это ' + pokerToday() + '. ' +
+        (from || to ? `Выбрано: ${lbl} — с ${from || 'начала'} по ${to || pokerToday()}.` : 'Выбрано: всё время.') +
+        ' Период меняет карточки в окнах «Покер», «Общий банкролл» и статистику.';
+    }
+
     const note = $('bankNote');
     if(note){
-      note.textContent = 'Игровые сутки идут с 12:00 до 12:00 следующего дня — «сегодня» это ' +
-        pokerToday() + '. Покерный банкролл меняет только игровой результат; переводы и комиссии — в окне «Кошельки», итог — в «Общем банкролле» выше.';
+      note.textContent = 'Покерный банкролл — это деньги на покеррумах и в кошельках (доллары, евро, рубли и крипта ' +
+        'по курсам из «Курса обмена») минус текущие расходы в этих же валютах. От общего банкролла он отличается ' +
+        'только на криптовалюты, у которых в «Курсе обмена» выключена отметка «БР».';
     }
   }
 
@@ -2280,6 +2331,7 @@ const SEED_DATA = [];
       const u = used(c);
       return `<div class="ar-item" title="${u.length ? 'в кошельках: ' + escapeHtml(u.join(', ')) : 'не используется в кошельках'}">
         1 <b>${c}</b> = <input type="number" step="any" min="0" data-arate="${c}" value="${v || ''}" class="${v ? '' : 'missing'}" placeholder="курс"> USD
+        <button type="button" class="ar-pok ${inPoker(c) ? 'on' : ''}" data-arpok="${c}" title="Считать в покерном банкролле">БР</button>
         <button type="button" class="ar-del" data-ardel="${c}" title="Удалить курс">×</button></div>`;
     }).join('') +
     `<div class="ar-item add"><input type="text" id="arNewCode" placeholder="код, напр. USDT" maxlength="8" style="text-transform:uppercase;">
@@ -3188,7 +3240,7 @@ const SEED_DATA = [];
     const eu = parseFloat($('rateEurUsd').value);
     const ur = parseFloat($('rateUsdRub').value);
     if(isNaN(eu) || eu<=0 || isNaN(ur) || ur<=0){ alert('Введите корректные курсы (числа больше нуля)'); return; }
-    rates = Object.assign({}, rates, {eurUsd:eu, usdRub:ur});
+    rates = Object.assign({}, rates, {eurUsd:eu, usdRub:ur, assetsPoker: rates.assetsPoker || {}});
     document.querySelectorAll('[data-arate]').forEach(inp=>{
       const v = parseFloat(inp.value);
       rates.assets[inp.getAttribute('data-arate')] = v > 0 ? v : 0;
@@ -3920,6 +3972,16 @@ const SEED_DATA = [];
     if(oa){ opAsset = oa.getAttribute('data-opasset'); if(opAsset === walletCurrency(opAcct)) opAsset = ''; opRatePair = ''; renderGeneral(); return; }
     const ota = el.closest('[data-optasset]');
     if(ota){ opTAsset = ota.getAttribute('data-optasset'); if(opTAsset === walletCurrency(opTarget)) opTAsset = ''; opRatePair = ''; renderGeneral(); return; }
+
+    const apk = el.closest('[data-arpok]');
+    if(apk){
+      const c = apk.getAttribute('data-arpok');
+      if(!rates.assetsPoker) rates.assetsPoker = {};
+      rates.assetsPoker[c] = !inPoker(c);
+      await saveRates();
+      renderRates(); renderBankroll();
+      return;
+    }
 
     const ard = el.closest('[data-ardel]');
     if(ard){
