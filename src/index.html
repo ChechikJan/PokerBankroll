@@ -97,6 +97,8 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
 .bank-card.info{border-color:#4A4070;border-left-color:#9B87D6;
   background:linear-gradient(180deg,#2C2742 0%,#211D31 100%);}
 .bank-card.info .bk-val{color:#CDBFF5;}
+.bank-card.exp{border-color:#6A3A33;border-left-color:#C0503E;
+  background:linear-gradient(180deg,#3A2622 0%,#2A1C19 100%);}
 /* a gain or a loss still wins over the currency tint */
 .bank-card .bk-val.pos{color:var(--felt-bright);}
 .bank-card .bk-val.neg{color:var(--rust);}
@@ -134,6 +136,53 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
   border-radius:8px;padding:9px 12px;margin:-6px 0 14px;}
 .cf-where span{color:var(--text-faint);font-size:11px;}
 .cash-list{max-height:230px;overflow-y:auto;margin:10px 0;}
+details.gb-panel > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;
+  user-select:none;}
+details.gb-panel > summary::-webkit-details-marker{display:none;}
+.gb-total{font-size:19px;font-weight:600;}
+.gb-chev{margin-left:auto;color:var(--text-faint);font-size:15px;transition:transform .15s ease;}
+details.gb-panel:not([open]) .gb-chev{transform:rotate(-90deg);}
+details.gb-panel[open] > summary{margin-bottom:4px;}
+.op-box{margin-top:16px;padding:14px 15px;border:1px solid var(--border);border-radius:10px;
+  background:rgba(0,0,0,.12);}
+.op-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
+.op-grid .field{display:flex;flex-direction:column;}
+@media(max-width:760px){.op-grid{grid-template-columns:1fr 1fr;}}
+.room-bank.wallet .rb-name::after{content:'кошелёк';font-size:9px;color:var(--text-faint);margin-left:auto;
+  text-transform:uppercase;letter-spacing:.06em;}
+.cf-acct{color:var(--text-dim);min-width:70px;}
+.acct-tags{display:flex;flex-wrap:wrap;gap:7px;align-items:center;}
+.acct-tags .grp{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-right:2px;}
+.acct-tags .sep{width:100%;height:0;}
+.acct-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:12px;
+  border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-family:inherit;}
+.acct-tag .cur{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9.5px;opacity:.75;}
+.acct-tag:hover{color:var(--text);}
+.acct-tag.eur{border-color:#40587B;color:#AFC6E6;}
+.acct-tag.usd{border-color:#2F6B4C;color:#A9E0C3;}
+.acct-tag.rub{border-color:#7A5F2E;color:#E7CE9B;}
+.acct-tag.active{background:rgba(255,255,255,.08);border-width:2px;padding:3px 10px;color:var(--text);}
+.acct-tag.eur.active{border-color:var(--eur);background:rgba(90,130,190,.22);}
+.acct-tag.usd.active{border-color:var(--usd);background:rgba(60,160,110,.22);}
+.acct-tag.rub.active{border-color:var(--rub);background:rgba(200,160,80,.22);}
+.acct-tag.none.active{border-color:var(--felt-bright);}
+.acct-tag.ext.dep{border-color:#3E7A55;color:#9FE3B8;}
+.acct-tag.ext.wd{border-color:#8A4A3E;color:#E8A999;}
+.acct-tag.ext.dep.active{border-color:#5FCB8A;background:rgba(80,190,120,.2);color:#DFF6EA;}
+.acct-tag.ext.wd.active{border-color:#E07A64;background:rgba(220,110,90,.2);color:#FBE3DD;}
+.acct-tag.wl{border-style:dashed;}
+.acct-tag.wl.active{border-style:solid;}
+.op-rates{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);
+  margin:0 0 14px;padding:9px 11px;border:1px dashed var(--border);border-radius:8px;}
+.op-rates input{width:92px;padding:5px 8px;font-size:12px;}
+.op-rates .grp{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-right:4px;}
+.rb-edit{position:absolute;right:8px;bottom:8px;font-size:10.5px;padding:2px 8px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--border);background:rgba(0,0,0,.25);color:var(--text-dim);font-family:inherit;}
+.rb-edit:hover{color:var(--text);border-color:var(--gold);}
+.room-bank{position:relative;}
+.op-preview{font-size:12px;color:var(--text-dim);margin:2px 0 6px;}
+.op-preview b{color:var(--text);}
+.cf-fee{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;color:var(--rust);}
 .cash-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--border);
   font-size:12px;}
 .cash-row:last-child{border-bottom:none;}
@@ -178,6 +227,8 @@ select{text-overflow:ellipsis;}
 .tag-group:last-child{margin-bottom:0;}
 .tag-group-t{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-faint);
   margin-bottom:6px;}
+.tag-badge.exp{background:rgba(192,80,62,.18);color:#E59A8C;}
+.tag-toggle.exp input{accent-color:#E59A8C;}
 .tag-badge.fmt{background:rgba(190,150,90,.18);color:#E0C38A;}
 .tag-badge.spd{background:rgba(90,190,190,.18);color:#8CDCDC;}
 .tag-toggle.fmt input{accent-color:#E0C38A;}
@@ -368,15 +419,114 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">чистая · 18.09.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">чистая · 20.09.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
   </div>
 
+  <details class="panel gb-panel" id="gbPanel" open>
+    <summary class="gb-sum">
+      <h2 style="margin:0;">Общий банкролл</h2>
+      <span class="gb-total mono" id="gbTotal"></span>
+      <span class="gb-chev">▾</span>
+    </summary>
+    <div class="bank-grid" id="gbGrid"></div>
+    <div class="bd-note" style="margin:10px 0 0;">Переводы между кошельками и румами общий банкролл не меняют — сумма просто переходит с одного счёта на другой. В минус идут только комиссии и текущие расходы.</div>
+  </details>
+
+  <details class="panel gb-panel" id="walletPanel" open>
+    <summary class="gb-sum">
+      <h2 style="margin:0;">Кошельки</h2>
+      <span class="gb-total mono" id="wlTotal"></span>
+      <span class="gb-chev">▾</span>
+    </summary>
+    <div class="rb-head" style="margin-top:6px;">Нажмите на плашку, чтобы ввести фактический баланс</div>
+    <div class="room-bank-grid" id="walletGrid"></div>
+
+    <div class="op-box">
+      <div class="rb-head" style="margin-top:0;">Депозит / вывод / перевод</div>
+      <div class="op-rates">
+        <span class="grp">Курсы для переводов</span>
+        1 EUR = <input type="number" step="0.0001" id="trEurUsd"> USD
+        <span style="margin:0 6px;color:var(--text-faint);">·</span>
+        1 USD = <input type="number" step="0.01" id="trUsdRub"> RUB
+        <button class="btn ghost tiny" id="trSave">Сохранить курс</button>
+        <span id="trNote" style="color:var(--text-faint);font-size:11px;"></span>
+      </div>
+      <div class="form-grid op-grid">
+        <div class="field">
+          <label>Дата</label>
+          <input type="date" id="opDate">
+        </div>
+        <div class="field wide">
+          <label>Кошелёк</label>
+          <div class="room-btns" id="opAcctBtns"></div>
+        </div>
+        <div class="field">
+          <label>Тип</label>
+          <div class="tabs" id="opTypeTabs" style="margin:0;">
+            <div class="tab active" data-optype="DEP">Депозит</div>
+            <div class="tab" data-optype="WD">Вывод</div>
+          </div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label id="opTargetLbl">Куда</label>
+        <div class="acct-tags" id="opTargetTags"></div>
+      </div>
+      <div class="form-grid op-grid">
+        <div class="field">
+          <label id="opAmountLbl">Сумма</label>
+          <input type="number" step="0.01" id="opAmount" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label id="opFeeLbl">Комиссия</label>
+          <input type="number" step="0.01" id="opFee" placeholder="0.00">
+        </div>
+        <div class="field" id="opRateField" style="visibility:hidden;">
+          <label id="opRateLbl">Курс</label>
+          <input type="number" step="0.0001" id="opRate" placeholder="0.0000">
+        </div>
+        <div class="field" style="justify-content:flex-end;">
+          <button class="btn" id="opAdd">Добавить операцию</button>
+        </div>
+      </div>
+      <div class="op-preview" id="opPreview"></div>
+      <div class="bd-note" id="opHint" style="margin:0 0 6px;"></div>
+      <div class="rb-head" id="opListHead" style="margin:10px 0 4px;"></div>
+      <div class="cash-list" id="opList"></div>
+    </div>
+  </details>
+
+  <div class="panel" id="expPanel">
+    <h2>Текущие расходы</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label>Дата</label>
+        <input type="date" id="xDate">
+      </div>
+      <div class="field wide">
+        <label>Статья</label>
+        <div class="room-btns" id="xCatBtns"></div>
+      </div>
+      <div class="field">
+        <label id="xAmountLbl">Сумма, USD</label>
+        <input type="number" step="0.01" id="xAmount" placeholder="0.00">
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>Списать с <span style="color:var(--text-faint);text-transform:none;letter-spacing:0;">(не выбрано — вычтется прямо из общего банкролла)</span></label>
+      <div class="acct-tags" id="xPayBtns"></div>
+    </div>
+    <button class="btn" id="xAdd">Добавить расход</button>
+    <div class="rb-head" style="margin:16px 0 4px;">Последние расходы</div>
+    <div class="cash-list" id="xList"></div>
+  </div>
+
   <div class="panel">
     <div class="bank-head">
-      <h2 style="margin:0;">Банкролл</h2>
+      <h2 style="margin:0;">Покер</h2>
       <div class="chip-row" id="periodTabs" style="flex-wrap:wrap;gap:8px;">
         <div class="tab" data-period="DAY">Сегодня</div>
         <div class="tab" data-period="WEEK">Неделя</div>
@@ -534,7 +684,7 @@ tr:last-child td{border-bottom:none;}
           <div class="tab" data-side="SAT">Сателлиты</div>
           <div class="tab" data-side="SIDE">Доп. ставки</div>
           <div class="tab" data-side="CASINO">Казино</div>
-          <div class="tab" data-side="TRAIN">Тренировки</div>
+          <div class="tab" data-side="EXPENSE">Текущие расходы</div>
           <div class="tab" data-side="RAKE">Рейкбек</div>
           <div class="tab" data-side="MIX" id="mixTab">Своя статистика</div>
         </div>
@@ -633,6 +783,21 @@ tr:last-child td{border-bottom:none;}
   </div>
 </div>
 
+<div class="modal-bg" id="balModal">
+  <div class="modal">
+    <h3 id="balTitle">Баланс</h3>
+    <div class="bd-note" id="balNote" style="margin:0 0 12px;"></div>
+    <div class="field">
+      <label id="balLbl">Фактический баланс</label>
+      <input type="number" step="0.01" id="balInput">
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="balCancel">Отмена</button>
+      <button class="btn" id="balSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="cashModal">
   <div class="modal wide">
     <h3 id="cfTitle">Депозиты и выводы</h3>
@@ -724,6 +889,23 @@ const SEED_DATA = [];
   let bankroll = null;      // {date, amount, currency}
   let cashflow = [];        // [{id, date, type:'DEP'|'WD', amount, currency, room}]
   let roomBank = {};        // {roomName: {amount, currency}} — стартовые суммы на румах
+  // Off-poker accounts. amount is the balance the user typed in by hand at ts;
+  // every operation recorded after that moment moves it further.
+  const DEFAULT_WALLETS = [
+    {name:'Binance', currency:'USD'},
+    {name:'Bybit',   currency:'USD'},
+    {name:'OKX',     currency:'USD'},
+    {name:'Skrill',  currency:'EUR'}
+  ];
+  let wallets = DEFAULT_WALLETS.map(w=>({...w, amount:0, ts:0, date:''}));
+  let opAcct = '';          // выбранный счёт в форме операций
+  let opType = 'DEP';
+  let opTarget = '';        // рум или кошелёк на другой стороне перевода
+  let opRatePair = '';
+  let opRates = {EURUSD: null, USDRUB: null};   // курсы для переводов (пусто — общий курс)
+  let balTarget = null;
+  let xCat = 'TRAIN';       // статья расхода
+  let xPay = '';            // с какого счёта оплачен расход
   let chartRoom = 'ALL';
   let biMin = 0, biMax = 25000;
   const BI_MAX = 25000;
@@ -759,8 +941,11 @@ const SEED_DATA = [];
     {id:'RE',     label:'Ре-энтри',       cls:'re',   filter:'Ре-энтри',    group:'special'},
     {id:'FLIGHT', label:'Флайт',          cls:'fl',   filter:'Флайты',      group:'special'},
     {id:'CASINO', label:'Казино',         cls:'cas',  filter:'Казино',      group:'special'},
-    {id:'TRAIN',  label:'Тренировка',     cls:'trn',  filter:'Тренировки',  group:'special'},
     {id:'RAKE',   label:'Рейкбек',        cls:'rake', filter:'Рейкбек',     group:'special'},
+
+    {id:'TRAIN',  label:'Тренировка',     cls:'exp',  filter:'Тренировки',  group:'expense'},
+    {id:'MINING', label:'Майнинг',        cls:'exp',  filter:'Майнинг',     group:'expense'},
+    {id:'SERVER', label:'Сервер',         cls:'exp',  filter:'Сервер',      group:'expense'},
 
     {id:'C_mtzp940f', label:'Фризаут',            cls:'fmt', filter:'Фризаут',    group:'format'},
     {id:'C_mtzpa28g', label:'Прогрессивный нокаут', cls:'fmt', filter:'ПКО',      group:'format'},
@@ -777,6 +962,8 @@ const SEED_DATA = [];
     {id:'SIDE',   plural:'доп. ставок',         row:'Доп. ставки'},
     {id:'CASINO', plural:'записей казино',      row:'Казино'},
     {id:'TRAIN',  plural:'тренировок',          row:'Тренировки'},
+    {id:'MINING', plural:'записей майнинга',    row:'Майнинг'},
+    {id:'SERVER', plural:'записей о сервере',   row:'Сервер'},
     {id:'RAKE',   plural:'начислений рейкбека', row:'Рейкбек'}
   ];
   function isOutside(t){
@@ -784,10 +971,20 @@ const SEED_DATA = [];
     return OUTSIDE_TAGS.some(o => tags.includes(o.id));
   }
 
+  // Running costs: only a buy-in (the amount paid), result always 0, always USD,
+  // no pokerroom. The whole amount comes off the overall profit and bankroll.
+  const EXPENSE_TAGS = BUILTIN_TAGS.filter(t=>t.group === 'expense');
+  const EXPENSE_IDS = EXPENSE_TAGS.map(t=>t.id);
+  function isExpense(t){
+    const tags = t.tags || [];
+    return EXPENSE_IDS.some(id=>tags.includes(id));
+  }
+
   const FORMAT_TAGS = BUILTIN_TAGS.filter(t=>t.group === 'format');
   const SPEED_TAGS  = BUILTIN_TAGS.filter(t=>t.group === 'speed');
   const TAG_GROUPS = [
     {id:'special', title:'Особые'},
+    {id:'expense', title:'Текущие расходы — только сумма, в минус общего профита'},
     {id:'format',  title:'Тип турнира'},
     {id:'speed',   title:'Скорость (без отметки — нормал)'},
     {id:'custom',  title:'Свои теги'}
@@ -833,10 +1030,21 @@ const SEED_DATA = [];
       }
       const out = {};
       try{
-        for(const k of ['tournaments','rates','rooms','seedVersion']){
-          const v = window.localStorage.getItem(STORAGE_PREFIX + k);
-          if(v !== null) out[k] = v;
+        // every key this build ever saved, not a fixed list — otherwise the
+        // bankroll, operations and wallets would vanish after a reload
+        const keys = ['tournaments','rates','rooms','seedVersion','bankroll','cashflow',
+                      'roomBank','wallets','customTags','opRates'];
+        const ls = window.localStorage;
+        if(typeof ls.length === 'number' && typeof ls.key === 'function'){
+          for(let i = 0; i < ls.length; i++){
+            const full = ls.key(i);
+            if(full && full.indexOf(STORAGE_PREFIX) === 0) keys.push(full.slice(STORAGE_PREFIX.length));
+          }
         }
+        Array.from(new Set(keys)).forEach(k=>{
+          const v = ls.getItem(STORAGE_PREFIX + k);
+          if(v !== null) out[k] = v;
+        });
       }catch(err){}
       this._cache = out;
       return this._cache;
@@ -965,6 +1173,15 @@ const SEED_DATA = [];
       if(manual.length) pendingNotice = manual.length;
     }
     if(!tournaments) tournaments = [];
+    // «Казик» was a casino session typed in as a room — make it a casino record
+    if(tournaments.some(t=>(t.note || '').trim() === 'Казик')){
+      tournaments.forEach(t=>{
+        if((t.note || '').trim() !== 'Казик') return;
+        t.note = '';
+        t.tags = (t.tags || []).filter(x=>x !== 'CASINO').concat('CASINO');
+      });
+      await saveTournaments();
+    }
 
     try{
       const v = await store.get('rates');
@@ -978,6 +1195,16 @@ const SEED_DATA = [];
       if(cv) cashflow = JSON.parse(cv) || [];
       const rb = await store.get('roomBank');
       if(rb) roomBank = JSON.parse(rb) || {};
+      const wv = await store.get('wallets');
+      if(wv){
+        const saved = JSON.parse(wv) || [];
+        wallets = DEFAULT_WALLETS.map(d=>{
+          const s = saved.find(x=>x.name === d.name);
+          return s ? {...d, amount:Number(s.amount)||0, ts:s.ts||0, date:s.date||''} : {...d, amount:0, ts:0, date:''};
+        }).concat(saved.filter(s=>!DEFAULT_WALLETS.some(d=>d.name === s.name)));
+      }
+      const orv = await store.get('opRates');
+      if(orv) opRates = Object.assign({EURUSD: null, USDRUB: null}, JSON.parse(orv) || {});
       const ct = await store.get('customTags');
       if(ct){
         const saved = JSON.parse(ct) || [];
@@ -1243,7 +1470,7 @@ const SEED_DATA = [];
           cur: rc,
           start: st ? convert(st.amount, st.currency, rc) : 0,
           hasStart: !!st,
-          profit: 0, dep: 0, wd: 0, n: 0
+          profit: 0, dep: 0, wd: 0, fee: 0, exp: 0, n: 0
         };
       }
       return acc[name];
@@ -1251,6 +1478,12 @@ const SEED_DATA = [];
 
     Object.keys(roomBank).forEach(touch);
     tournaments.forEach(t=>{
+      if(t.payFrom && isExpense(t) && !isWalletName(t.payFrom)){
+        if(from && t.date < from) return;
+        const r = touch(t.payFrom);
+        r.exp += convert(cost(t), t.currency, r.cur);
+        return;
+      }
       const name = (t.note || '').trim();
       if(!name) return;
       if(from && t.date < from) return;
@@ -1261,16 +1494,18 @@ const SEED_DATA = [];
       }
     });
     cashflow.forEach(f=>{
-      const name = (f.room || '').trim();
-      if(!name) return;
       if(from && f.date < from) return;
-      const r = touch(name);
-      const v = convert(f.amount, f.currency, r.cur);
-      if(f.type === 'WD') r.wd += v; else r.dep += v;
+      opLegs(f).forEach(l=>{
+        if(isWalletName(l.acct)) return;
+        const r = touch(l.acct);
+        r.dep += convert(l.inn, l.cur, r.cur);
+        r.wd  += convert(l.out, l.cur, r.cur);
+        r.fee += convert(l.fee, l.cur, r.cur);
+      });
     });
 
     return Object.values(acc)
-      .map(r=> Object.assign(r, {current: r.start + r.profit + r.dep - r.wd}))
+      .map(r=> Object.assign(r, {current: r.start + r.profit + r.dep - r.wd - r.fee - r.exp}))
       .sort((a,b)=> b.n - a.n || a.name.localeCompare(b.name,'ru'));
   }
 
@@ -1321,7 +1556,7 @@ const SEED_DATA = [];
 
     const cards = [];
     if(b){
-      cards.push(`<div class="bank-card hero ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Общий банкролл</div>
+      cards.push(`<div class="bank-card hero ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Покерный банкролл</div>
         <div class="bk-val ${sign(b.current - b.start)}">${fmt(b.current)} ${sym}</div>
         <div class="bk-sub">старт ${fmt(b.start)} ${sym} с ${b.date} · профит ${b.profit>0?'+':''}${fmt(b.profit)}${(b.dep||b.wd)?` · ввод ${fmt(b.dep)} · вывод ${fmt(b.wd)}`:''}</div></div>`);
     } else {
@@ -1340,24 +1575,372 @@ const SEED_DATA = [];
     cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()}"><div class="bk-lbl">Загрузка ${lbl}</div>
       <div class="bk-val neutral">${fmt(m.buyins)} ${sym}</div>
       <div class="bk-sub">сумма байинов</div></div>`);
+    {
+      const {from, to} = getPeriodRange();
+      const inRange = (d)=> (!from || d >= from) && (!to || d <= to);
+      let total = 0; const per = {};
+      tournaments.forEach(t=>{
+        if(!inRange(t.date) || !isExpense(t)) return;
+        const v = convert(cost(t) - (t.result || 0), t.currency, cur);
+        total += v;
+        const id = EXPENSE_IDS.find(x=>(t.tags||[]).includes(x));
+        per[id] = (per[id] || 0) + v;
+      });
+      const parts = EXPENSE_TAGS.filter(d=>per[d.id]).map(d=>`${d.label.toLowerCase()} ${fmt(per[d.id])}`);
+      cards.push(`<div class="bank-card exp"><div class="bk-lbl">Текущие расходы ${lbl}</div>
+        <div class="bk-val ${total>0?'neg':'neutral'}">${total>0?'−':''}${fmt(total)} ${sym}</div>
+        <div class="bk-sub">${parts.length ? parts.join(' · ') : 'тренировки, майнинг, сервер'}</div></div>`);
+    }
     cards.push(`<div class="bank-card info"><div class="bk-lbl">ROI ${lbl}</div>
       <div class="bk-val ${sign(m.roi)}">${m.roi.toFixed(2)}%</div>
       <div class="bk-sub">от суммы байинов</div></div>`);
-    cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()} clickable" data-cashgen="DEP" title="Нажмите, чтобы завести депозит"><div class="bk-lbl">Депозит общий ${lbl}</div>
-      <div class="bk-val neutral">${fmt(m.dep)} ${sym}</div>
-      <div class="bk-sub">${m.roomDep ? `на румы переведено ${fmt(m.roomDep)}` : 'извне в банкролл'}</div></div>`);
-    cards.push(`<div class="bank-card ${baseCurrency.toLowerCase()} clickable" data-cashgen="WD" title="Нажмите, чтобы завести вывод"><div class="bk-lbl">Вывод общий ${lbl}</div>
-      <div class="bk-val ${m.wd>0?'pos':'neutral'}">${fmt(m.wd)} ${sym}</div>
-      <div class="bk-sub">${m.roomWd ? `с румов снято ${fmt(m.roomWd)}` : 'из банкролла наружу'}</div></div>`);
     box.innerHTML = cards.join('');
 
     renderRoomBanks();
+    renderGeneral();
 
     const note = $('bankNote');
     if(note){
       note.textContent = 'Игровые сутки идут с 12:00 до 12:00 следующего дня — «сегодня» это ' +
-        pokerToday() + '. Общий банкролл меняют профит и общие ввод/вывод; переводы на румы — только балансы румов.';
+        pokerToday() + '. Покерный банкролл меняет только игровой результат; переводы и комиссии — в окне «Кошельки», итог — в «Общем банкролле» выше.';
     }
+  }
+
+  // ================= General bankroll: rooms + wallets =================
+  function isWalletName(name){ return wallets.some(w=>w.name === name); }
+  function walletCurrency(name){ const w = wallets.find(x=>x.name === name); return w ? w.currency : null; }
+  function acctCurrency(name){ return walletCurrency(name) || roomCurrency(name) || baseCurrency; }
+  // moment a record was created: explicit ts, or the timestamp baked into its id
+  function recTs(x){
+    if(x && x.ts) return x.ts;
+    const m = /^t_(\d+)_/.exec((x && x.id) || '');
+    return m ? Number(m[1]) : 0;
+  }
+
+  // An operation touches one or two accounts. Transfer: the source loses amount + fee,
+  // the destination gets toAmount (converted at the rate the user entered).
+  function opLegs(f){
+    if(f.kind === 'tr'){
+      const src = f.type === 'WD' ? f.target : f.wallet;
+      const dst = f.type === 'WD' ? f.wallet : f.target;
+      return [
+        {acct: src, cur: f.currency,   inn: 0,          out: f.amount, fee: f.fee || 0},
+        {acct: dst, cur: f.toCurrency, inn: f.toAmount, out: 0,        fee: 0}
+      ];
+    }
+    if(f.kind === 'ext'){
+      return [{acct: f.wallet, cur: f.currency,
+               inn: f.type === 'WD' ? 0 : f.amount, out: f.type === 'WD' ? f.amount : 0, fee: f.fee || 0}];
+    }
+    const name = (f.room || '').trim();
+    if(!name) return [];
+    return [{acct: name, cur: f.currency,
+             inn: f.type === 'WD' ? 0 : f.amount, out: f.type === 'WD' ? f.amount : 0, fee: f.fee || 0}];
+  }
+
+  function walletStates(){
+    return wallets.map(w=>{
+      const s = {name:w.name, cur:w.currency, base:w.amount || 0, setDate:w.date || '',
+                 dep:0, wd:0, fee:0, exp:0};
+      cashflow.forEach(f=>{
+        if(recTs(f) <= (w.ts || 0)) return;
+        opLegs(f).forEach(l=>{
+          if(l.acct !== w.name) return;
+          s.dep += convert(l.inn, l.cur, w.currency);
+          s.wd  += convert(l.out, l.cur, w.currency);
+          s.fee += convert(l.fee, l.cur, w.currency);
+        });
+      });
+      tournaments.forEach(t=>{
+        if(t.payFrom !== w.name || !isExpense(t) || recTs(t) <= (w.ts || 0)) return;
+        s.exp += convert(cost(t), t.currency, w.currency);
+      });
+      s.current = s.base + s.dep - s.wd - s.fee - s.exp;
+      return s;
+    });
+  }
+
+  function generalState(){
+    const cur = baseCurrency;
+    const from = bankroll ? bankroll.date : null;
+    const rooms = roomBankrollStates();
+    const ws = walletStates();
+    const roomsTotal = rooms.reduce((s,r)=> s + convert(r.current, r.cur, cur), 0);
+    const walletsTotal = ws.reduce((s,w)=> s + convert(w.current, w.cur, cur), 0);
+    let loose = 0;
+    tournaments.forEach(t=>{
+      if(!isExpense(t) || t.payFrom) return;
+      if(from && t.date < from) return;
+      loose += convert(cost(t), t.currency, cur);
+    });
+    let legacy = 0;
+    cashflow.forEach(f=>{
+      if(f.kind === 'tr' || f.kind === 'ext' || (f.room || '').trim()) return;
+      if(from && f.date < from) return;
+      const v = convert(f.amount, f.currency, cur) * (f.type === 'WD' ? -1 : 1);
+      legacy += v - convert(f.fee || 0, f.currency, cur);
+    });
+    return {cur, rooms, ws, roomsTotal, walletsTotal, loose, legacy,
+            total: roomsTotal + walletsTotal - loose + legacy};
+  }
+
+  // money that went into / came out of the poker rooms in the selected period
+  function opsInPeriod(){
+    const {from, to} = getPeriodRange();
+    const inRange = (d)=> (!from || d >= from) && (!to || d <= to);
+    const cur = baseCurrency;
+    let dep = 0, wd = 0, fee = 0, n = 0, exp = 0;
+    cashflow.forEach(f=>{
+      if(!inRange(f.date)) return;
+      n++;
+      fee += convert(f.fee || 0, f.currency, cur);
+      if(f.kind === 'tr') return;
+      const v = convert(f.amount, f.currency, cur);
+      if(f.type === 'WD') wd += v; else dep += v;
+    });
+    tournaments.forEach(t=>{ if(isExpense(t) && inRange(t.date)) exp += convert(cost(t), t.currency, cur); });
+    return {dep, wd, fee, n, exp};
+  }
+
+  const EXT_DEP = '__EXT_DEP', EXT_WD = '__EXT_WD';
+  function isExt(name){ return name === EXT_DEP || name === EXT_WD; }
+  function isKnownAcct(name){ return isWalletName(name) || knownRooms().some(r=>r.name === name); }
+
+  // big buttons — wallets only
+  function walletButtons(selected, attr){
+    return wallets.map(w=>`<button type="button" class="room-btn ${w.currency.toLowerCase()} ${selected===w.name?'active':''}" ${attr}="${escapeHtml(w.name)}">${escapeHtml(w.name)}<span class="cur">${w.currency}</span></button>`).join('');
+  }
+
+  // small tags — rooms, then wallets
+  function acctTags(selected, attr, opts){
+    opts = opts || {};
+    const cls = (c)=> (c || '').toLowerCase();
+    const tag = (name, cur, extra)=> `<button type="button" class="acct-tag ${cls(cur)} ${extra||''} ${selected===name?'active':''}" ${attr}="${escapeHtml(name)}">${escapeHtml(name)}<span class="cur">${cur || ''}</span></button>`;
+    let html = '';
+    if(opts.withNone) html += `<button type="button" class="acct-tag none ${selected===''?'active':''}" ${attr}="">не указано</button><span class="sep"></span>`;
+    html += '<span class="grp">Румы</span>' + knownRooms().map(r=>tag(r.name, r.currency, '')).join('');
+    html += '<span class="sep"></span><span class="grp">Кошельки</span>' +
+            wallets.filter(w=>w.name !== opts.exclude).map(w=>tag(w.name, w.currency, 'wl')).join('');
+    if(opts.withExt){
+      html += `<span class="sep"></span><span class="grp">Общий банкролл</span>` +
+        `<button type="button" class="acct-tag ext dep ${selected===EXT_DEP?'active':''}" ${attr}="${EXT_DEP}">Общий депозит<span class="cur">+</span></button>` +
+        `<button type="button" class="acct-tag ext wd ${selected===EXT_WD?'active':''}" ${attr}="${EXT_WD}">Общий вывод<span class="cur">−</span></button>`;
+    }
+    return html;
+  }
+
+  const CUR_RANK = {EUR:3, USD:2, RUB:1};
+  function opCurrencies(){
+    if(isExt(opTarget)){
+      const wc = opAcct ? acctCurrency(opAcct) : null;
+      return {src: opTarget === EXT_DEP ? 'общий депозит' : opAcct, dst: opTarget === EXT_DEP ? opAcct : 'общий вывод',
+              sc: wc, dc: wc, ext: true};
+    }
+    const src = opType === 'WD' ? opTarget : opAcct;
+    const dst = opType === 'WD' ? opAcct : opTarget;
+    return {src, dst, sc: src ? acctCurrency(src) : null, dc: dst ? acctCurrency(dst) : null};
+  }
+  // rate is always typed as "1 stronger = ? weaker"
+  function ratePair(sc, dc){
+    if(!sc || !dc || sc === dc) return null;
+    return CUR_RANK[sc] >= CUR_RANK[dc] ? {hi: sc, lo: dc} : {hi: dc, lo: sc};
+  }
+  function opToAmount(amount){
+    const {sc, dc} = opCurrencies();
+    const p = ratePair(sc, dc);
+    if(!p) return amount;
+    const r = parseFloat($('opRate').value);
+    if(isNaN(r) || r <= 0) return NaN;
+    return sc === p.hi ? amount * r : amount / r;
+  }
+
+  function renderOpPreview(){
+    const {src, dst, sc, dc} = opCurrencies();
+    const box = $('opPreview');
+    if(!src || !dst){ box.innerHTML = ''; return; }
+    const amount = parseFloat($('opAmount').value);
+    const fee = parseFloat($('opFee').value) || 0;
+    if(isNaN(amount) || amount <= 0){
+      box.innerHTML = `<b>${escapeHtml(src)}</b> → <b>${escapeHtml(dst)}</b>`;
+      return;
+    }
+    if(isExt(opTarget)){
+      const w = escapeHtml(opAcct), sy = SYM[sc];
+      box.innerHTML = opTarget === EXT_DEP
+        ? `<b>${w}</b>: +${fmt(amount - fee)} ${sy}${fee ? ` (${fmt(amount)} − комиссия ${fmt(fee)})` : ''} · <b>общий банкролл</b>: +${fmt(amount - fee)} ${sy}`
+        : `<b>${w}</b>: −${fmt(amount + fee)} ${sy}${fee ? ` (в т.ч. комиссия ${fmt(fee)})` : ''} · <b>общий банкролл</b>: −${fmt(amount + fee)} ${sy}`;
+      return;
+    }
+    const to = opToAmount(amount);
+    box.innerHTML = `<b>${escapeHtml(src)}</b>: −${fmt(amount + fee)} ${SYM[sc]}` +
+      (fee ? ` (в т.ч. комиссия ${fmt(fee)})` : '') +
+      ` → <b>${escapeHtml(dst)}</b>: +${isNaN(to) ? '—' : fmt(to)} ${SYM[dc]}`;
+  }
+
+  function renderGeneral(){
+    if(!$('gbGrid')) return;
+    const g = generalState();
+    const o = opsInPeriod();
+    const cur = g.cur, sym = SYM[cur];
+    const sign = (v)=> (v > 0 ? 'pos' : (v < 0 ? 'neg' : 'neutral'));
+    const lbl = PERIOD_LABEL[period] || 'за период';
+    const cc = cur.toLowerCase();
+
+    $('gbTotal').innerHTML = `<span class="${sign(g.total)}">${fmt(g.total)} ${sym}</span>`;
+    $('wlTotal').innerHTML = `<span class="${sign(g.walletsTotal)}">${fmt(g.walletsTotal)} ${sym}</span>`;
+    $('gbGrid').innerHTML = [
+      `<div class="bank-card hero ${cc}"><div class="bk-lbl">Общий банкролл</div>
+        <div class="bk-val ${sign(g.total)}">${fmt(g.total)} ${sym}</div>
+        <div class="bk-sub">румы ${fmt(g.roomsTotal)} + кошельки ${fmt(g.walletsTotal)}${g.loose ? ' − расходы ' + fmt(g.loose) : ''}</div></div>`,
+      `<div class="bank-card ${cc}"><div class="bk-lbl">На покеррумах</div>
+        <div class="bk-val">${fmt(g.roomsTotal)} ${sym}</div>
+        <div class="bk-sub">${g.rooms.length} румов</div></div>`,
+      `<div class="bank-card ${cc}"><div class="bk-lbl">В кошельках</div>
+        <div class="bk-val">${fmt(g.walletsTotal)} ${sym}</div>
+        <div class="bk-sub">${g.ws.map(w=>w.name).join(', ')}</div></div>`,
+      `<div class="bank-card ${cc} clickable" data-optype-pick="DEP"><div class="bk-lbl">Общий депозит ${lbl}</div>
+        <div class="bk-val">${fmt(o.dep)} ${sym}</div>
+        <div class="bk-sub">деньги извне — плюс к банкроллу</div></div>`,
+      `<div class="bank-card ${cc} clickable" data-optype-pick="WD"><div class="bk-lbl">Общий вывод ${lbl}</div>
+        <div class="bk-val ${o.wd>0?'pos':'neutral'}">${fmt(o.wd)} ${sym}</div>
+        <div class="bk-sub">забрано из банкролла</div></div>`,
+      `<div class="bank-card exp"><div class="bk-lbl">Комиссии ${lbl}</div>
+        <div class="bk-val ${o.fee>0?'neg':'neutral'}">${o.fee>0?'−':''}${fmt(o.fee)} ${sym}</div>
+        <div class="bk-sub">в минус общего банкролла</div></div>`,
+      `<div class="bank-card exp"><div class="bk-lbl">Текущие расходы ${lbl}</div>
+        <div class="bk-val ${o.exp>0?'neg':'neutral'}">${o.exp>0?'−':''}${fmt(o.exp)} ${sym}</div>
+        <div class="bk-sub">тренировка, майнинг, сервер</div></div>`
+    ].join('');
+
+    $('walletGrid').innerHTML = g.ws.map(w=>`
+      <div class="room-bank ${w.cur.toLowerCase()} wallet clickable" data-wallet="${escapeHtml(w.name)}" title="Нажмите, чтобы ввести фактический баланс">
+        <div class="rb-name">${escapeHtml(w.name)}<span class="rb-cur">${w.cur}</span></div>
+        <div class="rb-val ${sign(w.current)}">${fmt(w.current)} ${SYM[w.cur]}</div>
+        <div class="rb-sub">${w.setDate ? 'баланс ' + fmt(w.base) + ' на ' + w.setDate : 'баланс ещё не введён'}</div>
+        <div class="rb-sub">пришло ${fmt(w.dep)} · ушло ${fmt(w.wd)}${w.fee ? ' · комиссии ' + fmt(w.fee) : ''}${w.exp ? ' · расходы ' + fmt(w.exp) : ''}</div>
+      </div>`).join('');
+
+    // the operations form
+    if(opAcct && !isWalletName(opAcct)) opAcct = '';
+    if(opTarget && !isExt(opTarget) && (!isKnownAcct(opTarget) || opTarget === opAcct)) opTarget = '';
+    if(opTarget === EXT_DEP) opType = 'DEP';
+    if(opTarget === EXT_WD) opType = 'WD';
+    $('opAcctBtns').innerHTML = walletButtons(opAcct, 'data-opacct');
+    document.querySelectorAll('#opTypeTabs .tab').forEach(t=>
+      t.classList.toggle('active', t.getAttribute('data-optype') === opType));
+    $('opTargetLbl').textContent = opType === 'WD' ? 'Откуда (рум или кошелёк)' : 'Куда (рум или кошелёк)';
+    $('opTargetTags').innerHTML = acctTags(opTarget, 'data-optarget', {exclude: opAcct, withExt: true});
+
+    const {src, dst, sc, dc} = opCurrencies();
+    $('opAmountLbl').textContent = 'Сумма' + (sc ? ', ' + sc : '');
+    $('opFeeLbl').textContent = 'Комиссия' + (sc ? ', ' + sc : '');
+    const p = ratePair(sc, dc);
+    $('opRateField').style.visibility = p ? 'visible' : 'hidden';
+    if(p){
+      $('opRateLbl').textContent = `Курс: 1 ${p.hi} = ? ${p.lo}`;
+      const key = p.hi + p.lo;
+      if(opRatePair !== key || !$('opRate').value){
+        const def = trRate(p.hi, p.lo);
+        $('opRate').value = def >= 10 ? def.toFixed(2) : def.toFixed(4);
+        opRatePair = key;
+      }
+    }
+    $('opHint').textContent = !opAcct ? 'Выберите кошелёк.'
+      : !opTarget ? (opType === 'WD' ? 'Выберите тег — откуда выводите.' : 'Выберите тег — куда переводите.')
+      : opTarget === EXT_DEP ? 'Общий депозит: деньги извне приходят в кошелёк и увеличивают общий банкролл (комиссия вычитается).'
+      : opTarget === EXT_WD ? 'Общий вывод: деньги уходят из кошелька наружу и уменьшают общий банкролл.'
+      : 'Полная сумма переходит с одного счёта на другой, общий банкролл уменьшится только на комиссию. Комиссия списывается со счёта-отправителя.';
+    renderTrRates();
+    renderOpPreview();
+    renderOpList();
+  }
+
+  function opDescr(f){
+    if(f.kind === 'ext') return escapeHtml(f.wallet);
+    if(f.kind === 'tr'){
+      const src = f.type === 'WD' ? f.target : f.wallet;
+      const dst = f.type === 'WD' ? f.wallet : f.target;
+      return `${escapeHtml(src)} → ${escapeHtml(dst)}`;
+    }
+    return escapeHtml(f.room || 'без счёта');
+  }
+
+  function renderOpList(){
+    const box = $('opList');
+    if(!box) return;
+    const focus = opTarget || opAcct;
+    const list = cashflow
+      .filter(f => !focus || (isExt(focus)
+          ? f.kind !== 'tr' && (f.type === 'WD') === (focus === EXT_WD)
+          : opLegs(f).some(l=>l.acct === focus)))
+      .slice()
+      .sort((a,b)=> b.date.localeCompare(a.date) || recTs(b) - recTs(a))
+      .slice(0, focus ? 100 : 15);
+    $('opListHead').textContent = focus ? 'Операции: ' + (focus === EXT_DEP ? 'общий депозит' : focus === EXT_WD ? 'общий вывод' : focus) : 'Последние операции';
+    box.innerHTML = list.length
+      ? list.map(f=>{
+          const conv = f.kind === 'tr' && f.toCurrency !== f.currency
+            ? ` → ${fmt(f.toAmount)} ${SYM[f.toCurrency]}` : '';
+          return `
+          <div class="cash-row">
+            <span class="cf-date">${f.date}</span>
+            <span>${f.kind === 'tr' ? (f.type === 'WD' ? 'Вывод' : 'Депозит') : (f.type === 'WD' ? 'Общий вывод' : 'Общий депозит')}</span>
+            <span class="cf-acct">${opDescr(f)}</span>
+            ${f.fee ? `<span class="cf-fee">комиссия ${fmt(f.fee)}</span>` : ''}
+            <span class="cf-sum ${f.type === 'WD' ? 'pos' : 'neutral'}">${fmt(f.amount)} ${SYM[f.currency]}${conv}</span>
+            <button class="btn ghost tiny" data-opdel="${f.id}">×</button>
+          </div>`;}).join('')
+      : '<div class="bd-note" style="margin:0;">Операций пока нет.</div>';
+  }
+
+  async function saveOpRates(){
+    try{ await store.set('opRates', JSON.stringify(opRates)); }catch(e){}
+  }
+  function trRate(hi, lo){
+    const eu = opRates.EURUSD || convert(1, 'EUR', 'USD');
+    const ur = opRates.USDRUB || convert(1, 'USD', 'RUB');
+    if(hi === 'EUR' && lo === 'USD') return eu;
+    if(hi === 'USD' && lo === 'RUB') return ur;
+    if(hi === 'EUR' && lo === 'RUB') return eu * ur;
+    return convert(1, hi, lo);
+  }
+  function renderTrRates(){
+    if(!$('trEurUsd')) return;
+    if(document.activeElement !== $('trEurUsd')) $('trEurUsd').value = opRates.EURUSD || '';
+    if(document.activeElement !== $('trUsdRub')) $('trUsdRub').value = opRates.USDRUB || '';
+    $('trEurUsd').placeholder = convert(1, 'EUR', 'USD').toFixed(4);
+    $('trUsdRub').placeholder = convert(1, 'USD', 'RUB').toFixed(2);
+    $('trNote').textContent = (opRates.EURUSD || opRates.USDRUB)
+      ? 'подставляются в поле «Курс» при переводах между валютами'
+      : 'пусто — берётся общий курс из «Курса обмена»';
+  }
+
+  async function saveWallets(){
+    try{ await store.set('wallets', JSON.stringify(wallets)); }catch(e){}
+  }
+
+  // ================= Running costs panel =================
+  function renderExpenses(){
+    if(!$('xCatBtns')) return;
+    $('xCatBtns').innerHTML = EXPENSE_TAGS.map(t=>
+      `<button type="button" class="room-btn ${xCat === t.id ? 'active' : ''} xcat" data-xcat="${t.id}">${escapeHtml(t.label)}</button>`).join('');
+    if(xPay && !isKnownAcct(xPay)) xPay = '';
+    $('xPayBtns').innerHTML = acctTags(xPay, 'data-xpay', {withNone: true});
+    $('xAmountLbl').textContent = 'Сумма, ' + (xPay ? acctCurrency(xPay) : 'USD');
+    const list = tournaments.filter(isExpense).slice()
+      .sort((a,b)=> b.date.localeCompare(a.date) || recTs(b) - recTs(a)).slice(0, 12);
+    $('xList').innerHTML = list.length
+      ? list.map(t=>{
+          const id = EXPENSE_IDS.find(x=>(t.tags||[]).includes(x));
+          return `<div class="cash-row">
+            <span class="cf-date">${t.date}</span>
+            <span>${escapeHtml(tagLabel(id))}</span>
+            <span class="cf-acct">${escapeHtml(t.payFrom || 'из общего')}</span>
+            <span class="cf-sum neg">−${fmt(cost(t))} ${SYM[t.currency]}</span>
+            <button class="btn ghost tiny" data-xdel="${t.id}">×</button>
+          </div>`;
+        }).join('')
+      : '<div class="bd-note" style="margin:0;">Расходов пока нет.</div>';
   }
 
   function renderRoomBanks(){
@@ -1372,11 +1955,13 @@ const SEED_DATA = [];
     const sign = (v)=> (v > 0 ? 'pos' : (v < 0 ? 'neg' : 'neutral'));
     box.innerHTML = rooms.map(r=>{
       const cls = (r.cur || '').toLowerCase();
-      return `<div class="room-bank ${cls} clickable" data-cashroom="${escapeHtml(r.name)}" title="Нажмите, чтобы завести депозит или вывод">
+      return `<div class="room-bank ${cls} clickable" data-cashroom="${escapeHtml(r.name)}" title="Нажмите, чтобы завести депозит или вывод по этому руму">
         <div class="rb-name">${escapeHtml(r.name)}<span class="rb-cur">${r.cur}</span></div>
         <div class="rb-val ${sign(r.current)}">${fmt(r.current)} ${SYM[r.cur]}</div>
         <div class="rb-sub">старт ${fmt(r.start)} · профит ${r.profit>0?'+':''}${fmt(r.profit)}</div>
-        <div class="rb-sub">ввод ${fmt(r.dep)} · вывод ${fmt(r.wd)} · турниров ${r.n}</div>
+        <div class="rb-sub">ввод ${fmt(r.dep)} · вывод ${fmt(r.wd)}${r.fee ? ' · комиссии ' + fmt(r.fee) : ''}${r.exp ? ' · расходы ' + fmt(r.exp) : ''} · турниров ${r.n}</div>
+        <div style="height:18px;"></div>
+        <button type="button" class="rb-edit" data-roombal="${escapeHtml(r.name)}">✎ баланс</button>
       </div>`;
     }).join('');
   }
@@ -1508,6 +2093,7 @@ const SEED_DATA = [];
         return true;
       });
     }
+    else if(statSide === 'EXPENSE') periodList = periodList.filter(isExpense);
     else if(OUTSIDE_TAGS.some(o=>o.id === statSide)) periodList = periodList.filter(t=>(t.tags||[]).includes(statSide));
     else if(statSide === 'SAT')    periodList = periodList.filter(t=>(t.tags||[]).includes('SAT'));
     else if(statSide === 'NOSIDE') periodList = periodList.filter(t=>isCountable(t) && !(t.tags||[]).includes('SAT'));
@@ -1522,7 +2108,7 @@ const SEED_DATA = [];
     const cls = s.profit>0?'pos':(s.profit<0?'neg':'neutral');
     const roiCls = s.roi>0?'pos':(s.roi<0?'neg':'neutral');
     $('statGrid').innerHTML = `
-      <div class="stat"><div class="lbl">${OUTSIDE_TAGS.some(o=>o.id===statSide) ? 'Записей' : 'Турниров'}</div><div class="val">${OUTSIDE_TAGS.some(o=>o.id===statSide) ? s.outsideCount : s.count}${(!OUTSIDE_TAGS.some(o=>o.id===statSide) && s.reCount) ? ` <span style="font-size:11px;color:var(--text-faint);">(${s.reCount} повторных)</span>` : ''}${(statSide === 'ALL' && s.outsideCount) ? ` <span style="font-size:11px;color:var(--text-faint);">+${s.outsideCount} вне счёта</span>` : ''}</div></div>
+      <div class="stat"><div class="lbl">${(statSide==='EXPENSE' || OUTSIDE_TAGS.some(o=>o.id===statSide)) ? 'Записей' : 'Турниров'}</div><div class="val">${(statSide==='EXPENSE' || OUTSIDE_TAGS.some(o=>o.id===statSide)) ? s.outsideCount : s.count}${(statSide!=='EXPENSE' && !OUTSIDE_TAGS.some(o=>o.id===statSide) && s.reCount) ? ` <span style="font-size:11px;color:var(--text-faint);">(${s.reCount} повторных)</span>` : ''}${(statSide === 'ALL' && s.outsideCount) ? ` <span style="font-size:11px;color:var(--text-faint);">+${s.outsideCount} вне счёта</span>` : ''}</div></div>
       <div class="stat"><div class="lbl">${foldSat ? `Профит с билетами (${baseCurrency})` : `Профит, деньги (${baseCurrency})`}</div><div class="val ${cls}">${fmt(s.profit)} ${SYM[baseCurrency]}</div></div>
       <div class="stat"><div class="lbl">ROI</div><div class="val ${roiCls}">${s.roi.toFixed(2)}%</div></div>
       <div class="stat"><div class="lbl">${statSide === 'SIDE' ? 'Средняя ставка' : 'ABI (средний байин)'}</div><div class="val">${fmt(statSide === 'SIDE' ? (s.allCount ? s.totalBuyin/s.allCount : 0) : s.abi)} ${SYM[baseCurrency]}</div></div>
@@ -1547,7 +2133,9 @@ const SEED_DATA = [];
         if(s.flightCount) inner.push(`${s.flightCount} флайтов`);
         if(inner.length) txt += `, из них ` + inner.join(' и ');
         const outside = [];
-        OUTSIDE_TAGS.forEach(o=>{ if(s.outCounts[o.id]) outside.push(`${s.outCounts[o.id]} ${o.plural}`); });
+        OUTSIDE_TAGS.filter(o=>!EXPENSE_IDS.includes(o.id)).forEach(o=>{ if(s.outCounts[o.id]) outside.push(`${s.outCounts[o.id]} ${o.plural}`); });
+        const expN = EXPENSE_IDS.reduce((n,id)=>n + (s.outCounts[id] || 0), 0);
+        if(expN) outside.push(`${expN} записей текущих расходов`);
         if(outside.length) txt += `. Плюс ` + outside.join(', ') +
           ` — они в общем профите и общем ROI, но вне счёта турниров, ABI и ROI турниров.`;
         txt += ` ABI считается только по турнирам (${fmt(s.stakeCounted)} ${SYM[baseCurrency]} / ${s.count}), вход по билету — по номиналу байина.`;
@@ -1557,9 +2145,11 @@ const SEED_DATA = [];
           ? 'Чистые турниры: без сателлитов и без доп. ставок.'
           : (statSide === 'SAT'
               ? 'Только сателлиты. Выигранный билет считается выплатой — иначе удачный сателлит выглядел бы убыточным.'
+              : (statSide === 'EXPENSE'
+                  ? 'Текущие расходы: тренировки, майнинг, сервер. Вся сумма идёт в минус общего профита и общего банкролла; в счёт турниров, ABI и ROI турниров не входит. Разбивка по статьям — в таблице ниже.'
               : (statSide === 'RAKE'
                   ? 'Только рейкбек. Билеты считаются наравне с деньгами — рейкбек часто приходит именно билетом.'
-                  : 'Деньги идут в общий банкролл, общий профит и общий ROI, но в счёт турниров, ABI и ROI турниров не входят.'));
+                  : 'Деньги идут в общий банкролл, общий профит и общий ROI, но в счёт турниров, ABI и ROI турниров не входят.')));
         compNote.textContent = foldSat
           ? base + ` Билетов получено на ${fmt(s.ticketsWon)} ${SYM[baseCurrency]}, они уже включены в профит. ` +
             'В срезе «Всё вместе» билеты не складываются с деньгами, чтобы не посчитать их дважды.'
@@ -1598,7 +2188,16 @@ const SEED_DATA = [];
 
     // --- breakdown table ---
     const rows = [];
-    if(statView === 'CURRENCY'){
+    if(statSide === 'EXPENSE'){
+      EXPENSE_TAGS.forEach(def=>{
+        const sub = periodList.filter(t=>(t.tags||[]).includes(def.id));
+        if(!sub.length) return;
+        rows.push({name: def.label, st: computeStats(sub, conv), cur: baseCurrency,
+                   muted: true, outCount: sub.length});
+      });
+      rows.push({name: 'ИТОГО в ' + baseCurrency, st: s, cur: baseCurrency, total: true,
+                 muted: true, outCount: periodList.length});
+    } else if(statView === 'CURRENCY'){
       ['EUR','USD','RUB'].forEach(cur=>{
         const sub = periodList.filter(t=>t.currency===cur);
         if(!sub.length) return;
@@ -1662,12 +2261,17 @@ const SEED_DATA = [];
       // side bets sit outside the per-currency МТТ counts, so give them their
       // own line — then every column of the table adds up to the total row
       if(statSide === 'ALL'){
-        OUTSIDE_TAGS.forEach(o=>{
-          const sub = periodList.filter(t=>(t.tags||[]).includes(o.id));
+        const exp = periodList.filter(isExpense);
+        OUTSIDE_TAGS.filter(o=>!EXPENSE_IDS.includes(o.id)).forEach(o=>{
+          const sub = periodList.filter(t=>(t.tags||[]).includes(o.id) && !isExpense(t));
           if(!sub.length) return;
           rows.push({name: o.row, st: computeStats(sub, conv), cur: baseCurrency,
                      muted: true, outCount: sub.length});
         });
+        if(exp.length){
+          rows.push({name: 'Текущие расходы', st: computeStats(exp, conv), cur: baseCurrency,
+                     muted: true, outCount: exp.length});
+        }
       }
       rows.push({name: 'ИТОГО в ' + baseCurrency, st: s, cur: baseCurrency, total: true});
     }
@@ -1677,7 +2281,8 @@ const SEED_DATA = [];
       return;
     }
 
-    const label = statView === 'ROOM' ? 'Покеррум'
+    const label = statSide === 'EXPENSE' ? 'Статья расходов'
+                : statView === 'ROOM' ? 'Покеррум'
                 : (statView === 'BI' ? 'Диапазон байина'
                 : (statView === 'FORMAT' ? 'Тип турнира'
                 : (statView === 'SPEED' ? 'Скорость' : 'Валюта')));
@@ -1732,6 +2337,11 @@ const SEED_DATA = [];
       html += `<div class="bd-note">Все валюты пересчитаны в USD по вашему курсу; турнир попадает в диапазон по полной стоимости входа (байин + ребай).</div>`;
     } else {
       html += `<div class="bd-note">Строки по валютам — в собственных единицах. Итоговая строка конвертирована в ${baseCurrency}.</div>`;
+    }
+    if(statSide === 'EXPENSE'){
+      $('statBreakdown').innerHTML = html.replace(/<div class="bd-note">Строки по валютам[^<]*<\/div>/, '') +
+        `<div class="bd-note">Суммы в ${baseCurrency}. Расходы вне счёта турниров, ABI и ROI турниров — они уменьшают только общий профит и общий банкролл.</div>`;
+      return;
     }
     // the tickets column means different things depending on the view
     html += foldSat
@@ -1930,7 +2540,7 @@ const SEED_DATA = [];
   // --- pokerroom select population ---
   function knownRooms(){
     const map = new Map();
-    rooms.forEach(r=>{ if(r && r.name) map.set(r.name, r.currency || null); });
+    rooms.forEach(r=>{ if(r && r.name && r.name !== 'Казик') map.set(r.name, r.currency || null); });
     tournaments.forEach(t=>{
       const n = (t.note || '').trim();
       if(n && !map.has(n)) map.set(n, t.currency || null);
@@ -1966,6 +2576,7 @@ const SEED_DATA = [];
 
       let html = '';
       TAG_GROUPS.forEach(g=>{
+        if(g.id === 'expense' && prefix === 'ftag') return;   // they have their own panel
         const items = g.id === 'custom' ? customTags : BUILTIN_TAGS.filter(t=>t.group === g.id);
         if(!items.length && g.id !== 'custom') return;
         if(g.id === 'custom' && !items.length && !extra) return;
@@ -1981,7 +2592,7 @@ const SEED_DATA = [];
     box('etag', 'eTagBox', '');
 
     // freeroll needs its own handler again after a redraw
-    ['FREE','RAKE','TRAIN'].forEach(id=>{
+    ['FREE','RAKE','TRAIN','MINING','SERVER'].forEach(id=>{
       const el = $('ftag_' + id);
       if(el) el.addEventListener('change', applyFreeroll);
     });
@@ -2219,6 +2830,7 @@ const SEED_DATA = [];
     if(!$('fTagBox').innerHTML) renderTagUI();
     fillRoomSelects();
     renderBankroll();
+    renderExpenses();
     renderLedger();
     renderTable();
     renderStats();
@@ -2260,7 +2872,7 @@ const SEED_DATA = [];
     const ticket = isNaN(ticketRaw) || ticketRaw < 0 ? 0 : ticketRaw;
     const tags = readTags('ftag');
     // a training entry is a plain USD cost: no rebuy, no ticket, result fixed at 0
-    const isTrain = tags.includes('TRAIN');
+    const isTrain = tags.some(id=>EXPENSE_IDS.includes(id));
     const isRake = tags.includes('RAKE');
     if(isRake && result === null){ result = parseAmount($('fResult').value) || 0; }
     tournaments.push({
@@ -2270,7 +2882,7 @@ const SEED_DATA = [];
       rebuy: isTrain ? 0 : rebuy,
       result: isTrain ? 0 : result,
       ticket: isTrain ? 0 : ticket,
-      note: formRoom.trim(), tags, imported: false
+      note: isTrain ? '' : formRoom.trim(), tags, imported: false
     });
     await saveTournaments();
     $('fBuyin').value=''; $('fRebuy').value=''; $('fResult').value=''; $('fTicket').value='';
@@ -2314,7 +2926,8 @@ const SEED_DATA = [];
     const payload = {
       app:'poker-tracker', version:1,
       exportedAt: new Date().toISOString(),
-      rates, rooms, tournaments
+      rates, rooms, tournaments,
+      bankroll, roomBank, cashflow, wallets, customTags, opRates
     };
     const blob = new Blob([JSON.stringify(payload, null, 1)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
@@ -2352,9 +2965,15 @@ const SEED_DATA = [];
           rooms = data.rooms.map(r=> typeof r === 'string' ? {name:r, currency:null} : r);
           await saveRooms();
         }
+        if(data.bankroll !== undefined){ bankroll = data.bankroll; await saveBankroll(); }
+        if(data.roomBank){ roomBank = data.roomBank; await saveRoomBank(); }
+        if(Array.isArray(data.cashflow)){ cashflow = data.cashflow; await saveCashflow(); }
+        if(Array.isArray(data.wallets)){ wallets = data.wallets; await saveWallets(); }
+        if(data.opRates){ opRates = Object.assign({EURUSD: null, USDRUB: null}, data.opRates); await saveOpRates(); }
+        if(Array.isArray(data.customTags)){ customTags = data.customTags; await saveCustomTags(); }
         await saveTournaments();
         await store.set('seedVersion', SEED_VERSION);
-        renderRates(); renderAll();
+        renderRates(); renderTagUI(); renderAll();
         alert('Данные загружены.');
       }catch(err){
         alert('Не удалось прочитать файл: он повреждён или создан другой программой.');
@@ -2441,9 +3060,11 @@ const SEED_DATA = [];
 
   // A training session only has a cost: the buy-in is what you paid, the result
   // is always zero, and it is billed in USD.
+  function expenseOn(prefix){ return EXPENSE_IDS.some(id=>tagOn(prefix, id)); }
+
   function applyFreeroll(){
     const noBuyin = noBuyinTag('ftag');
-    const train = tagOn('ftag', 'TRAIN');
+    const train = expenseOn('ftag');
 
     $('fBuyin').disabled = noBuyin;
     $('fRebuy').disabled = noBuyin || train;
@@ -2488,7 +3109,7 @@ const SEED_DATA = [];
 
   function applyEditLocks(){
     const noBuyin = noBuyinTag('etag');
-    const train = tagOn('etag', 'TRAIN');
+    const train = expenseOn('etag');
     $('eBuyin').disabled = noBuyin;
     $('eRebuy').disabled = noBuyin || train;
     if(noBuyin){ $('eBuyin').value = '0'; $('eRebuy').value = ''; }
@@ -2497,7 +3118,7 @@ const SEED_DATA = [];
     $('eTicket').disabled = train;
   }
   document.addEventListener('change', (ev)=>{
-    if(ev.target && /^etag_(FREE|RAKE|TRAIN)$/.test(ev.target.id || '')) applyEditLocks();
+    if(ev.target && /^etag_(FREE|RAKE|TRAIN|MINING|SERVER)$/.test(ev.target.id || '')) applyEditLocks();
   });
 
   // --- pokerroom selects ---
@@ -2722,26 +3343,18 @@ const SEED_DATA = [];
   }
 
   function openCashflow(room, type){
-    cfRoomValue = room || '';
-    $('cfDate').value = pokerToday();
-    if(type) $('cfType').value = type;
-    $('cfCurrency').value = (cfRoomValue ? roomCurrency(cfRoomValue) : baseCurrency) || baseCurrency;
-    $('cfAmount').value = '';
-
-    $('cfWhere').innerHTML = cfRoomValue
-      ? `${escapeHtml(cfRoomValue)} <span>— перевод между своими счетами</span>`
-      : `Общий банкролл <span>— деньги извне или из покера наружу</span>`;
-    $('cfExplain').textContent = cfRoomValue
-      ? 'Меняет баланс рума. Общий банкролл не трогает — это перекладывание внутри своих же денег.'
-      : 'Меняет общий банкролл: депозит добавляет деньги, вывод убирает их из покера.';
-
-    renderCashList();
-    $('cashModal').classList.add('open');
-    setTimeout(()=>{ try{ $('cfAmount').focus(); }catch(e){} }, 60);
+    if(room && isWalletName(room)) opAcct = room;
+    else opTarget = room || '';
+    if(type) opType = type;
+    $('walletPanel').open = true;
+    renderGeneral();
+    $('walletPanel').scrollIntoView({behavior:'smooth', block:'start'});
+    setTimeout(()=>{ try{ $('opAmount').focus(); }catch(e){} }, 350);
   }
 
   // room card -> that room; the two general cards -> the whole bankroll
   document.addEventListener('click', (ev)=>{
+    if(ev.target.closest && ev.target.closest('[data-roombal]')) return;
     const rc = ev.target.closest && ev.target.closest('[data-cashroom]');
     if(rc){ openCashflow(rc.getAttribute('data-cashroom'), 'DEP'); return; }
     const gc = ev.target.closest && ev.target.closest('[data-cashgen]');
@@ -2758,6 +3371,171 @@ const SEED_DATA = [];
     await saveCashflow();
     $('cfAmount').value = '';
     renderCashList(); renderBankroll();
+  });
+
+
+  // ================= General bankroll handlers =================
+  document.addEventListener('click', async (ev)=>{
+    const el = ev.target.closest ? ev.target : null;
+    if(!el) return;
+
+    const wl = el.closest('[data-wallet]');
+    if(wl){ openBalance('wallet', wl.getAttribute('data-wallet')); return; }
+
+    const rbal = el.closest('[data-roombal]');
+    if(rbal){ openBalance('room', rbal.getAttribute('data-roombal')); return; }
+
+    const acct = el.closest('[data-opacct]');
+    if(acct){
+      opAcct = acct.getAttribute('data-opacct');
+      if(opTarget === opAcct) opTarget = '';
+      renderGeneral();
+      return;
+    }
+
+    const tg = el.closest('[data-optarget]');
+    if(tg){
+      const v = tg.getAttribute('data-optarget');
+      opTarget = opTarget === v ? '' : v;
+      renderGeneral();
+      return;
+    }
+
+    const tp = el.closest('[data-optype]');
+    if(tp){
+      opType = tp.getAttribute('data-optype');
+      if(isExt(opTarget)) opTarget = opType === 'WD' ? EXT_WD : EXT_DEP;
+      renderGeneral(); return;
+    }
+
+    const pick = el.closest('[data-optype-pick]');
+    if(pick){
+      const ty = pick.getAttribute('data-optype-pick');
+      openCashflow(ty === 'WD' ? EXT_WD : EXT_DEP, ty);
+      return;
+    }
+
+    const del = el.closest('[data-opdel]');
+    if(del){
+      if(!confirm('Удалить операцию?')) return;
+      cashflow = cashflow.filter(x=>x.id !== del.getAttribute('data-opdel'));
+      await saveCashflow();
+      renderBankroll();
+      return;
+    }
+
+    const xc = el.closest('[data-xcat]');
+    if(xc){ xCat = xc.getAttribute('data-xcat'); renderExpenses(); return; }
+
+    const xp = el.closest('[data-xpay]');
+    if(xp){ xPay = xp.getAttribute('data-xpay'); renderExpenses(); return; }
+
+    const xd = el.closest('[data-xdel]');
+    if(xd){
+      if(!confirm('Удалить расход?')) return;
+      tournaments = tournaments.filter(x=>x.id !== xd.getAttribute('data-xdel'));
+      await saveTournaments();
+      renderAll();
+    }
+  });
+
+  // ---- manual balance correction (wallets and rooms) ----
+  function openBalance(kind, name){
+    let cur, current;
+    if(kind === 'wallet'){
+      const st = walletStates().find(x=>x.name === name);
+      if(!st) return;
+      cur = st.cur; current = st.current;
+      $('balNote').textContent = 'Введите сумму, которая сейчас лежит в кошельке. Дальше баланс считается от неё: ' +
+        'операции и расходы, добавленные после этого, будут прибавляться и вычитаться.';
+    } else {
+      const st = roomBankrollStates().find(x=>x.name === name);
+      if(!st) return;
+      cur = st.cur; current = st.current;
+      $('balNote').textContent = 'Введите фактический баланс рума. Разница пойдёт в стартовую сумму рума, ' +
+        'поэтому текущий баланс станет ровно таким, а профит, турниры и операции не изменятся.';
+    }
+    balTarget = {kind, name, cur, current};
+    $('balTitle').textContent = 'Баланс: ' + name;
+    $('balLbl').textContent = 'Фактический баланс, ' + cur + ' (сейчас по учёту ' + fmt(current) + ' ' + SYM[cur] + ')';
+    $('balInput').value = (Math.round(current * 100) / 100).toFixed(2);
+    $('balModal').classList.add('open');
+    setTimeout(()=>{ try{ $('balInput').focus(); $('balInput').select(); }catch(e){} }, 50);
+  }
+  async function saveBalance(){
+    if(!balTarget) return;
+    const v = parseFloat(String($('balInput').value).replace(',', '.'));
+    if(isNaN(v)){ $('balInput').focus(); return; }
+    const t = balTarget;
+    if(t.kind === 'wallet'){
+      const w = wallets.find(x=>x.name === t.name);
+      w.amount = v; w.ts = Date.now(); w.date = pokerToday();
+      await saveWallets();
+    } else {
+      const st = roomBankrollStates().find(x=>x.name === t.name);
+      roomBank[t.name] = {amount: Math.round((st.start + (v - st.current)) * 100) / 100, currency: st.cur};
+      await saveRoomBank();
+    }
+    balTarget = null;
+    $('balModal').classList.remove('open');
+    renderBankroll();
+  }
+  $('balSave').addEventListener('click', saveBalance);
+  $('balCancel').addEventListener('click', ()=>{ balTarget = null; $('balModal').classList.remove('open'); });
+  $('balModal').addEventListener('click', (e)=>{ if(e.target.id === 'balModal'){ balTarget = null; $('balModal').classList.remove('open'); } });
+  $('balInput').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') saveBalance(); if(e.key === 'Escape') $('balCancel').click(); });
+
+  $('trSave').addEventListener('click', async ()=>{
+    const eu = parseFloat($('trEurUsd').value), ur = parseFloat($('trUsdRub').value);
+    opRates = {EURUSD: eu > 0 ? eu : null, USDRUB: ur > 0 ? ur : null};
+    await saveOpRates();
+    opRatePair = '';
+    $('trEurUsd').blur(); $('trUsdRub').blur();
+    renderGeneral();
+  });
+
+  ['opAmount','opFee','opRate'].forEach(id=> $(id).addEventListener('input', renderOpPreview));
+
+  $('opAdd').addEventListener('click', async ()=>{
+    const date = $('opDate').value;
+    const amount = parseFloat($('opAmount').value);
+    const feeRaw = parseFloat($('opFee').value);
+    const fee = isNaN(feeRaw) || feeRaw < 0 ? 0 : feeRaw;
+    if(!opAcct){ alert('Выберите кошелёк'); return; }
+    if(!opTarget){ alert(opType === 'WD' ? 'Выберите, откуда вывод — рум или кошелёк' : 'Выберите, куда депозит — рум или кошелёк'); return; }
+    if(!date || isNaN(amount) || amount <= 0){ alert('Укажите дату и сумму больше нуля'); return; }
+    if(isExt(opTarget)){
+      cashflow.push({id: uid(), ts: Date.now(), date, kind: 'ext', type: opTarget === EXT_WD ? 'WD' : 'DEP',
+                     wallet: opAcct, amount, fee, currency: acctCurrency(opAcct)});
+      await saveCashflow();
+      $('opAmount').value = ''; $('opFee').value = '';
+      renderBankroll();
+      return;
+    }
+    const {sc, dc} = opCurrencies();
+    const toAmount = opToAmount(amount);
+    if(isNaN(toAmount)){ alert('Укажите курс обмена'); return; }
+    const p = ratePair(sc, dc);
+    cashflow.push({id: uid(), ts: Date.now(), date, kind: 'tr', type: opType,
+                   wallet: opAcct, target: opTarget,
+                   amount, fee, currency: sc,
+                   toAmount: Math.round(toAmount * 100) / 100, toCurrency: dc,
+                   rate: p ? parseFloat($('opRate').value) : 1});
+    await saveCashflow();
+    $('opAmount').value = ''; $('opFee').value = '';
+    opRatePair = '';
+    renderBankroll();
+  });
+
+  $('xAdd').addEventListener('click', async ()=>{
+    const date = $('xDate').value;
+    const amount = parseFloat($('xAmount').value);
+    if(!date || isNaN(amount) || amount <= 0){ alert('Укажите дату и сумму больше нуля'); return; }
+    tournaments.push({id: uid(), date, currency: xPay ? acctCurrency(xPay) : 'USD', buyin: amount, rebuy:0, result:0, ticket:0,
+                      note:'', tags:[xCat], payFrom: xPay || '', imported:false});
+    await saveTournaments();
+    $('xAmount').value = '';
+    renderAll();
   });
 
   // --- table: room filter ---
@@ -2848,14 +3626,14 @@ const SEED_DATA = [];
     const newRoom = $('eNote').value === '__ADD__' ? (t.note || '') : $('eNote').value;
     const newRoomCur = roomCurrency(newRoom);
     if(newRoomCur) t.currency = newRoomCur;
-    if(tags.includes('TRAIN')){ t.currency = 'USD'; }
+    if(tags.some(id=>EXPENSE_IDS.includes(id))){ t.currency = 'USD'; }
     const eRebuyRaw = parseFloat($('eRebuy').value);
     t.date = date; t.note = newRoom.trim(); t.buyin = buyin;
     t.rebuy = isNaN(eRebuyRaw) || eRebuyRaw < 0 ? 0 : eRebuyRaw;
     const eTicketRaw = parseAmount($('eTicket').value);
     t.ticket = isNaN(eTicketRaw) || eTicketRaw < 0 ? 0 : eTicketRaw;
     t.result = rv === '' ? null : parseFloat(rv);
-    if(tags.includes('TRAIN')){ t.rebuy = 0; t.ticket = 0; t.result = 0; }
+    if(tags.some(id=>EXPENSE_IDS.includes(id))){ t.rebuy = 0; t.ticket = 0; t.result = 0; t.note = ''; }
     t.tags = tags;
     await saveTournaments();
     $('editModal').classList.remove('open');
@@ -2873,6 +3651,8 @@ const SEED_DATA = [];
   // init
   (async function init(){
     await loadData();
+    $('opDate').value = pokerToday();
+    $('xDate').value = pokerToday();
     renderTagUI();
     applyFreeroll();
     renderRates();
