@@ -226,6 +226,14 @@ details.gb-panel[open] > summary{margin-bottom:4px;}
 .bal-row .bl b{display:block;color:var(--text);font-size:13px;}
 .modal-bg .modal{max-height:92vh;overflow-y:auto;}
 .period-panel .bank-head{align-items:center;}
+.toast-box{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;display:flex;
+  flex-direction:column;gap:8px;align-items:center;pointer-events:none;max-width:90vw;}
+.toast{background:#2A211F;border:1px solid var(--rust);color:#F3E4DF;border-radius:10px;padding:10px 16px;font-size:13px;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);white-space:pre-line;transition:opacity .3s ease, transform .3s ease;}
+.toast.ok{background:#1E2A24;border-color:var(--felt-bright);color:#DFF6EA;}
+.toast.out{opacity:0;transform:translateY(8px);}
+.op-side{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.op-arrow{font-size:16px;color:var(--text-faint);margin:0 2px;}
 .top-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:-8px 0 18px;}
 .xls-prev{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;}
 .xls-prev th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);font-weight:500;
@@ -472,7 +480,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">чистая · 21.09.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">чистая · 30.09.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -525,31 +533,16 @@ tr:last-child td{border-bottom:none;}
           <label>Дата</label>
           <input type="date" id="opDate">
         </div>
-        <div class="field wide">
-          <label>Кошелёк</label>
-          <div class="room-btns" id="opAcctBtns"></div>
-        </div>
-        <div class="field">
-          <label>Тип</label>
-          <div class="tabs" id="opTypeTabs" style="margin:0;">
-            <div class="tab active" data-optype="DEP">Депозит</div>
-            <div class="tab" data-optype="WD">Вывод</div>
-          </div>
-        </div>
       </div>
       <div class="field" style="margin-bottom:12px;">
-        <label id="opTargetLbl">Куда</label>
-        <div class="acct-tags" id="opTargetTags"></div>
+        <label>Откуда <span style="color:var(--text-faint);text-transform:none;letter-spacing:0;">— рум, кошелёк или деньги извне</span></label>
+        <div class="acct-tags" id="opFromTags"></div>
+        <div class="acct-tags" id="opFromAssets" style="margin-top:7px;"></div>
       </div>
-      <div class="op-sub">
-        <div class="field" id="opAssetField" style="display:none;">
-          <label id="opAssetLbl">Валюта кошелька</label>
-          <div class="acct-tags" id="opAssetChips"></div>
-        </div>
-        <div class="field" id="opTAssetField" style="display:none;">
-          <label id="opTAssetLbl">Валюта получателя</label>
-          <div class="acct-tags" id="opTAssetChips"></div>
-        </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Куда <span style="color:var(--text-faint);text-transform:none;letter-spacing:0;">— рум, кошелёк или вывод из банкролла</span></label>
+        <div class="acct-tags" id="opToTags"></div>
+        <div class="acct-tags" id="opToAssets" style="margin-top:7px;"></div>
       </div>
       <div class="form-grid op-grid">
         <div class="field">
@@ -874,6 +867,19 @@ tr:last-child td{border-bottom:none;}
   </div>
 </div>
 
+<div class="modal-bg" id="askModal">
+  <div class="modal">
+    <h3 id="askTitle">Ввод</h3>
+    <div class="bd-note" id="askNote" style="margin:0 0 12px;white-space:pre-line;"></div>
+    <div class="field"><input type="text" id="askInput"></div>
+    <div class="acct-tags" id="askChoices" style="margin:4px 0 0;"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="askCancel">Отмена</button>
+      <button class="btn" id="askOk">OK</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="xlsModal">
   <div class="modal wide">
     <h3>Импорт из Excel</h3>
@@ -1034,14 +1040,13 @@ const SEED_DATA = [];
     {name:'Skrill',  currency:'EUR'}
   ];
   let wallets = DEFAULT_WALLETS.map(w=>({...w, amount:0, ts:0, date:''}));
-  let opAcct = '';          // выбранный счёт в форме операций
-  let opType = 'DEP';
-  let opTarget = '';        // рум или кошелёк на другой стороне перевода
+  let opFrom = '';          // откуда: рум, кошелёк или «общий депозит»
+  let opTo = '';            // куда: рум, кошелёк или «общий вывод»
+  let opFromAsset = '';     // валюта отправителя ('' — основная)
+  let opToAsset = '';       // валюта получателя
   let opRatePair = '';
   let opRates = {EURUSD: null, USDRUB: null};   // курсы для переводов (пусто — общий курс)
   let balTarget = null;
-  let opAsset = '';          // валюта выбранного кошелька ('' = основная)
-  let opTAsset = '';         // валюта кошелька-получателя
   let gbBreakOpen = false;
   let wedDraft = null;
   let xCat = 'TRAIN';       // статья расхода
@@ -1144,6 +1149,51 @@ const SEED_DATA = [];
   const TAG_LABEL = {};
 
   const $ = (id) => document.getElementById(id);
+
+  // ---- messages and dialogs that work everywhere, incl. the desktop build ----
+  function toast(msg, kind){
+    let box = $('toastBox');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'toastBox'; box.className = 'toast-box';
+      document.body.appendChild(box);
+    }
+    const el = document.createElement('div');
+    el.className = 'toast' + (kind === 'ok' ? ' ok' : '');
+    el.textContent = String(msg);
+    box.appendChild(el);
+    setTimeout(()=>{ el.classList.add('out'); setTimeout(()=> el.remove(), 350); }, 4200);
+  }
+  function alert(msg){ toast(msg); }
+
+  let askResolve = null;
+  function uiAsk(opts){
+    opts = opts || {};
+    $('askTitle').textContent = opts.title || 'Ввод';
+    $('askNote').textContent = opts.note || '';
+    const inp = $('askInput');
+    inp.style.display = opts.choices ? 'none' : '';
+    inp.value = opts.value == null ? '' : String(opts.value);
+    $('askOk').style.display = opts.choices ? 'none' : '';
+    $('askChoices').innerHTML = (opts.choices || []).map(c=>
+      `<button type="button" class="acct-tag ${c.cls || ''}" data-askchoice="${escapeHtml(String(c.value))}">${escapeHtml(c.label)}</button>`).join('');
+    $('askModal').classList.add('open');
+    if(!opts.choices) setTimeout(()=>{ try{ inp.focus(); inp.select(); }catch(e){} }, 60);
+    return new Promise(res=>{ askResolve = res; });
+  }
+  function askDone(v){
+    $('askModal').classList.remove('open');
+    const r = askResolve; askResolve = null;
+    if(r) r(v);
+  }
+  const uiPrompt = (title, note, value)=> uiAsk({title, note, value});
+  async function uiConfirm(note, title){
+    const r = await uiAsk({title: title || 'Подтвердите', note, choices: [
+      {label: 'Да', value: '1', cls: 'ext dep'},
+      {label: 'Отмена', value: '', cls: ''}
+    ]});
+    return r === '1';
+  }
 
   // Storage works in both homes:
   //  * inside the desktop app  -> Rust writes poker_data.json next to the exe
@@ -1832,8 +1882,8 @@ const SEED_DATA = [];
   // the destination gets toAmount (converted at the rate the user entered).
   function opLegs(f){
     if(f.kind === 'tr'){
-      const src = f.type === 'WD' ? f.target : f.wallet;
-      const dst = f.type === 'WD' ? f.wallet : f.target;
+      const src = f.from || (f.type === 'WD' ? f.target : f.wallet);
+      const dst = f.to   || (f.type === 'WD' ? f.wallet : f.target);
       return [
         {acct: src, cur: f.currency,   inn: 0,          out: f.amount, fee: f.fee || 0},
         {acct: dst, cur: f.toCurrency, inn: f.toAmount, out: 0,        fee: 0}
@@ -1942,25 +1992,21 @@ const SEED_DATA = [];
   function isExt(name){ return name === EXT_DEP || name === EXT_WD; }
   function isKnownAcct(name){ return isWalletName(name) || knownRooms().some(r=>r.name === name); }
 
-  // big buttons — wallets only
-  function walletButtons(selected, attr){
-    return wallets.map(w=>`<button type="button" class="room-btn ${w.currency.toLowerCase()} ${selected===w.name?'active':''}" ${attr}="${escapeHtml(w.name)}">${escapeHtml(w.name)}<span class="cur">${w.currency}</span></button>`).join('');
-  }
-
-  // small tags — rooms, then wallets
+  // small tags: rooms, wallets and the outside world
   function acctTags(selected, attr, opts){
     opts = opts || {};
-    const cls = (c)=> (c || '').toLowerCase();
-    const tag = (name, cur, extra, label)=> `<button type="button" class="acct-tag ${cls(cur)} ${extra||''} ${selected===name?'active':''}" ${attr}="${escapeHtml(name)}">${escapeHtml(label || name)}<span class="cur">${cur || ''}</span></button>`;
+    const tag = (name, cur, extra, label)=> `<button type="button" class="acct-tag ${curCls(cur || baseCurrency)} ${extra||''} ${selected===name?'active':''}" ${attr}="${escapeHtml(name)}">${escapeHtml(label || name)}<span class="cur">${cur || ''}</span></button>`;
     let html = '';
     if(opts.withNone) html += `<button type="button" class="acct-tag none ${selected===''?'active':''}" ${attr}="">не указано</button><span class="sep"></span>`;
     html += '<span class="grp">Румы</span>' + knownRooms().map(r=>tag(r.name, r.currency, '')).join('');
     html += '<span class="sep"></span><span class="grp">Кошельки</span>' +
-            wallets.filter(w=>w.name !== opts.exclude || (opts.allowSelf && (w.assets || []).length))
-              .map(w=>tag(w.name, w.currency, 'wl', w.name === opts.exclude ? w.name + ' (обмен)' : '')).join('');
-    if(opts.withExt){
-      html += `<span class="sep"></span><span class="grp">Общий банкролл</span>` +
-        `<button type="button" class="acct-tag ext dep ${selected===EXT_DEP?'active':''}" ${attr}="${EXT_DEP}">Общий депозит<span class="cur">+</span></button>` +
+            wallets.map(w=>tag(w.name, w.currency, 'wl')).join('');
+    if(opts.ext === 'in'){
+      html += `<span class="sep"></span><span class="grp">Извне</span>` +
+        `<button type="button" class="acct-tag ext dep ${selected===EXT_DEP?'active':''}" ${attr}="${EXT_DEP}">Общий депозит<span class="cur">+</span></button>`;
+    }
+    if(opts.ext === 'out'){
+      html += `<span class="sep"></span><span class="grp">Наружу</span>` +
         `<button type="button" class="acct-tag ext wd ${selected===EXT_WD?'active':''}" ${attr}="${EXT_WD}">Общий вывод<span class="cur">−</span></button>`;
     }
     return html;
@@ -1969,26 +2015,30 @@ const SEED_DATA = [];
   // currency chips for a wallet: its fiat + its crypto
   function assetChips(wallet, selected, attr){
     const w = wallets.find(x=>x.name === wallet);
-    if(!w) return '';
-    const list = [w.currency].concat((w.assets || []).map(a=>a.code));
-    return list.map(c=>`<button type="button" class="acct-tag ${curCls(c)} ${selected===c?'active':''}" ${attr}="${c}">${c}</button>`).join('');
+    if(!w || !(w.assets || []).length) return '';
+    const list = [w.currency].concat(w.assets.map(a=>a.code));
+    return '<span class="grp">Валюта</span>' + list.map(c=>
+      `<button type="button" class="acct-tag ${curCls(c)} ${selected===c?'active':''}" ${attr}="${c}">${c}</button>`).join('');
   }
   function walletAssetOrMain(name, asset){
     const codes = walletAssetCodes(name);
     return asset && codes.includes(asset) ? asset : walletCurrency(name);
   }
+  // currency of one side of the operation
+  function sideCur(name, asset){
+    if(!name || isExt(name)) return null;
+    return isWalletName(name) ? walletAssetOrMain(name, asset) : acctCurrency(name);
+  }
 
   const CUR_RANK = {EUR:3, USD:2, RUB:1};
   function opCurrencies(){
-    const wc = opAcct ? walletAssetOrMain(opAcct, opAsset) : null;
-    if(isExt(opTarget)){
-      return {src: opTarget === EXT_DEP ? 'общий депозит' : opAcct, dst: opTarget === EXT_DEP ? opAcct : 'общий вывод',
-              sc: wc, dc: wc, ext: true};
-    }
-    const tc = !opTarget ? null
-      : isWalletName(opTarget) ? walletAssetOrMain(opTarget, opTAsset) : acctCurrency(opTarget);
-    if(opType === 'WD') return {src: opTarget, dst: opAcct, sc: tc, dc: wc};
-    return {src: opAcct, dst: opTarget, sc: wc, dc: tc};
+    const fc = sideCur(opFrom, opFromAsset);
+    const tc = sideCur(opTo, opToAsset);
+    // money from the outside arrives in the currency of the account it lands on,
+    // money going outside leaves in the currency of the account it comes from
+    if(opFrom === EXT_DEP) return {src: 'общий депозит', dst: opTo, sc: tc, dc: tc, ext: 'in'};
+    if(opTo === EXT_WD)    return {src: opFrom, dst: 'общий вывод', sc: fc, dc: fc, ext: 'out'};
+    return {src: opFrom, dst: opTo, sc: fc, dc: tc};
   }
   // rate is always typed as "1 stronger = ? weaker" (crypto is always the "stronger" side vs fiat)
   function ratePair(sc, dc){
@@ -2008,28 +2058,34 @@ const SEED_DATA = [];
   }
 
   function renderOpPreview(){
-    const {src, dst, sc, dc} = opCurrencies();
+    const c = opCurrencies();
     const box = $('opPreview');
-    if(!src || !dst){ box.innerHTML = ''; return; }
+    if(!box) return;
+    if(!opFrom || !opTo){ box.innerHTML = ''; return; }
     const amount = parseFloat($('opAmount').value);
     const fee = parseFloat($('opFee').value) || 0;
-    const sd = (n)=> (src === dst ? `${escapeHtml(n)}` : escapeHtml(n));
     if(isNaN(amount) || amount <= 0){
-      box.innerHTML = `<b>${sd(src)}</b> ${sc || ''} → <b>${sd(dst)}</b> ${dc || ''}`;
+      box.innerHTML = `<b>${escapeHtml(c.src)}</b> ${c.sc || ''} → <b>${escapeHtml(c.dst)}</b> ${c.dc || ''}`;
       return;
     }
-    if(isExt(opTarget)){
-      const w = escapeHtml(opAcct), sy = SYM[sc];
-      const baseV = (v)=> isFiat(sc) && sc === baseCurrency ? '' : ` (≈ ${fmt(convert(v, sc, baseCurrency))} ${SYM[baseCurrency]})`;
-      box.innerHTML = opTarget === EXT_DEP
-        ? `<b>${w}</b>: +${fmtA(amount - fee, sc)} ${sy}${fee ? ` (${fmtA(amount, sc)} − комиссия ${fmtA(fee, sc)})` : ''} · <b>общий банкролл</b>: +${fmtA(amount - fee, sc)} ${sy}${baseV(amount - fee)}`
-        : `<b>${w}</b>: −${fmtA(amount + fee, sc)} ${sy}${fee ? ` (в т.ч. комиссия ${fmtA(fee, sc)})` : ''} · <b>общий банкролл</b>: −${fmtA(amount + fee, sc)} ${sy}${baseV(amount + fee)}`;
+    const sy = SYM[c.sc];
+    const baseV = (v)=> c.sc === baseCurrency ? '' : ` (≈ ${fmt(convert(v, c.sc, baseCurrency))} ${SYM[baseCurrency]})`;
+    if(c.ext === 'in'){
+      box.innerHTML = `<b>${escapeHtml(opTo)}</b>: +${fmtA(amount - fee, c.sc)} ${sy}` +
+        (fee ? ` (${fmtA(amount, c.sc)} − комиссия ${fmtA(fee, c.sc)})` : '') +
+        ` · <b>общий банкролл</b>: +${fmtA(amount - fee, c.sc)} ${sy}${baseV(amount - fee)}`;
+      return;
+    }
+    if(c.ext === 'out'){
+      box.innerHTML = `<b>${escapeHtml(opFrom)}</b>: −${fmtA(amount + fee, c.sc)} ${sy}` +
+        (fee ? ` (в т.ч. комиссия ${fmtA(fee, c.sc)})` : '') +
+        ` · <b>общий банкролл</b>: −${fmtA(amount + fee, c.sc)} ${sy}${baseV(amount + fee)}`;
       return;
     }
     const to = opToAmount(amount);
-    box.innerHTML = `<b>${escapeHtml(src)}</b>: −${fmtA(amount + fee, sc)} ${SYM[sc]}` +
-      (fee ? ` (в т.ч. комиссия ${fmtA(fee, sc)})` : '') +
-      ` → <b>${escapeHtml(dst)}</b>: +${isNaN(to) ? '—' : fmtA(to, dc)} ${SYM[dc]}`;
+    box.innerHTML = `<b>${escapeHtml(opFrom)}</b>: −${fmtA(amount + fee, c.sc)} ${sy}` +
+      (fee ? ` (в т.ч. комиссия ${fmtA(fee, c.sc)})` : '') +
+      ` → <b>${escapeHtml(opTo)}</b>: +${isNaN(to) ? '—' : fmtA(to, c.dc)} ${SYM[c.dc]}`;
   }
 
   function renderBreakdown(g){
@@ -2116,33 +2172,19 @@ const SEED_DATA = [];
         <div class="rb-sub">фиат и криптовалюты</div></div>`;
 
     // the operations form
-    if(opAcct && !isWalletName(opAcct)) opAcct = '';
-    if(opTarget && !isExt(opTarget) && (!isKnownAcct(opTarget) ||
-       (opTarget === opAcct && !walletAssetCodes(opAcct).length))) opTarget = '';
-    if(opTarget === EXT_DEP) opType = 'DEP';
-    if(opTarget === EXT_WD) opType = 'WD';
-    if(opAsset && !walletAssetCodes(opAcct).includes(opAsset)) opAsset = '';
-    if(opTAsset && !(isWalletName(opTarget) && walletAssetCodes(opTarget).includes(opTAsset))) opTAsset = '';
-    $('opAcctBtns').innerHTML = walletButtons(opAcct, 'data-opacct');
-    document.querySelectorAll('#opTypeTabs .tab').forEach(t=>
-      t.classList.toggle('active', t.getAttribute('data-optype') === opType));
-    $('opTargetLbl').textContent = opType === 'WD' ? 'Откуда (рум или кошелёк)' : 'Куда (рум или кошелёк)';
-    $('opTargetTags').innerHTML = acctTags(opTarget, 'data-optarget', {exclude: opAcct, allowSelf: true, withExt: true});
+    if(opFrom && !isExt(opFrom) && !isKnownAcct(opFrom)) opFrom = '';
+    if(opTo && !isExt(opTo) && !isKnownAcct(opTo)) opTo = '';
+    if(opFrom === EXT_DEP && opTo === EXT_WD) opTo = '';
+    if(opFromAsset && !walletAssetCodes(opFrom).includes(opFromAsset)) opFromAsset = '';
+    if(opToAsset && !walletAssetCodes(opTo).includes(opToAsset)) opToAsset = '';
 
-    const hasA = opAcct && walletAssetCodes(opAcct).length;
-    $('opAssetField').style.display = hasA ? '' : 'none';
-    if(hasA){
-      $('opAssetLbl').textContent = 'Валюта в ' + opAcct;
-      $('opAssetChips').innerHTML = assetChips(opAcct, walletAssetOrMain(opAcct, opAsset), 'data-opasset');
-    }
-    const hasT = opTarget && isWalletName(opTarget) && (walletAssetCodes(opTarget).length || opTarget === opAcct);
-    $('opTAssetField').style.display = hasT ? '' : 'none';
-    if(hasT){
-      $('opTAssetLbl').textContent = (opTarget === opAcct ? 'Обменять на' : 'Валюта в ' + opTarget);
-      $('opTAssetChips').innerHTML = assetChips(opTarget, walletAssetOrMain(opTarget, opTAsset), 'data-optasset');
-    }
+    $('opFromTags').innerHTML = acctTags(opFrom, 'data-opfrom', {ext: 'in'});
+    $('opToTags').innerHTML   = acctTags(opTo,   'data-opto',   {ext: 'out'});
+    $('opFromAssets').innerHTML = isWalletName(opFrom) ? assetChips(opFrom, walletAssetOrMain(opFrom, opFromAsset), 'data-opfromasset') : '';
+    $('opToAssets').innerHTML   = isWalletName(opTo)   ? assetChips(opTo,   walletAssetOrMain(opTo,   opToAsset),   'data-optoasset')   : '';
 
-    const {src, dst, sc, dc} = opCurrencies();
+    const c = opCurrencies();
+    const sc = c.sc, dc = c.dc;
     $('opAmountLbl').textContent = 'Сумма' + (sc ? ', ' + sc : '');
     $('opFeeLbl').textContent = 'Комиссия' + (sc ? ', ' + sc : '');
     const p = ratePair(sc, dc);
@@ -2156,12 +2198,12 @@ const SEED_DATA = [];
         opRatePair = key;
       }
     }
-    $('opHint').textContent = !opAcct ? 'Выберите кошелёк.'
-      : !opTarget ? (opType === 'WD' ? 'Выберите тег — откуда выводите.' : 'Выберите тег — куда переводите.')
-      : opTarget === EXT_DEP ? 'Общий депозит: деньги извне приходят в кошелёк и увеличивают общий банкролл (комиссия вычитается).'
-      : opTarget === EXT_WD ? 'Общий вывод: деньги уходят из кошелька наружу и уменьшают общий банкролл.'
-      : opTarget === opAcct ? 'Обмен внутри кошелька: одна валюта списывается, другая зачисляется по курсу. Общий банкролл меняется только на комиссию и разницу курса.'
-      : 'Полная сумма переходит с одного счёта на другой, общий банкролл уменьшится только на комиссию. Комиссия списывается со счёта-отправителя.';
+    $('opHint').textContent = !opFrom ? 'Выберите, откуда уходят деньги: рум, кошелёк или «Общий депозит», если деньги приходят извне.'
+      : !opTo ? 'Выберите, куда деньги приходят: рум, кошелёк или «Общий вывод», если деньги уходят из банкролла.'
+      : opFrom === EXT_DEP ? 'Общий депозит: деньги извне приходят на счёт и увеличивают общий банкролл (комиссия вычитается).'
+      : opTo === EXT_WD ? 'Общий вывод: деньги уходят со счёта наружу и уменьшают общий банкролл.'
+      : opFrom === opTo ? 'Обмен внутри счёта: одна валюта списывается, другая зачисляется по курсу.'
+      : 'Перевод: сумма полностью переходит с одного счёта на другой, общий банкролл уменьшится только на комиссию. Комиссия списывается с отправителя.';
     renderTrRates();
     renderOpPreview();
     renderOpList();
@@ -2170,8 +2212,8 @@ const SEED_DATA = [];
   function opDescr(f){
     if(f.kind === 'ext') return escapeHtml(f.wallet);
     if(f.kind === 'tr'){
-      const src = f.type === 'WD' ? f.target : f.wallet;
-      const dst = f.type === 'WD' ? f.wallet : f.target;
+      const src = f.from || (f.type === 'WD' ? f.target : f.wallet);
+      const dst = f.to   || (f.type === 'WD' ? f.wallet : f.target);
       return src === dst ? `${escapeHtml(src)} (обмен)` : `${escapeHtml(src)} → ${escapeHtml(dst)}`;
     }
     return escapeHtml(f.room || 'без счёта');
@@ -2180,7 +2222,7 @@ const SEED_DATA = [];
   function renderOpList(){
     const box = $('opList');
     if(!box) return;
-    const focus = opTarget || opAcct;
+    const focus = (isExt(opFrom) ? opFrom : '') || (isExt(opTo) ? opTo : '') || opFrom || opTo;
     const list = cashflow
       .filter(f => !focus || (isExt(focus)
           ? f.kind !== 'tr' && (f.type === 'WD') === (focus === EXT_WD)
@@ -2975,7 +3017,7 @@ const SEED_DATA = [];
   }
 
   async function addCustomTag(){
-    const name = (prompt('Название нового тега:') || '').trim();
+    const name = ((await uiPrompt('Новый тег', 'Название нового тега:')) || '').trim();
     if(!name) return;
     if(allTags().some(t=>t.label.toLowerCase() === name.toLowerCase())){
       alert('Такой тег уже есть.');
@@ -2991,7 +3033,7 @@ const SEED_DATA = [];
     const t = customTags.find(x=>x.id === id);
     if(!t) return;
     const used = tournaments.filter(x=>(x.tags||[]).includes(id)).length;
-    if(!confirm('Удалить тег «' + t.label + '»?' +
+    if(!await uiConfirm('Удалить тег «' + t.label + '»?' +
         (used ? '\n\nОн снимется с ' + used + ' записей, сами турниры останутся.' : ''))) return;
     customTags = customTags.filter(x=>x.id !== id);
     if(used){
@@ -3068,25 +3110,21 @@ const SEED_DATA = [];
     });
   }
 
-  function askCurrency(roomName){
-    const raw = prompt(
-      'В какой валюте байины в «' + roomName + '»?\n\n' +
-      'Введите EUR, USD или RUB:', 'USD');
-    if(raw === null) return null;
-    const v = raw.trim().toUpperCase();
-    if(v === 'EUR' || v === 'EURO' || v === '€') return 'EUR';
-    if(v === 'USD' || v === '$') return 'USD';
-    if(v === 'RUB' || v === 'RUR' || v === '₽') return 'RUB';
-    alert('Валюта не распознана. Укажите EUR, USD или RUB.');
-    return askCurrency(roomName);
+  async function askCurrency(roomName){
+    const v = await uiAsk({
+      title: 'Валюта рума',
+      note: 'В какой валюте байины в «' + roomName + '»?',
+      choices: [{label:'EUR €', value:'EUR', cls:'eur'}, {label:'USD $', value:'USD', cls:'usd'}, {label:'RUB ₽', value:'RUB', cls:'rub'}]
+    });
+    return v || null;
   }
 
   // Rename or remove a room. Renaming rewrites the room on every tournament
   // that used it, so history stays attached to the same pokerroom.
   async function editRoom(name){
     const used = tournaments.filter(t => (t.note || '').trim() === name).length;
-    const answer = prompt(
-      'Покеррум «' + name + '»' + (used ? ' — записей: ' + used : '') + '\n\n' +
+    const answer = await uiPrompt('Покеррум: ' + name,
+      (used ? 'Записей: ' + used + '\n' : '') +
       'Введите новое название, чтобы переименовать.\n' +
       'Введите знак минус (-), чтобы удалить рум.\n' +
       'Пустое поле — отмена.', name);
@@ -3095,9 +3133,9 @@ const SEED_DATA = [];
     if(!val || val === name) return;
 
     if(val === '-'){
-      if(used && !confirm('Удалить рум «' + name + '»?\n\n' +
+      if(used && !await uiConfirm('Удалить рум «' + name + '»?\n\n' +
           'У ' + used + ' записей рум будет очищен, сами турниры останутся.')) return;
-      if(!used && !confirm('Удалить рум «' + name + '» из списка?')) return;
+      if(!used && !await uiConfirm('Удалить рум «' + name + '» из списка?')) return;
       rooms = rooms.filter(r => r.name !== name);
       tournaments.forEach(t=>{ if((t.note || '').trim() === name) t.note = ''; });
       if(formRoom === name) formRoom = '';
@@ -3125,11 +3163,11 @@ const SEED_DATA = [];
     renderAll();
   }
 
-  function addRoomFromForm(){
-    const name = (prompt('Название нового покеррума:') || '').trim();
+  async function addRoomFromForm(){
+    const name = ((await uiPrompt('Новый покеррум', 'Название нового покеррума:')) || '').trim();
     if(!name) return;
     if(!knownRooms().some(r=>r.name === name && r.currency)){
-      const cur = askCurrency(name);
+      const cur = await askCurrency(name);
       if(!cur) return;
       const existing = rooms.find(r=>r.name === name);
       if(existing) existing.currency = cur; else rooms.push({name, currency: cur});
@@ -3140,15 +3178,15 @@ const SEED_DATA = [];
     applyRoomCurrency(name);
   }
 
-  function handleRoomAdd(selectEl){
+  async function handleRoomAdd(selectEl){
     if(selectEl.value !== '__ADD__') return;
-    const name = (prompt('Название нового покеррума:') || '').trim();
+    const name = ((await uiPrompt('Новый покеррум', 'Название нового покеррума:')) || '').trim();
     if(!name){ selectEl.value = ''; return; }
     if(knownRooms().some(r=>r.name === name && r.currency)){
       fillRoomSelects(); selectEl.value = name;
       return;
     }
-    const cur = askCurrency(name);
+    const cur = await askCurrency(name);
     if(!cur){ selectEl.value = ''; return; }
     const existing = rooms.find(r=>r.name === name);
     if(existing) existing.currency = cur;
@@ -3523,7 +3561,7 @@ const SEED_DATA = [];
       try{
         const data = JSON.parse(reader.result);
         if(!data || !Array.isArray(data.tournaments)) throw new Error('bad format');
-        if(!confirm(`Загрузить ${data.tournaments.length} турниров из файла?\n\nТекущая база будет заменена.`)) return;
+        if(!await uiConfirm(`Загрузить ${data.tournaments.length} турниров из файла?\n\nТекущая база будет заменена.`)) return;
         tournaments = data.tournaments.map(t=>({
           id: t.id || uid(),
           date: t.date, currency: t.currency,
@@ -3569,8 +3607,8 @@ const SEED_DATA = [];
 
   // --- clear / reload data ---
   $('clearAll').addEventListener('click', async ()=>{
-    if(!confirm('Удалить ВСЕ турниры и получить пустую копию программы?\n\nЭто действие нельзя отменить.')) return;
-    if(!confirm('Точно? Все записи, включая импортированные из Excel, будут стёрты.')) return;
+    if(!await uiConfirm('Удалить ВСЕ турниры и получить пустую копию программы?\n\nЭто действие нельзя отменить.')) return;
+    if(!await uiConfirm('Точно? Все записи, включая импортированные из Excel, будут стёрты.')) return;
     tournaments = [];
     await saveTournaments();
     // mark as "cleared" so the seed does not come back on reload
@@ -3582,8 +3620,8 @@ const SEED_DATA = [];
   $('reloadSeed').addEventListener('click', async ()=>{
     const manualNow = tournaments.filter(t => t.imported === false);
     const keep = manualNow.length
-      ? confirm(`Перезагрузить данные из Excel?\n\nУ вас ${manualNow.length} записей, добавленных вручную.\n\nOK — сохранить их и обновить остальное\nОтмена — ничего не менять`)
-      : confirm('Перезагрузить данные из Excel-файлов?');
+      ? await uiConfirm(`Перезагрузить данные из Excel?\n\nУ вас ${manualNow.length} записей, добавленных вручную.\n\nOK — сохранить их и обновить остальное\nОтмена — ничего не менять`)
+      : await uiConfirm('Перезагрузить данные из Excel-файлов?');
     if(!keep) return;
     tournaments = SEED_DATA.map(([date,currency,buyin,rebuy,result,ticket,tagStr,room])=>({
       id: uid(), date, currency, buyin, rebuy, result, ticket: ticket || 0, note: room || '',
@@ -3926,9 +3964,9 @@ const SEED_DATA = [];
   }
 
   function openCashflow(room, type){
-    if(room && isWalletName(room)) opAcct = room;
-    else opTarget = room || '';
-    if(type) opType = type;
+    if(type === 'WD'){ opFrom = room || ''; if(opTo === opFrom) opTo = ''; }
+    else { opTo = room || ''; if(opFrom === opTo) opFrom = ''; }
+    opFromAsset = ''; opToAsset = ''; opRatePair = '';
     $('walletPanel').open = true;
     renderGeneral();
     $('walletPanel').scrollIntoView({behavior:'smooth', block:'start'});
@@ -3967,10 +4005,10 @@ const SEED_DATA = [];
     if(el.closest('[data-wadd]')){ openWalletEditor(null); return; }
     if(el.closest('[data-gbbreak]') || el.closest('#gbBreakBtn')){ gbBreakOpen = !gbBreakOpen; renderGeneral(); return; }
 
-    const oa = el.closest('[data-opasset]');
-    if(oa){ opAsset = oa.getAttribute('data-opasset'); if(opAsset === walletCurrency(opAcct)) opAsset = ''; opRatePair = ''; renderGeneral(); return; }
-    const ota = el.closest('[data-optasset]');
-    if(ota){ opTAsset = ota.getAttribute('data-optasset'); if(opTAsset === walletCurrency(opTarget)) opTAsset = ''; opRatePair = ''; renderGeneral(); return; }
+    const oa = el.closest('[data-opfromasset]');
+    if(oa){ opFromAsset = oa.getAttribute('data-opfromasset'); if(opFromAsset === walletCurrency(opFrom)) opFromAsset = ''; opRatePair = ''; renderGeneral(); return; }
+    const ota = el.closest('[data-optoasset]');
+    if(ota){ opToAsset = ota.getAttribute('data-optoasset'); if(opToAsset === walletCurrency(opTo)) opToAsset = ''; opRatePair = ''; renderGeneral(); return; }
 
     const apk = el.closest('[data-arpok]');
     if(apk){
@@ -3987,7 +4025,7 @@ const SEED_DATA = [];
       const c = ard.getAttribute('data-ardel');
       const u = wallets.filter(w=>(w.assets || []).some(a=>a.code === c)).map(w=>w.name);
       if(u.length){ alert(`${c} есть в кошельках: ${u.join(', ')}. Сначала уберите его из кошельков (кнопка «✎ кошелёк»).`); return; }
-      if(!confirm(`Удалить курс ${c}?`)) return;
+      if(!await uiConfirm(`Удалить курс ${c}?`)) return;
       delete rates.assets[c];
       await saveRates();
       renderRates(); renderBankroll();
@@ -4015,41 +4053,39 @@ const SEED_DATA = [];
     const rbal = el.closest('[data-roombal]');
     if(rbal){ openBalance('room', rbal.getAttribute('data-roombal')); return; }
 
-    const acct = el.closest('[data-opacct]');
-    if(acct){
-      opAcct = acct.getAttribute('data-opacct');
-      opAsset = '';
-      if(opTarget === opAcct && !walletAssetCodes(opAcct).length) opTarget = '';
+    const fr = el.closest('[data-opfrom]');
+    if(fr){
+      const v = fr.getAttribute('data-opfrom');
+      opFrom = opFrom === v ? '' : v;
+      opFromAsset = ''; opRatePair = '';
       renderGeneral();
       return;
     }
 
-    const tg = el.closest('[data-optarget]');
-    if(tg){
-      const v = tg.getAttribute('data-optarget');
-      opTarget = opTarget === v ? '' : v;
-      opTAsset = '';
+    const to = el.closest('[data-opto]');
+    if(to){
+      const v = to.getAttribute('data-opto');
+      opTo = opTo === v ? '' : v;
+      opToAsset = ''; opRatePair = '';
       renderGeneral();
       return;
-    }
-
-    const tp = el.closest('[data-optype]');
-    if(tp){
-      opType = tp.getAttribute('data-optype');
-      if(isExt(opTarget)) opTarget = opType === 'WD' ? EXT_WD : EXT_DEP;
-      renderGeneral(); return;
     }
 
     const pick = el.closest('[data-optype-pick]');
     if(pick){
       const ty = pick.getAttribute('data-optype-pick');
-      openCashflow(ty === 'WD' ? EXT_WD : EXT_DEP, ty);
+      if(ty === 'WD'){ opTo = EXT_WD; if(opFrom === EXT_DEP) opFrom = ''; }
+      else { opFrom = EXT_DEP; if(opTo === EXT_WD) opTo = ''; }
+      opRatePair = '';
+      renderGeneral();
+      $('walletPanel').open = true;
+      $('walletPanel').scrollIntoView({behavior:'smooth', block:'start'});
       return;
     }
 
     const del = el.closest('[data-opdel]');
     if(del){
-      if(!confirm('Удалить операцию?')) return;
+      if(!await uiConfirm('Удалить операцию?')) return;
       cashflow = cashflow.filter(x=>x.id !== del.getAttribute('data-opdel'));
       await saveCashflow();
       renderBankroll();
@@ -4064,7 +4100,7 @@ const SEED_DATA = [];
 
     const xd = el.closest('[data-xdel]');
     if(xd){
-      if(!confirm('Удалить расход?')) return;
+      if(!await uiConfirm('Удалить расход?')) return;
       tournaments = tournaments.filter(x=>x.id !== xd.getAttribute('data-xdel'));
       await saveTournaments();
       renderAll();
@@ -4124,6 +4160,18 @@ const SEED_DATA = [];
     $('balModal').classList.remove('open');
     renderBankroll();
   }
+  $('askOk').addEventListener('click', ()=> askDone($('askInput').value));
+  $('askCancel').addEventListener('click', ()=> askDone(null));
+  $('askModal').addEventListener('click', (e)=>{
+    if(e.target.id === 'askModal'){ askDone(null); return; }
+    const c = e.target.closest('[data-askchoice]');
+    if(c) askDone(c.getAttribute('data-askchoice'));
+  });
+  $('askInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') askDone($('askInput').value);
+    if(e.key === 'Escape') askDone(null);
+  });
+
   $('balSave').addEventListener('click', saveBalance);
   $('balCancel').addEventListener('click', ()=>{ balTarget = null; $('balModal').classList.remove('open'); });
   $('balModal').addEventListener('click', (e)=>{ if(e.target.id === 'balModal'){ balTarget = null; $('balModal').classList.remove('open'); } });
@@ -4176,8 +4224,8 @@ const SEED_DATA = [];
       if(f.room === oldName) f.room = newName;
     });
     tournaments.forEach(t=>{ if(t.payFrom === oldName) t.payFrom = newName; });
-    if(opAcct === oldName) opAcct = newName;
-    if(opTarget === oldName) opTarget = newName;
+    if(opFrom === oldName) opFrom = newName;
+    if(opTo === oldName) opTo = newName;
     if(xPay === oldName) xPay = newName;
   }
   $('wedAddCode').addEventListener('click', ()=>{
@@ -4226,10 +4274,10 @@ const SEED_DATA = [];
       alert(`По кошельку ${n} есть ${ops} операций и ${exps} расходов. Сначала удалите их — иначе суммы потеряются из общего банкролла.`);
       return;
     }
-    if(!confirm(`Удалить кошелёк ${n}?`)) return;
+    if(!await uiConfirm(`Удалить кошелёк ${n}?`)) return;
     wallets = wallets.filter(w=>w.name !== n);
-    if(opAcct === n) opAcct = '';
-    if(opTarget === n) opTarget = '';
+    if(opFrom === n) opFrom = '';
+    if(opTo === n) opTo = '';
     if(xPay === n) xPay = '';
     await saveWallets();
     wedDraft = null;
@@ -4245,31 +4293,37 @@ const SEED_DATA = [];
     const amount = parseFloat($('opAmount').value);
     const feeRaw = parseFloat($('opFee').value);
     const fee = isNaN(feeRaw) || feeRaw < 0 ? 0 : feeRaw;
-    if(!opAcct){ alert('Выберите кошелёк'); return; }
-    if(!opTarget){ alert(opType === 'WD' ? 'Выберите, откуда вывод — рум или кошелёк' : 'Выберите, куда депозит — рум или кошелёк'); return; }
-    if(!date || isNaN(amount) || amount <= 0){ alert('Укажите дату и сумму больше нуля'); return; }
-    if(isExt(opTarget)){
-      cashflow.push({id: uid(), ts: Date.now(), date, kind: 'ext', type: opTarget === EXT_WD ? 'WD' : 'DEP',
-                     wallet: opAcct, amount, fee, currency: opCurrencies().sc});
+    if(!opFrom){ toast('Выберите, откуда уходят деньги'); return; }
+    if(!opTo){ toast('Выберите, куда деньги приходят'); return; }
+    if(!date || isNaN(amount) || amount <= 0){ toast('Укажите дату и сумму больше нуля'); return; }
+    const c = opCurrencies();
+    if(c.ext){
+      const acct = c.ext === 'in' ? opTo : opFrom;
+      cashflow.push({id: uid(), ts: Date.now(), date, kind: 'ext', type: c.ext === 'in' ? 'DEP' : 'WD',
+                     wallet: acct, amount, fee, currency: c.sc});
       await saveCashflow();
       $('opAmount').value = ''; $('opFee').value = '';
       renderBankroll();
+      toast(`${c.ext === 'in' ? 'Депозит' : 'Вывод'}: ${fmtA(amount, c.sc)} ${SYM[c.sc]} — ${acct}`, 'ok');
       return;
     }
-    const {sc, dc} = opCurrencies();
-    if(opTarget === opAcct && sc === dc){ alert('Для обмена внутри кошелька выберите разные валюты'); return; }
+    if(opFrom === opTo && c.sc === c.dc){ toast('Для обмена внутри счёта выберите разные валюты'); return; }
     const toAmount = opToAmount(amount);
-    if(isNaN(toAmount)){ alert('Укажите курс обмена'); return; }
-    const p = ratePair(sc, dc);
-    cashflow.push({id: uid(), ts: Date.now(), date, kind: 'tr', type: opType,
-                   wallet: opAcct, target: opTarget,
-                   amount, fee, currency: sc,
-                   toAmount: isFiat(dc) ? Math.round(toAmount * 100) / 100 : Math.round(toAmount * 1e8) / 1e8, toCurrency: dc,
+    if(isNaN(toAmount)){ toast('Укажите курс обмена'); return; }
+    const p = ratePair(c.sc, c.dc);
+    cashflow.push({id: uid(), ts: Date.now(), date, kind: 'tr', type: 'TR',
+                   from: opFrom, to: opTo,
+                   wallet: opFrom, target: opTo,
+                   amount, fee, currency: c.sc,
+                   toAmount: isFiat(c.dc) ? Math.round(toAmount * 100) / 100 : Math.round(toAmount * 1e8) / 1e8,
+                   toCurrency: c.dc,
                    rate: p ? parseFloat($('opRate').value) : 1});
     await saveCashflow();
     $('opAmount').value = ''; $('opFee').value = '';
     opRatePair = '';
     renderBankroll();
+    toast(`${opFrom} → ${opTo}: ${fmtA(amount, c.sc)} ${SYM[c.sc]}` +
+          (c.sc !== c.dc ? ` → ${fmtA(toAmount, c.dc)} ${SYM[c.dc]}` : ''), 'ok');
   });
 
   $('xAdd').addEventListener('click', async ()=>{
@@ -4386,7 +4440,7 @@ const SEED_DATA = [];
   });
 
   $('deleteBtn').addEventListener('click', async ()=>{
-    if(!confirm('Удалить этот турнир?')) return;
+    if(!await uiConfirm('Удалить этот турнир?')) return;
     tournaments = tournaments.filter(x=>x.id!==editingId);
     await saveTournaments();
     $('editModal').classList.remove('open');
