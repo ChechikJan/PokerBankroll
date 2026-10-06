@@ -480,7 +480,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">чистая · 30.09.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">чистая · 06.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -1622,12 +1622,18 @@ const SEED_DATA = [];
     // reported separately so the split original/repeat stays visible
     const reCount = counted.filter(t=>(t.tags||[]).includes('RE')).length;
     const flightCount = counted.filter(t=>(t.tags||[]).includes('FLIGHT')).length;
+    // a session is one poker day with at least one tournament played
+    const sessDays = new Set(counted.map(t=>t.date));
+    const allDays = new Set(list.map(t=>t.date));
+    const sessions = sessDays.size;
+    const perSession = sessions ? counted.length / sessions : 0;
     return {count:counted.length, sideCount, casinoCount, outCounts, outsideCount, satCount, reCount, flightCount,
             doneCount:countedDone.length, pendingCount:counted.length-countedDone.length,
             allCount:list.length, allDone:done.length, allPending:list.length-done.length,
             totalBuyin:cashCost, totalBuyinDone:cashCostDone, stakeCounted,
             cashProfit, profitWithTickets, paidOut, foldTickets: !!foldTicketsWon,
             ticketsWon, ticketsSpent, ticketBalance,
+            sessions, perSession, allSessions: allDays.size,
             profit, roi, abi};
   }
 
@@ -2490,6 +2496,14 @@ const SEED_DATA = [];
         ? `<div class="stat"><div class="lbl">Из них деньгами</div><div class="val ${s.cashProfit>0?'pos':(s.cashProfit<0?'neg':'neutral')}">${fmt(s.cashProfit)} ${SYM[baseCurrency]}</div></div>
            <div class="stat"><div class="lbl">Из них билетами</div><div class="val ${s.ticketsWon>0?'pos':'neutral'}">${fmt(s.ticketsWon)} ${SYM[baseCurrency]}</div></div>`
         : `<div class="stat"><div class="lbl">Сумма байинов</div><div class="val neutral">${fmt(s.totalBuyin)} ${SYM[baseCurrency]}</div></div>`}
+      ${(()=>{
+        const outView = statSide === 'EXPENSE' || OUTSIDE_TAGS.some(o=>o.id === statSide);
+        const ses = outView ? s.allSessions : s.sessions;
+        const per = outView ? (s.allSessions ? s.allCount / s.allSessions : 0) : s.perSession;
+        return `<div class="stat"><div class="lbl">Сессий ${lblPeriod}</div><div class="val">${ses}</div></div>
+        <div class="stat"><div class="lbl">${outView ? 'Записей' : 'Турниров'} в сессию</div><div class="val">${per.toFixed(1)}</div>
+          <div class="stat-sub">${outView ? s.allCount : s.count} / ${ses || 0}</div></div>`;
+      })()}
       <div class="stat"><div class="lbl">В игре / завершено</div><div class="val neutral">${statSide === 'SIDE' ? s.allPending : s.pendingCount} / ${statSide === 'SIDE' ? s.allDone : s.doneCount}</div></div>
       ${statSide === 'ALL' ? `<div class="stat"><div class="lbl">Профит с билетами</div><div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div><div class="stat-sub">${fmt(s.profit)} + ${fmt(Math.max(0, s.ticketBalance))} билетами ${period === 'ALL' ? '' : lblPeriod}</div></div>` : ''}
     `;
