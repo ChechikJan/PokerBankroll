@@ -480,7 +480,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">чистая · 06.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">чистая · 11.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -815,6 +815,15 @@ tr:last-child td{border-bottom:none;}
     <div id="mixTagBox"></div>
     <div class="rb-head" style="margin:14px 0 8px;">Покеррумы</div>
     <div class="room-btns" id="mixRoomBox"></div>
+    <div class="rb-head" style="margin:14px 0 8px;">Байин <span id="mixBiCurNote" style="text-transform:none;letter-spacing:0;"></span></div>
+    <div class="rate-row" style="margin:0 0 10px;">
+      <div class="field"><label>От</label><input type="number" step="0.01" id="mixBiFrom" placeholder="любой"></div>
+      <div class="field"><label>До</label><input type="number" step="0.01" id="mixBiTo" placeholder="любой"></div>
+      <button class="btn ghost tiny" id="mixBiClear">Любой байин</button>
+    </div>
+    <div class="room-btns" id="mixBiQuick"></div>
+    <div class="rb-head" style="margin:12px 0 6px;">Частые байины</div>
+    <div class="room-btns" id="mixBiExact"></div>
     <div class="bd-note mono" id="mixSummary" style="margin-top:12px;color:var(--gold);"></div>
     <div class="modal-actions">
       <button class="btn ghost" id="mixClear">Сбросить</button>
@@ -1027,6 +1036,7 @@ const SEED_DATA = [];
   let statSide = 'ALL';
   let mixTags = [];    // теги, выбранные в «своей статистике» (условие И)
   let mixRooms = [];   // и/или конкретные румы
+  let mixBiFrom = null, mixBiTo = null;   // диапазон байина в USD ('своя статистика')
   let cfRoomValue = '';  // куда идёт операция: '' — общий банкролл, иначе имя рума
   let bankroll = null;      // {date, amount, currency}
   let cashflow = [];        // [{id, date, type:'DEP'|'WD', amount, currency, room}]
@@ -2470,6 +2480,11 @@ const SEED_DATA = [];
         const tags = t.tags || [];
         if(!mixTags.every(id=>tags.includes(id))) return false;
         if(mixRooms.length && !mixRooms.includes((t.note||'').trim())) return false;
+        if(mixBiFrom !== null || mixBiTo !== null){
+          const bi = convert(cost(t), t.currency, mixBiCur());
+          if(mixBiFrom !== null && bi < mixBiFrom - 1e-9) return false;
+          if(mixBiTo !== null && bi > mixBiTo + 1e-9) return false;
+        }
         return true;
       });
     }
@@ -2537,7 +2552,9 @@ const SEED_DATA = [];
                   ? 'Текущие расходы: тренировки, майнинг, сервер. Вся сумма идёт в минус общего профита и общего банкролла; в счёт турниров, ABI и ROI турниров не входит. Разбивка по статьям — в таблице ниже.'
               : (statSide === 'RAKE'
                   ? 'Только рейкбек. Билеты считаются наравне с деньгами — рейкбек часто приходит именно билетом.'
-                  : 'Деньги идут в общий банкролл, общий профит и общий ROI, но в счёт турниров, ABI и ROI турниров не входят.')));
+                  : (statSide === 'MIX'
+                  ? 'Свой срез' + (mixBiLabel() ? ': ' + mixBiLabel() + ' — байин с ребаями, пересчитан в ' + mixBiCur() + '.' : '.')
+                  : 'Деньги идут в общий банкролл, общий профит и общий ROI, но в счёт турниров, ABI и ROI турниров не входят.'))));
         compNote.textContent = foldSat
           ? base + ` Билетов получено на ${fmt(s.ticketsWon)} ${SYM[baseCurrency]}, они уже включены в профит. ` +
             'В срезе «Всё вместе» билеты не складываются с деньгами, чтобы не посчитать их дважды.'
@@ -3795,6 +3812,37 @@ const SEED_DATA = [];
   ['biMin','biMax'].forEach(id=> $(id).addEventListener('change', syncRange));
 
   // --- custom slice ---
+  // the buy-in filter speaks the currency of the chosen room; mixed rooms fall back to USD
+  function mixBiCur(){
+    if(!mixRooms.length) return 'USD';
+    const curs = Array.from(new Set(mixRooms.map(n=> roomCurrency(n) || 'USD')));
+    return curs.length === 1 ? curs[0] : 'USD';
+  }
+  const BI_LADDER = {
+    USD: [0, 5, 11, 25, 55, 110, 250, 550, 1100],
+    EUR: [0, 5, 11, 25, 55, 110, 250, 550, 1100],
+    RUB: [0, 300, 600, 1500, 3000, 7000, 15000, 35000, 75000]
+  };
+  // whole numbers look better without the cents in the buy-in picker
+  function fmtBi(v){ return Number.isInteger(v) ? v.toLocaleString('ru-RU') : fmt(v); }
+  function mixBuckets(){
+    const cur = mixBiCur();
+    const steps = BI_LADDER[cur] || BI_LADDER.USD;
+    const sym = SYM[cur];
+    const out = [];
+    for(let i = 0; i < steps.length - 1; i++) out.push([steps[i], steps[i+1], `${fmtBi(steps[i])} – ${fmtBi(steps[i+1])} ${sym}`]);
+    out.push([steps[steps.length-1], Infinity, `${fmtBi(steps[steps.length-1])}+ ${sym}`]);
+    return out;
+  }
+
+  function mixBiLabel(){
+    if(mixBiFrom === null && mixBiTo === null) return '';
+    const sym = SYM[mixBiCur()];
+    if(mixBiFrom !== null && mixBiTo !== null)
+      return mixBiFrom === mixBiTo ? `байин ${fmtBi(mixBiFrom)} ${sym}` : `байин ${fmtBi(mixBiFrom)} – ${fmtBi(mixBiTo)} ${sym}`;
+    return mixBiFrom !== null ? `байин от ${fmtBi(mixBiFrom)} ${sym}` : `байин до ${fmtBi(mixBiTo)} ${sym}`;
+  }
+
   function renderMixPicker(){
     const box = $('mixTagBox');
     if(!box) return;
@@ -3814,10 +3862,33 @@ const SEED_DATA = [];
                       data-mixroom="${escapeHtml(r.name)}">${escapeHtml(r.name)}</button>`;
     }).join('');
 
+    // buy-in: ready-made brackets and the levels that actually occur in the base
+    const biCur = mixBiCur(), biSym = SYM[biCur];
+    $('mixBiCurNote').textContent = '— в ' + biCur + (mixRooms.length > 1 && biCur === 'USD' ? ' (румы в разных валютах)' : '') +
+      ', байин с ребаями, пусто = любой';
+    $('mixBiQuick').innerHTML = mixBuckets().map(([lo,hi,name])=>
+      `<button type="button" class="room-btn ${mixBiFrom === lo && (mixBiTo === hi || (hi === Infinity && mixBiTo === null)) ? 'active' : ''}" data-mixbucket="${lo}|${hi === Infinity ? '' : hi}">${name}</button>`).join('');
+    const seen = {};
+    tournaments.forEach(t=>{
+      if(!isCountable(t)) return;
+      if(mixRooms.length && !mixRooms.includes((t.note || '').trim())) return;
+      const v = Math.round(convert(cost(t), t.currency, biCur) * 100) / 100;
+      if(!v) return;
+      seen[v] = (seen[v] || 0) + 1;
+    });
+    const top = Object.keys(seen).map(Number).sort((a,b)=> seen[b] - seen[a]).slice(0, 16).sort((a,b)=> a - b);
+    $('mixBiExact').innerHTML = top.length
+      ? top.map(v=>`<button type="button" class="room-btn ${mixBiFrom === v && mixBiTo === v ? 'active' : ''}" data-mixbi="${v}">${fmtBi(v)} ${biSym}<span class="cur">${seen[v]}</span></button>`).join('')
+      : '<div class="bd-note" style="margin:0;">Турниров пока нет.</div>';
+    if(document.activeElement !== $('mixBiFrom')) $('mixBiFrom').value = mixBiFrom === null ? '' : mixBiFrom;
+    if(document.activeElement !== $('mixBiTo')) $('mixBiTo').value = mixBiTo === null ? '' : mixBiTo;
+
     const parts = [];
     if(mixTags.length) parts.push(mixTags.map(tagLabel).join(' + '));
     if(mixRooms.length) parts.push('румы: ' + mixRooms.join(', '));
-    $('mixSummary').textContent = parts.length ? parts.join(' · ') : 'Ничего не выбрано — попадут все записи.';
+    parts.push(mixBiLabel() || 'байин любой');
+    $('mixSummary').textContent = (mixTags.length || mixRooms.length || mixBiLabel())
+      ? parts.join(' · ') : 'Ничего не выбрано — попадут все записи.';
   }
 
   document.addEventListener('click', (ev)=>{
@@ -3831,14 +3902,46 @@ const SEED_DATA = [];
     const rm = ev.target.closest && ev.target.closest('[data-mixroom]');
     if(rm){
       const n = rm.getAttribute('data-mixroom');
+      const was = mixBiCur();
       mixRooms = mixRooms.includes(n) ? mixRooms.filter(x=>x!==n) : mixRooms.concat([n]);
+      const now = mixBiCur();
+      if(now !== was){
+        const re = (v)=> v === null ? null : Math.round(convert(v, was, now) * 100) / 100;
+        mixBiFrom = re(mixBiFrom); mixBiTo = re(mixBiTo);
+      }
+      renderMixPicker();
+      return;
+    }
+    const bk = ev.target.closest && ev.target.closest('[data-mixbucket]');
+    if(bk){
+      const raw = bk.getAttribute('data-mixbucket').split('|');
+      const lo = Number(raw[0]);
+      const hi = raw[1] === '' ? null : Number(raw[1]);
+      if(mixBiFrom === lo && mixBiTo === hi){ mixBiFrom = null; mixBiTo = null; }
+      else { mixBiFrom = lo; mixBiTo = hi; }
+      renderMixPicker();
+      return;
+    }
+    const bx = ev.target.closest && ev.target.closest('[data-mixbi]');
+    if(bx){
+      const v = Number(bx.getAttribute('data-mixbi'));
+      if(mixBiFrom === v && mixBiTo === v){ mixBiFrom = null; mixBiTo = null; }
+      else { mixBiFrom = v; mixBiTo = v; }
       renderMixPicker();
     }
   });
 
+  ['mixBiFrom','mixBiTo'].forEach(id=> $(id).addEventListener('input', ()=>{
+    const v = parseFloat($(id).value);
+    const val = isNaN(v) ? null : v;
+    if(id === 'mixBiFrom') mixBiFrom = val; else mixBiTo = val;
+    renderMixPicker();
+  }));
+  $('mixBiClear').addEventListener('click', ()=>{ mixBiFrom = null; mixBiTo = null; renderMixPicker(); });
+
   $('mixTab').addEventListener('click', ()=>{ renderMixPicker(); $('mixModal').classList.add('open'); });
   $('mixModal').addEventListener('click', (e)=>{ if(e.target.id==='mixModal') $('mixModal').classList.remove('open'); });
-  $('mixClear').addEventListener('click', ()=>{ mixTags = []; mixRooms = []; renderMixPicker(); });
+  $('mixClear').addEventListener('click', ()=>{ mixTags = []; mixRooms = []; mixBiFrom = null; mixBiTo = null; renderMixPicker(); });
   $('mixApply').addEventListener('click', ()=>{
     $('mixModal').classList.remove('open');
     statSide = 'MIX';
