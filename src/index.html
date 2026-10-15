@@ -532,6 +532,9 @@ tr:last-child td{border-bottom:none;}
 #pageKo td{text-align:right;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;}
 #pageKo td:first-child{font-family:inherit;}
 #pageKo tr.ko-cur td{background:var(--ko-bounty-soft);}
+#pageKo table.ko-jpt{min-width:420px;}
+#pageKo table.ko-jpt tr.ko-off td{opacity:.4;}
+#pageKo table.ko-jpt tr.ko-tot td{font-weight:600;color:var(--ko-accent);border-bottom:0;}
 #pageKo td.ko-eq{font-weight:600;color:var(--ko-accent);}
 [hidden]{display:none!important;}
 </style>
@@ -885,6 +888,7 @@ tr:last-child td{border-bottom:none;}
       <button type="button" class="tab" role="tab" data-f="space" aria-selected="false">Space KO<small>Winamax</small></button>
       <button type="button" class="tab" role="tab" data-f="mystery" aria-selected="false">Mystery KO<small>фикс. пул</small></button>
       <button type="button" class="tab" role="tab" data-f="pko" aria-selected="false">PKO<small>обычный</small></button>
+      <button type="button" class="tab" role="tab" data-f="chiko" aria-selected="false">Triple Threat<small>Chiko</small></button>
     </div>
   </div>
 
@@ -963,6 +967,35 @@ tr:last-child td{border-bottom:none;}
         <label class="ko-f">Учитывать прибавку к своей голове: <b id="ko-headV">0%</b>
           <input type="range" id="ko-head" min="0" max="100" step="5" value="0"></label>
         <div class="ko-hint">0% = считаем только то, что получаешь сразу (половину). 100% = весь нокаут, включая половину, которая уходит тебе на голову.</div>
+      </fieldset>
+      <fieldset id="ko-jpBox" hidden>
+        <legend>Джекпот-баунти (выпадает за каждый нокаут)</legend>
+        <div class="ko-row">
+          <label class="ko-f">Уровень бай-ина
+            <select id="ko-jptier">
+              <option value="0">до $5,50</option>
+              <option value="1" selected>$5,51 – $25</option>
+              <option value="2">от $25,01</option>
+            </select></label>
+          <label class="ko-f">Текущий джекпот
+            <input type="text" id="ko-jpamt" inputmode="decimal" value="89669,77"></label>
+          <label class="ko-f">Доля бай-ина в джекпот, %
+            <input type="text" id="ko-jpshare" inputmode="decimal" value="45,5"></label>
+        </div>
+        <div>
+          <div class="ko-hint" style="margin-bottom:6px">Что закладывать с джекпота:</div>
+          <div class="ko-seg" id="ko-jpmode">
+            <label><input type="radio" name="ko-jpmode" value="0" checked> Полное ожидание</label>
+            <label><input type="radio" name="ko-jpmode" value="1"> Без 10%</label>
+            <label><input type="radio" name="ko-jpmode" value="2"> Без 10% и 0,897%</label>
+            <label><input type="radio" name="ko-jpmode" value="min"> Минимум 0,0036%</label>
+          </div>
+        </div>
+        <div class="ko-tablewrap"><table class="ko-jpt">
+          <thead><tr><th>Доля джекпота</th><th>Выплата</th><th>Шанс</th><th>Вклад в EV</th></tr></thead>
+          <tbody id="ko-jpbody"></tbody>
+        </table></div>
+        <div class="ko-hint">Джекпот растёт, поэтому вводи текущую сумму из лобби (окно Bounty Jackpot Information). Уровень выбирается сам по бай-ину. Выплата из джекпота идёт целиком тебе, на голову не добавляется.</div>
       </fieldset>
       <fieldset id="ko-mysBox" hidden>
         <legend>Нокаут оппонента</legend>
@@ -4855,6 +4888,9 @@ const FMT={
   pko:{cur:'$',prize:46,bshare:46,prizeHint:'Обычный PKO $10 на ПокерОК: $4,60 в призовые, $4,60 стартовый баунти, $0,80 рейк = 46%. Стартовый баунти в таблице = бай-ин × доля в баунти.',
     progressive:true,noMult:true,base:'start',legend:()=>Infinity,
     levels:[['Старт',1],['x1,5 старта',1.5],['x2',2],['x3',3],['x5',5],['x10',10],['x20',20]]},
+  chiko:{cur:'$',prize:22.7273,bshare:22.7273,buyin:11,stack:10000,jp:true,prizeHint:'Triple Threat $11: $2,50 в призовые + $2,50 прогрессивный KO-баунти + $5 в джекпот-баунти + $1 рейк. На ранней стадии фишки = призовые + KO-баунти + джекпот.',
+    progressive:true,noMult:true,base:'start',legend:()=>Infinity,
+    levels:[['Старт',1],['x1,5 старта',1.5],['x2',2],['x3',3],['x5',5],['x10',10],['x20',20]]},
   mystery:{cur:'$',prize:46,bshare:46,prizeHint:'Mystery KO $10 на ПокерОК: $4,60 в призовые, $4,60 в баунти, $0,80 рейк = 46%. Баунти обычно включаются в призах: на поздней стадии лучше задать курс фишек вручную.',
     progressive:false,levels:[['x0,5 бай-ина',.5],['x1',1],['x2',2],['x5',5],['x10',10],['x25',25],['x50',50]]}
 };
@@ -4866,12 +4902,16 @@ const pct=n=>isFinite(n)?fmt(n*100,1)+'%':'—';
 let st={f:'ocean',mult:'full',level:0};
 
 function loadSaved(){try{const s=JSON.parse(localStorage.getItem('pokerbankroll_koeq')||'null');if(s)return s}catch(e){}return null}
-function save(){try{const o={f:st.f,mult:st.mult};root.querySelectorAll('input[type=text],select,input[type=range]').forEach(i=>o[i.id.slice(3)]=i.value);o.cover=$('cover').checked;o.inmode=root.querySelector('input[name=ko-inmode]:checked').value;localStorage.setItem('pokerbankroll_koeq',JSON.stringify(o))}catch(e){}}
+function save(){try{const o={f:st.f,mult:st.mult};root.querySelectorAll('input[type=text],select,input[type=range]').forEach(i=>o[i.id.slice(3)]=i.value);o.cover=$('cover').checked;o.inmode=root.querySelector('input[name=ko-inmode]:checked').value;o.jpmode=(root.querySelector('input[name=ko-jpmode]:checked')||{}).value;localStorage.setItem('pokerbankroll_koeq',JSON.stringify(o))}catch(e){}}
 
 function setFormat(f,keep){
   st.f=f;const F=FMT[f];
   root.querySelectorAll('#ko-tabs button').forEach(b=>{b.setAttribute('aria-selected',b.dataset.f===f);b.classList.toggle('active',b.dataset.f===f)});
-  if(!keep){$('cur').value=F.cur;$('prize').value=F.prize;$('bshare').value=F.bshare;}
+  if(!keep){$('cur').value=F.cur;$('prize').value=F.prize;$('bshare').value=F.bshare;
+    if(F.buyin){$('buyin').value=F.buyin;$('stack').value=F.stack;$('bounty').value='2,5';$('jptier').value=jpTierFor(F.buyin);$('jpamt').value=String(JP_DEF[jpTierFor(F.buyin)]).replace('.',',');}
+    else if(st.prevJp){$('buyin').value='10';$('stack').value='20000';$('bounty').value=f==='pko'?'4,6':'5';}}
+  st.prevJp=!!F.jp;
+  $('jpBox').hidden=!F.jp;
   $('prizeHint').textContent=F.prizeHint;
   $('progBox').hidden=!F.progressive;$('mysBox').hidden=F.progressive;
   $('inMode').hidden=!!F.noMult;$('multBox').hidden=!!F.noMult;
@@ -4908,7 +4948,8 @@ function mysAvg(){
 }
 function cpu(){
   const m=num($('cpu').value);if(m>0)return m;
-  const share=num($('prize').value)+($('cmode').value==='early'?num($('bshare').value):0);
+  const F=FMT[st.f];
+  const share=num($('prize').value)+($('cmode').value==='early'?num($('bshare').value)+(F.jp?num($('jpshare').value):0):0);
   return num($('stack').value)/(num($('buyin').value)*share/100);
 }
 // money value of one KO that we count, for a given face bounty
@@ -4918,10 +4959,25 @@ function koMoney(face){
   const legendary=face>=F.legend(num($('buyin').value));
   const m=(legendary||F.noMult)?1:F.mults.find(x=>x[0]===st.mult)[2];
   const share=.5+.5*num($('head').value)/100;
-  return face*m*share;
+  return face*m*share+(F.jp?jpEV():0);
 }
 function reqEq(pot,call,chips){return call/(pot+call+chips)}
 
+const JP=[[10,30],[0.897,154],[0.2076,533],[0.0735,1848],[0.0329,6408],[0.017,22211],[0.0098,76983],[0.006,266833],[0.0036,625000]];
+const JP_DEF=[17933.95,89669.77,179339.54];
+function jpTierFor(b){return b<=5.5?0:b<=25?1:2}
+function jpEV(){
+  const J=num($('jpamt').value);if(!(J>0))return 0;
+  const m=(root.querySelector('input[name=ko-jpmode]:checked')||{}).value||'0';
+  if(m==='min')return J*JP[JP.length-1][0]/100;
+  const skip=+m;return JP.slice(skip).reduce((a,[p,f])=>a+J*p/100*f/1e6,0);
+}
+function renderJp(){
+  const J=num($('jpamt').value),c=$('cur').value,m=(root.querySelector('input[name=ko-jpmode]:checked')||{}).value||'0';
+  $('jpbody').innerHTML=JP.map(([p,f],i)=>{const off=m==='min'?i!==JP.length-1:i<+m;
+    return `<tr class="${off?'ko-off':''}"><td>${fmt(p,p<0.01?4:p<1?4:2)}%</td><td>${fmt(J*p/100,2)} ${c}</td><td>1 из ${fmt(1e6/f,0)}</td><td>${off?'—':fmt(m==='min'?J*p/100:J*p/100*f/1e6,3)+' '+c}</td></tr>`}).join('')+
+    `<tr class="ko-tot"><td>Итого за нокаут</td><td></td><td></td><td>${fmt(jpEV(),2)} ${c}</td></tr>`;
+}
 const LATE_BASE=[[1/3,12],[1/2,9],[2/3,7],[1,5],[1.5,4],[2,3],[3,2]];
 function baseDisc(r){
   const t=LATE_BASE;if(!(r>0))return NaN;if(r<=t[0][0])return t[0][1];if(r>=t[t.length-1][0])return t[t.length-1][1];
@@ -4935,6 +4991,7 @@ function lateParts(face,call){
   return {ratio,base,cov,cr,ko,kr,total:base+cov+ko};
 }
 function calc(){
+  if(FMT[st.f].jp)renderJp();
   const late=$('cmode').value==='late';
   $('lateBox').hidden=!late;$('lateDl').hidden=!late;$('mainDl').hidden=late;
   const mt=$('cmode').value==='mtable'&&st.f==='mystery';
@@ -4966,7 +5023,7 @@ function calc(){
   else if(F.progressive){
     const leg=face>=F.legend(num($('buyin').value));
     const m=(leg||F.noMult)?1:F.mults.find(x=>x[0]===st.mult)[2];
-    note=(F.noMult?`Нокаут на голове ${fmt(face,2)} ${c}`:`Средний нокаут ${fmt(face,2)} ${c} × множитель ${fmt(m,3)}`)+` × учтённая доля ${fmt(.5+.5*num($('head').value)/100,2)}`+(n>1?` × ${n} игрока`:'')+'.';
+    note=(F.noMult?`Нокаут на голове ${fmt(face,2)} ${c}`:`Средний нокаут ${fmt(face,2)} ${c} × множитель ${fmt(m,3)}`)+` × учтённая доля ${fmt(.5+.5*num($('head').value)/100,2)}`+(F.jp?` + джекпот-баунти ${fmt(jpEV(),2)} ${c}`:'')+(n>1?`, × ${n} игрока`:'')+'.';
     if(leg)note+=' Нокаут легендарного уровня: у него своя таблица множителей со средним x1, поэтому выбор множителя не применяется.';
   } else note=`Средний баунти ${fmt(face,2)} ${c} выплачивается целиком`+(n>1?`, × ${n} игрока`:'')+'.';
   $('oNote').textContent=note;
@@ -5032,7 +5089,7 @@ function calcLate(){
   const pot=num($('pot').value),call=num($('call').value),bb=num($('bb').value);
   const cover=$('cover').checked;
   $('headV').textContent=$('head').value+'%';
-  const face=F.progressive?bountyFace():mysAvg();
+  const face=(F.progressive?bountyFace():mysAvg())+(F.jp?jpEV():0);
   const P=lateParts(face,call);
   const eqNo=call>0?call/(pot+call):NaN;
   const disc=cover?P.total:0;
@@ -5055,7 +5112,7 @@ function calcLate(){
   $('tTitle').textContent='Нужное эквити по размеру нокаута (поздняя стадия)';
   $('thead').innerHTML='<tr><th>Нокаут оппонента</th><th>На голове</th><th>К среднему</th><th>Поправка за нокаут</th><th>Скидка всего</th><th>Нужно эквити</th></tr>';
   $('tbody').innerHTML=rows.map(r=>{
-    const q=lateParts(r[1],call),d=cover?q.total:0,e=isFinite(eqNo)?Math.max(0,eqNo-d/100):NaN;
+    const q=lateParts(r[1]+(F.jp?jpEV():0),call),d=cover?q.total:0,e=isFinite(eqNo)?Math.max(0,eqNo-d/100):NaN;
     const cur=Math.abs(r[1]-face)<1e-9;
     return `<tr class="${cur?'ko-cur':''}"><td>${r[0]}</td><td>${fmt(r[1],r[1]<10?2:0)} ${c}</td><td>${fmt(q.kr,2)}×</td><td>${sg(cover?q.ko:0)}</td><td>${sg(d)}</td><td class="ko-eq">${pct(e)}</td></tr>`}).join('');
   renderLevelsActive(face);
@@ -5069,13 +5126,15 @@ root.querySelectorAll('#ko-tabs button').forEach(b=>b.onclick=()=>{
   if(st.f===b.dataset.f)return;
   if(b.dataset.f==='mystery'||st.f==='mystery')$('cpu').value='';
   setFormat(b.dataset.f)});
-root.querySelectorAll('input,select').forEach(i=>{i.addEventListener('input',()=>{if(['buyin','cur','prize','bshare'].includes(i.id))renderLevels();calc()})});
+root.querySelectorAll('input,select').forEach(i=>{i.addEventListener('input',()=>{
+  if(i===$('buyin')&&FMT[st.f].jp){const t=jpTierFor(num(i.value));if(String(t)!==$('jptier').value){$('jptier').value=t;$('jpamt').value=String(JP_DEF[t]).replace('.',',');}}
+  if(i===$('jptier'))$('jpamt').value=String(JP_DEF[+i.value]).replace('.',',');if(['buyin','cur','prize','bshare'].some(x=>$(x)===i))renderLevels();calc()})});
 root.querySelectorAll('input[name=ko-inmode]').forEach(r=>r.addEventListener('change',()=>{
   const v=num($('bounty').value);
   $('bounty').value=String(+(r.value==='min'?v*.4:v/.4).toFixed(2)).replace('.',',');calc()}));
 
 const s=loadSaved();
-if(s){Object.keys(s).forEach(k=>{const el=$(k);if(el&&k!=='cover'&&el.type!=='radio')el.value=s[k]});$('cover').checked=s.cover!==false;if(s.inmode){const r=root.querySelector(`input[name=ko-inmode][value="${s.inmode}"]`);if(r)r.checked=true}st.mult=s.mult||'full';setFormat(s.f||'ocean',true)}
+if(s){Object.keys(s).forEach(k=>{const el=$(k);if(el&&k!=='cover'&&el.type!=='radio')el.value=s[k]});$('cover').checked=s.cover!==false;if(s.jpmode){const r=root.querySelector(`input[name=ko-jpmode][value="${s.jpmode}"]`);if(r)r.checked=true}if(s.inmode){const r=root.querySelector(`input[name=ko-inmode][value="${s.inmode}"]`);if(r)r.checked=true}st.mult=s.mult||'full';setFormat(s.f||'ocean',true)}
 else setFormat('ocean');
 
 })();
@@ -5096,5 +5155,6 @@ else setFormat('ocean');
   });
 })();
 </script>
+
 </body>
 </html>
