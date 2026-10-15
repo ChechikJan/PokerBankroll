@@ -471,6 +471,69 @@ tr:last-child td{border-bottom:none;}
 .modal h3{font-family:'Fraunces',Georgia,'Times New Roman',serif;margin:0 0 16px;font-size:17px;}
 .modal .field{margin-bottom:12px;}
 .modal-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px;}
+
+/* === KO equity calculator (scoped) === */
+.page-nav{margin:-6px 0 18px;}
+.page-nav .tab{font:inherit;font-size:13px;padding:9px 18px;}
+#pageKo{
+  --ko-accent:var(--felt-bright); --ko-accent-soft:rgba(62,141,100,.16);
+  --ko-bounty:#E07A63; --ko-bounty-soft:rgba(192,80,62,.16); --ko-warn:var(--gold);
+}
+#pageKo .ko-wrap{display:grid;gap:0;}
+#pageKo .ko-head .tabs{margin-bottom:0;}
+#pageKo .tab{font:inherit;font-size:12.5px;line-height:1.2;}
+#pageKo .tab small{margin-left:6px;font-size:11px;opacity:.7;}
+#pageKo .ko-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start;}
+@media(max-width:900px){#pageKo .ko-grid{grid-template-columns:1fr;}}
+#pageKo .panel{display:grid;gap:16px;}
+#pageKo .ko-grid > .panel{margin-bottom:18px;}
+#pageKo fieldset{border:0;margin:0;padding:0;display:grid;gap:12px;min-width:0;}
+#pageKo legend{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin-bottom:10px;padding:0;}
+#pageKo hr{border:0;border-top:1px solid var(--border);margin:0;}
+#pageKo .ko-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+#pageKo label.ko-f{display:grid;gap:5px;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;min-width:0;}
+#pageKo label.ko-f input,#pageKo label.ko-f select{width:100%;text-transform:none;letter-spacing:0;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;}
+#pageKo .ko-hint{font-size:12px;color:var(--text-dim);line-height:1.45;}
+#pageKo .ko-chips{display:flex;flex-wrap:wrap;gap:6px;}
+#pageKo .ko-chips button{font:500 12px 'IBM Plex Mono',ui-monospace,Consolas,monospace;border:1px solid var(--border);background:var(--surface-2);color:var(--text);padding:6px 10px;border-radius:999px;cursor:pointer;}
+#pageKo .ko-chips button span{color:var(--text-dim);margin-left:4px;}
+#pageKo .ko-chips button.ko-on{background:var(--ko-bounty-soft);border-color:var(--ko-bounty);}
+#pageKo .ko-seg{display:flex;flex-wrap:wrap;gap:6px;}
+#pageKo .ko-seg label{display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;cursor:pointer;background:var(--surface-2);color:var(--text);}
+#pageKo .ko-seg input{accent-color:var(--ko-accent);margin:0;}
+#pageKo .ko-seg label:has(input:checked){border-color:var(--ko-accent);background:var(--ko-accent-soft);}
+#pageKo .ko-check{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;color:var(--text);}
+#pageKo .ko-check input{width:17px;height:17px;accent-color:var(--ko-accent);}
+#pageKo input[type=range]{width:100%;accent-color:var(--ko-bounty);}
+#pageKo .ko-verdict{position:sticky;top:12px;}
+#pageKo .ko-big{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+#pageKo .ko-big div{background:var(--surface-2);border-radius:10px;padding:14px;min-width:0;}
+#pageKo .ko-big .ko-with{background:var(--ko-accent-soft);}
+#pageKo .ko-big b{display:block;font:600 34px/1.05 'IBM Plex Mono',ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;}
+#pageKo .ko-big .ko-with b{color:var(--ko-accent);}
+#pageKo .ko-big span{font-size:11px;color:var(--text-dim);}
+#pageKo .ko-gauge{position:relative;height:28px;background:var(--surface-2);border-radius:8px;overflow:hidden;}
+#pageKo .ko-gauge .ko-fill{position:absolute;inset:0 auto 0 0;background:var(--ko-accent);opacity:.85;transition:width .2s;}
+#pageKo .ko-gauge .ko-mark{position:absolute;top:0;bottom:0;width:2px;background:var(--text);transition:left .2s;}
+#pageKo .ko-gauge .ko-mark::after{content:attr(data-l);position:absolute;top:50%;transform:translate(6px,-50%);font:500 11px 'IBM Plex Mono',monospace;white-space:nowrap;color:var(--text);}
+#pageKo .ko-gscale{display:flex;justify-content:space-between;font:11px 'IBM Plex Mono',monospace;color:var(--text-faint);margin-top:4px;}
+#pageKo dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:13px;}
+#pageKo dt{color:var(--text-dim);} #pageKo dd{margin:0;text-align:right;font:500 13px 'IBM Plex Mono',ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;}
+#pageKo dd.ko-b{color:var(--ko-bounty);}
+#pageKo .ko-note{font-size:12.5px;padding:10px 12px;border-radius:8px;background:var(--surface-2);color:var(--text-dim);line-height:1.45;}
+#pageKo .ko-note.ko-warn{color:var(--ko-warn);}
+#pageKo .ko-formula{font:12px/1.6 'IBM Plex Mono',ui-monospace,Consolas,monospace;color:var(--text-faint);}
+#pageKo .ko-thead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;align-items:baseline;}
+#pageKo .ko-thead h2{margin:0;}
+#pageKo .ko-tablewrap{overflow-x:auto;}
+#pageKo table{min-width:520px;font-size:13px;}
+#pageKo th{text-align:right;}
+#pageKo th:first-child,#pageKo td:first-child{text-align:left;}
+#pageKo td{text-align:right;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;}
+#pageKo td:first-child{font-family:inherit;}
+#pageKo tr.ko-cur td{background:var(--ko-bounty-soft);}
+#pageKo td.ko-eq{font-weight:600;color:var(--ko-accent);}
+[hidden]{display:none!important;}
 </style>
 
 <div class="app">
@@ -486,6 +549,13 @@ tr:last-child td{border-bottom:none;}
     <div class="ledger" id="ledger"></div>
   </div>
 
+
+  <div class="tabs page-nav" id="pageNav">
+    <button type="button" class="tab active" data-page="bank">Банкролл</button>
+    <button type="button" class="tab" data-page="ko">Калькулятор KO</button>
+  </div>
+
+  <div id="pageBank">
   <div class="top-tools">
     <button class="btn ghost" id="exportBtn">Сохранить копию в файл</button>
     <button class="btn ghost" id="importBtn">Загрузить из файла</button>
@@ -803,6 +873,174 @@ tr:last-child td{border-bottom:none;}
       </div>
     </div>
   </div>
+  </div><!-- /pageBank -->
+
+  <div id="pageKo" hidden>
+<div class="ko-wrap">
+  <div class="panel ko-head">
+    <h2 style="margin:0 0 4px;">Эквити для колла в KO</h2>
+    <div class="ko-hint" style="margin-bottom:12px;">Переводит нокаут в фишки и считает, сколько эквити нужно, чтобы колл олл-ина был в плюс.</div>
+    <div class="tabs" role="tablist" id="ko-tabs">
+      <button type="button" class="tab active" role="tab" data-f="ocean" aria-selected="true">Ocean KO<small>ПокерОК</small></button>
+      <button type="button" class="tab" role="tab" data-f="space" aria-selected="false">Space KO<small>Winamax</small></button>
+      <button type="button" class="tab" role="tab" data-f="mystery" aria-selected="false">Mystery KO<small>фикс. пул</small></button>
+      <button type="button" class="tab" role="tab" data-f="pko" aria-selected="false">PKO<small>обычный</small></button>
+    </div>
+  </div>
+
+  <div class="ko-grid">
+    <div class="panel">
+      <fieldset>
+        <legend>Турнир</legend>
+        <div class="ko-row">
+          <label class="ko-f">Бай-ин
+            <input type="text" id="ko-buyin" inputmode="decimal" value="10"></label>
+          <label class="ko-f">Валюта
+            <select id="ko-cur"><option value="$">$</option><option value="€">€</option><option value="₽">₽</option></select></label>
+          <label class="ko-f">Стартовый стек, фишек
+            <input type="text" id="ko-stack" inputmode="numeric" value="20000"></label>
+          <label class="ko-f">Доля бай-ина в призовых, %
+            <input type="text" id="ko-prize" inputmode="decimal" value="42"></label>
+          <label class="ko-f">Доля бай-ина в баунти, %
+            <input type="text" id="ko-bshare" inputmode="decimal" value="50"></label>
+        </div>
+        <label class="ko-f">Сколько стоят фишки
+          <select id="ko-cmode">
+            <option value="early">Ранняя стадия: фишки = призовые + баунти</option>
+            <option value="prize">Только призовые (ближе к призам)</option>
+            <option value="late">Поздняя стадия: скидка по таблице поправок</option>
+            <option value="mtable">Мистери: скидка по таблице стадий ITM</option>
+          </select></label>
+        <div class="ko-hint">Ранняя стадия: стек приносит и призовые, и будущие нокауты, поэтому 1 фишка = (призовые + баунти) / стартовый стек. Ближе к призам и в мистери после ITM выбирай «только призовые» или задай курс вручную.</div>
+        <label class="ko-f">Фишек за 1 единицу валюты (вручную, необязательно)
+          <input type="text" id="ko-cpu" inputmode="decimal" placeholder="считается из стартового стека"></label>
+        <div class="ko-hint" id="ko-prizeHint"></div>
+      </fieldset>
+      <hr>
+      <fieldset>
+        <legend>Раздача</legend>
+        <div class="ko-row">
+          <label class="ko-f">Банк до твоего колла
+            <input type="text" id="ko-pot" inputmode="numeric" value="7000"></label>
+          <label class="ko-f">Сколько нужно доставить
+            <input type="text" id="ko-call" inputmode="numeric" value="6000"></label>
+          <label class="ko-f">Большой блайнд
+            <input type="text" id="ko-bb" inputmode="numeric" value="400"></label>
+          <label class="ko-f">Сколько игроков выбиваешь
+            <input type="text" id="ko-nko" inputmode="numeric" value="1"></label>
+        </div>
+        <div class="ko-hint">Банк до колла: олл-ин оппонента + блайнды, анте и все фишки в банке. Доставить: сколько тебе осталось положить.</div>
+        <div id="ko-lateBox" hidden>
+          <div class="ko-row">
+            <label class="ko-f">Средний стек в турнире
+              <input type="text" id="ko-avgstack" inputmode="numeric" value="30000"></label>
+            <label class="ko-f">Твой стек
+              <input type="text" id="ko-mystack" inputmode="numeric" value="30000"></label>
+            <label class="ko-f">Стек пушера
+              <input type="text" id="ko-pushstack" inputmode="numeric" placeholder="= сколько доставить"></label>
+            <label class="ko-f">Средний нокаут в турнире
+              <input type="text" id="ko-avgko" inputmode="decimal" value="10"></label>
+          </div>
+          <div class="ko-hint" style="margin-top:8px">Базовая скидка берётся из таблицы ранней стадии по стеку пушера относительно среднего стека, затем добавляются поправки за твой стек и размер нокаута.</div>
+        </div>
+        <label class="ko-check"><input type="checkbox" id="ko-cover" checked> Я накрываю оппонента (выигрыш раздачи его выбивает)</label>
+      </fieldset>
+      <hr>
+      <fieldset id="ko-progBox">
+        <legend>Нокаут оппонента</legend>
+        <div class="ko-seg" id="ko-inMode">
+          <label><input type="radio" name="ko-inmode" value="avg" checked> Средний нокаут</label>
+          <label><input type="radio" name="ko-inmode" value="min"> Минимум с токена</label>
+        </div>
+        <label class="ko-f" id="ko-bountyLbl">Средний нокаут (стоимость токена)
+          <input type="text" id="ko-bounty" inputmode="decimal" value="5"></label>
+        <div><div class="ko-hint" style="margin-bottom:6px">Быстрый выбор по уровню (нижняя граница уровня):</div>
+          <div class="ko-chips" id="ko-levels"></div></div>
+        <div id="ko-multBox">
+          <div class="ko-hint" style="margin-bottom:6px">Какой средний множитель закладывать:</div>
+          <div class="ko-seg" id="ko-mults"></div>
+        </div>
+        <label class="ko-f">Учитывать прибавку к своей голове: <b id="ko-headV">0%</b>
+          <input type="range" id="ko-head" min="0" max="100" step="5" value="0"></label>
+        <div class="ko-hint">0% = считаем только то, что получаешь сразу (половину). 100% = весь нокаут, включая половину, которая уходит тебе на голову.</div>
+      </fieldset>
+      <fieldset id="ko-mysBox" hidden>
+        <legend>Нокаут оппонента</legend>
+        <label class="ko-f">Средний мистери-баунти
+          <input type="text" id="ko-mavg" inputmode="decimal" value="12"></label>
+        <div class="ko-row">
+          <label class="ko-f">Осталось в пуле баунти
+            <input type="text" id="ko-mpool" inputmode="decimal" placeholder="напр. 18000"></label>
+          <label class="ko-f">Осталось конвертов
+            <input type="text" id="ko-mcount" inputmode="numeric" placeholder="напр. 1500"></label>
+        </div>
+        <div class="ko-hint">Если заполнишь пул и число конвертов, средний баунти посчитается сам. Баунти в мистери выплачивается целиком сразу.</div>
+        <div id="ko-mtBox" hidden style="display:grid;gap:12px">
+          <div class="ko-row">
+            <label class="ko-f">Таблица
+              <select id="ko-mtpool">
+                <option value="50">Пул баунти 50% (Stars, GG/ПокерОК, 888)</option>
+                <option value="30">Пул баунти 30% (Winamax)</option>
+              </select></label>
+            <label class="ko-f">Стадия
+              <select id="ko-mtstage">
+                <option value="0">ITM — 50% ITM</option>
+                <option value="0.5">50% — 30% ITM</option>
+                <option value="1">30% — 20% ITM</option>
+                <option value="1.5">20% — 10% ITM</option>
+                <option value="2">10% — 5% ITM и глубже</option>
+              </select></label>
+            <label class="ko-f">Эффективный стек, BB
+              <input type="text" id="ko-mtbb" inputmode="decimal" placeholder="= доставить / BB"></label>
+            <label class="ko-f">Средний баунти на старте мистери
+              <input type="text" id="ko-mtstart" inputmode="decimal" placeholder="пул / игроков на ITM"></label>
+          </div>
+          <div class="ko-hint">Поправка на топ-ноки: скидка из таблицы умножается на (текущий средний баунти / средний на старте). Если крупные конверты ещё не вскрыты, текущий средний выше стартового и скидка растёт; если уже вскрыты, падает.</div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="panel ko-verdict" aria-live="polite">
+      <div class="ko-big">
+        <div><span>Без нокаута</span><b id="ko-eqNo">—</b><span>шансы банка</span></div>
+        <div class="ko-with"><span>С нокаутом</span><b id="ko-eqWith">—</b><span>нужно эквити</span></div>
+      </div>
+      <div>
+        <div class="ko-gauge"><div class="ko-fill" id="ko-gFill"></div><div class="ko-mark" id="ko-gMark" data-l="без KO"></div></div>
+        <div class="ko-gscale"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+      </div>
+      <dl id="ko-mainDl">
+        <dt>Нокаут в деньгах (учтено)</dt><dd class="ko-b" id="ko-oMoney">—</dd>
+        <dt>Фишек за 1 единицу валюты</dt><dd id="ko-oCpu">—</dd>
+        <dt>Нокаут в фишках</dt><dd class="ko-b" id="ko-oChips">—</dd>
+        <dt>Нокаут в BB</dt><dd class="ko-b" id="ko-oBB">—</dd>
+        <dt>Колл в BB</dt><dd id="ko-oCallBB">—</dd>
+        <dt>Разница по эквити</dt><dd id="ko-oDiff">—</dd>
+      </dl>
+      <dl id="ko-lateDl" hidden>
+        <dt>Стек пушера к среднему</dt><dd id="ko-lRatio">—</dd>
+        <dt>Базовая скидка</dt><dd class="ko-b" id="ko-lBase">—</dd>
+        <dt>Поправка за твой стек</dt><dd class="ko-b" id="ko-lCover">—</dd>
+        <dt>Поправка за нокаут</dt><dd class="ko-b" id="ko-lKo">—</dd>
+        <dt>Итоговая скидка</dt><dd class="ko-b" id="ko-lTotal">—</dd>
+        <dt>Колл в BB</dt><dd id="ko-lCallBB">—</dd>
+      </dl>
+      <div class="ko-note" id="ko-oNote"></div>
+      <div class="ko-formula" id="ko-oFormula"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ko-thead"><h2 id="ko-tTitle">Нужное эквити по уровню нокаута</h2><span class="ko-hint">для текущего банка, колла и настроек</span></div>
+    <div class="ko-tablewrap"><table>
+      <thead id="ko-thead"></thead>
+      <tbody id="ko-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
+
+  </div><!-- /pageKo -->
 </div>
 
 <div class="modal-bg" id="mixModal">
@@ -4602,5 +4840,261 @@ const SEED_DATA = [];
 })();
 </script>
 
+<script>
+(function(){
+
+const FMT={
+  ocean:{cur:'$',prize:42,bshare:50,prizeHint:'Ocean KO $10: $4,20 в призовые, $5 баунти, $0,80 рейк = 42%. На $1000 доля 45%.',
+    progressive:true,legend:v=>Math.max(10000,50*v),
+    levels:[['Egg',.5],['Fry',.6],['Fish',.7],['Shrimp',1],['Crab',1.5],['Turtle',2.5],['Octopus',5],['Dolphin',10],['Whale',20],['Shark',50]],
+    mults:[['full','Полное ожидание x1,00',1],['n1','Без x400 · x0,992',.992],['n2','Без x400 и x100 · x0,912',.912],['min','Худший случай x0,4',.4]]},
+  space:{cur:'€',prize:40,bshare:50,prizeHint:'Space KO: 40% в призовые, 50% в баунти, 10% рейк.',
+    progressive:true,legend:()=>10000,
+    levels:[['Ур. 1',.5],['Ур. 2',.6],['Ур. 3',.75],['Ур. 4',1],['Ур. 5',1.5],['Ур. 6',2.5],['Ур. 7',5],['Ур. 8',10],['Ур. 9',20],['Ур. 10',50]],
+    mults:[['full','Полное ожидание x1,00',1],['n1','Без x100 · x0,90',.9],['n2','Без x100 и x10 · x0,85',.85],['min','Худший случай x0,4',.4]]},
+  pko:{cur:'$',prize:46,bshare:46,prizeHint:'Обычный PKO $10 на ПокерОК: $4,60 в призовые, $4,60 стартовый баунти, $0,80 рейк = 46%. Стартовый баунти в таблице = бай-ин × доля в баунти.',
+    progressive:true,noMult:true,base:'start',legend:()=>Infinity,
+    levels:[['Старт',1],['x1,5 старта',1.5],['x2',2],['x3',3],['x5',5],['x10',10],['x20',20]]},
+  mystery:{cur:'$',prize:46,bshare:46,prizeHint:'Mystery KO $10 на ПокерОК: $4,60 в призовые, $4,60 в баунти, $0,80 рейк = 46%. Баунти обычно включаются в призах: на поздней стадии лучше задать курс фишек вручную.',
+    progressive:false,levels:[['x0,5 бай-ина',.5],['x1',1],['x2',2],['x5',5],['x10',10],['x25',25],['x50',50]]}
+};
+const root=document.getElementById('pageKo');
+const $=id=>document.getElementById('ko-'+id);
+const num=v=>{const n=parseFloat(String(v).replace(/[\s ]/g,'').replace(',','.'));return isFinite(n)?n:NaN};
+const fmt=(n,d=0)=>isFinite(n)?n.toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const pct=n=>isFinite(n)?fmt(n*100,1)+'%':'—';
+let st={f:'ocean',mult:'full',level:0};
+
+function loadSaved(){try{const s=JSON.parse(localStorage.getItem('pokerbankroll_koeq')||'null');if(s)return s}catch(e){}return null}
+function save(){try{const o={f:st.f,mult:st.mult};root.querySelectorAll('input[type=text],select,input[type=range]').forEach(i=>o[i.id.slice(3)]=i.value);o.cover=$('cover').checked;o.inmode=root.querySelector('input[name=ko-inmode]:checked').value;localStorage.setItem('pokerbankroll_koeq',JSON.stringify(o))}catch(e){}}
+
+function setFormat(f,keep){
+  st.f=f;const F=FMT[f];
+  root.querySelectorAll('#ko-tabs button').forEach(b=>{b.setAttribute('aria-selected',b.dataset.f===f);b.classList.toggle('active',b.dataset.f===f)});
+  if(!keep){$('cur').value=F.cur;$('prize').value=F.prize;$('bshare').value=F.bshare;}
+  $('prizeHint').textContent=F.prizeHint;
+  $('progBox').hidden=!F.progressive;$('mysBox').hidden=F.progressive;
+  $('inMode').hidden=!!F.noMult;$('multBox').hidden=!!F.noMult;
+  if(F.noMult){const r0=root.querySelector('input[name=ko-inmode][value=avg]');if(!r0.checked){r0.checked=true}}
+  if(!keep&&f==='pko')$('bounty').value='4,6';
+  if(F.progressive&&!F.noMult){
+    if(!F.mults.find(m=>m[0]===st.mult))st.mult='full';
+    $('mults').innerHTML=F.mults.map(m=>`<label><input type="radio" name="ko-mult" value="${m[0]}" ${m[0]===st.mult?'checked':''}> ${m[1]}</label>`).join('');
+    $('mults').querySelectorAll('input').forEach(i=>i.onchange=()=>{st.mult=i.value;calc()});
+  }
+  const mo=$('cmode').querySelector('option[value=mtable]');mo.hidden=f!=='mystery';mo.disabled=f!=='mystery';
+  if(f!=='mystery'&&$('cmode').value==='mtable')$('cmode').value='early';
+  if(f==='mystery'&&!keep)$('mtpool').value='50';
+  renderLevels();calc();
+}
+function renderLevels(){
+  const F=FMT[st.f],b=num($('buyin').value),c=$('cur').value;
+  if(!F.progressive){$('levels').innerHTML='';return}
+  const face=bountyFace();
+  $('levels').innerHTML=F.levels.map((l,i)=>{const v=levelVal(l);return `<button type="button" data-v="${v}" class="${Math.abs(v-face)<1e-9?'ko-on':''}">${l[0]}<span>${fmt(v,v<10?2:0)} ${c}</span></button>`}).join('');
+  $('levels').querySelectorAll('button').forEach(bt=>bt.onclick=()=>{
+    const v=num(bt.dataset.v);const mode=root.querySelector('input[name=ko-inmode]:checked').value;
+    $('bounty').value=String(+(mode==='min'?v*.4:v).toFixed(2)).replace('.',',');calc();});
+}
+function levelVal(l){const F=FMT[st.f],b=num($('buyin').value);return F.base==='start'?+(b*num($('bshare').value)/100*l[1]).toFixed(4):b*l[1]}
+function bountyFace(){
+  const v=num($('bounty').value);const mode=root.querySelector('input[name=ko-inmode]:checked').value;
+  return mode==='min'?v/.4:v;
+}
+function mysAvg(){
+  const p=num($('mpool').value),c=num($('mcount').value);
+  if(p>0&&c>0){$('mavg').value=String(+(p/c).toFixed(2)).replace('.',',');}
+  return num($('mavg').value);
+}
+function cpu(){
+  const m=num($('cpu').value);if(m>0)return m;
+  const share=num($('prize').value)+($('cmode').value==='early'?num($('bshare').value):0);
+  return num($('stack').value)/(num($('buyin').value)*share/100);
+}
+// money value of one KO that we count, for a given face bounty
+function koMoney(face){
+  const F=FMT[st.f];
+  if(!F.progressive)return face;
+  const legendary=face>=F.legend(num($('buyin').value));
+  const m=(legendary||F.noMult)?1:F.mults.find(x=>x[0]===st.mult)[2];
+  const share=.5+.5*num($('head').value)/100;
+  return face*m*share;
+}
+function reqEq(pot,call,chips){return call/(pot+call+chips)}
+
+const LATE_BASE=[[1/3,12],[1/2,9],[2/3,7],[1,5],[1.5,4],[2,3],[3,2]];
+function baseDisc(r){
+  const t=LATE_BASE;if(!(r>0))return NaN;if(r<=t[0][0])return t[0][1];if(r>=t[t.length-1][0])return t[t.length-1][1];
+  for(let i=1;i<t.length;i++)if(r<=t[i][0]){const[a,x]=t[i-1],[b,y]=t[i];return x+(y-x)*(r-a)/(b-a)}
+}
+function lateParts(face,call){
+  const ps=num($('pushstack').value)>0?num($('pushstack').value):call;
+  const ratio=ps/num($('avgstack').value), base=baseDisc(ratio);
+  const cr=num($('mystack').value)/ps, cov=cr>=4?6:cr>=2?3:0;
+  const kr=face/num($('avgko').value), ko=kr<=.5?-3:kr>=4?6:kr>=2?3:0;
+  return {ratio,base,cov,cr,ko,kr,total:base+cov+ko};
+}
+function calc(){
+  const late=$('cmode').value==='late';
+  $('lateBox').hidden=!late;$('lateDl').hidden=!late;$('mainDl').hidden=late;
+  const mt=$('cmode').value==='mtable'&&st.f==='mystery';
+  $('mtBox').hidden=!mt;
+  if(mt){$('mainDl').hidden=true;$('lateDl').hidden=false;return calcMysTable();}
+  if(late)return calcLate();
+  const F=FMT[st.f],c=$('cur').value;
+  const pot=num($('pot').value),call=num($('call').value),bb=num($('bb').value);
+  const n=Math.max(1,Math.round(num($('nko').value)||1));
+  const cover=$('cover').checked,k=cpu();
+  $('headV').textContent=$('head').value+'%';
+  $('bountyLbl').firstChild.textContent=root.querySelector('input[name=ko-inmode]:checked').value==='min'?'Минимальная выплата на токене оппонента':(FMT[st.f].noMult?'Нокаут на голове оппонента (точная сумма)':'Средний нокаут (стоимость токена)');
+  const face=F.progressive?bountyFace():mysAvg();
+  const money=cover?koMoney(face)*n:0;
+  const chips=money*k;
+  const eqNo=call>0?call/(pot+call):NaN, eqW=call>0?reqEq(pot,call,chips):NaN;
+  $('eqNo').textContent=pct(eqNo);$('eqWith').textContent=pct(eqW);
+  $('gFill').style.width=(isFinite(eqW)?eqW*100:0)+'%';
+  $('gMark').style.left=(isFinite(eqNo)?eqNo*100:0)+'%';
+  $('oMoney').textContent=fmt(money,2)+' '+c;
+  $('oCpu').textContent=fmt(k,0);
+  $('oChips').textContent=fmt(chips,0);
+  $('oBB').textContent=bb>0?fmt(chips/bb,1):'—';
+  $('oCallBB').textContent=bb>0?fmt(call/bb,1):'—';
+  $('oDiff').textContent=isFinite(eqNo)?'−'+fmt((eqNo-eqW)*100,1)+' п.п.':'—';
+
+  let note='';
+  if(!cover)note='Оппонент накрывает тебя: нокаут не получить, считаются только шансы банка.';
+  else if(F.progressive){
+    const leg=face>=F.legend(num($('buyin').value));
+    const m=(leg||F.noMult)?1:F.mults.find(x=>x[0]===st.mult)[2];
+    note=(F.noMult?`Нокаут на голове ${fmt(face,2)} ${c}`:`Средний нокаут ${fmt(face,2)} ${c} × множитель ${fmt(m,3)}`)+` × учтённая доля ${fmt(.5+.5*num($('head').value)/100,2)}`+(n>1?` × ${n} игрока`:'')+'.';
+    if(leg)note+=' Нокаут легендарного уровня: у него своя таблица множителей со средним x1, поэтому выбор множителя не применяется.';
+  } else note=`Средний баунти ${fmt(face,2)} ${c} выплачивается целиком`+(n>1?`, × ${n} игрока`:'')+'.';
+  $('oNote').textContent=note;
+  $('oNote').className='ko-note'+(cover?'':' ko-warn');
+  $('oFormula').textContent=`эквити = колл / (банк + колл + нокаут в фишках) = ${fmt(call,0)} / (${fmt(pot,0)} + ${fmt(call,0)} + ${fmt(chips,0)})`;
+
+  // level table
+  const b=num($('buyin').value);
+  const rows=F.levels.map(l=>[l[0],levelVal(l)]);
+  if(!F.progressive)rows.unshift(['Текущий средний',face]);
+  $('tTitle').textContent=F.noMult?'Нужное эквити по размеру нокаута оппонента':F.progressive?'Нужное эквити по уровню токена оппонента':'Нужное эквити по размеру баунти';
+  $('tbody').innerHTML=rows.map(r=>{
+    const mo=cover?koMoney(r[1])*n:0,ch=mo*k,e=call>0?reqEq(pot,call,ch):NaN;
+    const cur=Math.abs(r[1]-face)<1e-9;
+    return `<tr class="${cur?'ko-cur':''}"><td>${r[0]}</td><td>${fmt(r[1],r[1]<10?2:0)} ${c}</td><td>${fmt(mo,2)} ${c}</td><td>${fmt(ch,0)}</td><td>${bb>0?fmt(ch/bb,1):'—'}</td><td class="ko-eq">${pct(e)}</td></tr>`}).join('');
+  $('thead').innerHTML='<tr><th>Нокаут оппонента</th><th>На голове</th><th>Учтено</th><th>В фишках</th><th>В BB</th><th>Нужно эквити</th></tr>';
+  renderLevelsActive(face);
+  save();
+}
+const MT={50:[[30,20,15],[20,15,8],[15,15,8],[15,8,0],[10,8,0],[10,8,0]],30:[[20,15,8],[15,10,5],[10,5,2],[8,3,0],[5,2,0],[5,1,0]]};
+const MT_BB=[5,10,15,20,25,30];
+function mtCol(tab,i,stage){const a=Math.floor(stage),f=stage-a,row=tab[i];return f?row[a]+(row[a+1]-row[a])*f:row[a]}
+function mtDisc(bbs,pool,stage){
+  const tab=MT[pool];if(!(bbs>0))return NaN;
+  if(bbs<=5)return mtCol(tab,0,stage);if(bbs>=30)return mtCol(tab,5,stage);
+  for(let i=1;i<6;i++)if(bbs<=MT_BB[i]){const x=mtCol(tab,i-1,stage),y=mtCol(tab,i,stage);return x+(y-x)*(bbs-MT_BB[i-1])/5}
+}
+function calcMysTable(){
+  const c=$('cur').value,pot=num($('pot').value),call=num($('call').value),bb=num($('bb').value);
+  const cover=$('cover').checked;
+  const avg=mysAvg(),start=num($('mtstart').value);
+  const k=start>0&&avg>0?avg/start:1;
+  const bbs=num($('mtbb').value)>0?num($('mtbb').value):call/bb;
+  const pool=$('mtpool').value,stage=num($('mtstage').value);
+  const base=mtDisc(bbs,pool,stage),disc=cover?base*k:0;
+  const eqNo=call>0?call/(pot+call):NaN,eqW=isFinite(eqNo)?Math.max(0,eqNo-disc/100):NaN;
+  $('eqNo').textContent=pct(eqNo);$('eqWith').textContent=pct(eqW);
+  $('gFill').style.width=(isFinite(eqW)?eqW*100:0)+'%';
+  $('gMark').style.left=(isFinite(eqNo)?eqNo*100:0)+'%';
+  const sg=v=>isFinite(v)?(v>0?'−':v<0?'+':'')+fmt(Math.abs(v),1)+' п.п.':'—';
+  const lbl=(id,t)=>{$(id).previousElementSibling.textContent=t};
+  lbl('lRatio','Эффективный стек');$('lRatio').textContent=isFinite(bbs)?fmt(bbs,1)+' BB':'—';
+  lbl('lBase','Скидка по таблице');$('lBase').textContent=sg(cover?base:0);
+  lbl('lCover','Поправка на топ-ноки');$('lCover').textContent='×'+fmt(k,2)+(start>0?` (средний ${fmt(avg,2)} ${c} / старт ${fmt(start,2)} ${c})`:' (старт не задан)');
+  lbl('lKo','Сдвиг от поправки');$('lKo').textContent=sg(cover?base*(k-1):0);
+  $('lTotal').textContent=sg(disc);
+  $('lCallBB').textContent=bb>0?fmt(call/bb,1):'—';
+  $('oNote').textContent=cover?(bbs<5||bbs>30?'Стек вне диапазона таблицы (5–30 BB): взято крайнее значение. ':'')+'Скидка из таблицы × поправка на топ-ноки, нужное эквити = шансы банка − скидка.':'Оппонент накрывает тебя: баунти не получить, считаются только шансы банка.';
+  $('oNote').className='ko-note'+(cover?'':' ko-warn');
+  $('oFormula').textContent=`эквити = ${pct(eqNo)} − ${fmt(cover?base:0,1)} × ${fmt(k,2)} = ${pct(eqW)}`;
+  $('tTitle').textContent='Нужное эквити по эффективному стеку (мистери, выбранная стадия)';
+  $('thead').innerHTML='<tr><th>Стек, BB</th><th>ITM — 50%</th><th>30% — 20%</th><th>10% — 5%</th><th>Скидка сейчас</th><th>Нужно эквити</th></tr>';
+  const tab=MT[pool];
+  $('tbody').innerHTML=MT_BB.map((b,i)=>{const d=cover?mtDisc(b,pool,stage)*k:0,e=isFinite(eqNo)?Math.max(0,eqNo-d/100):NaN;
+    const cur=isFinite(bbs)&&Math.abs(Math.min(30,Math.max(5,bbs))-b)<2.5;
+    return `<tr class="${cur?'ko-cur':''}"><td>${b}</td><td>${tab[i][0]}</td><td>${tab[i][1]}</td><td>${tab[i][2]}</td><td>${sg(d)}</td><td class="ko-eq">${pct(e)}</td></tr>`}).join('');
+  save();
+}
+function calcLate(){
+  const L=(id,t)=>{$(id).previousElementSibling.textContent=t};
+  L('lRatio','Стек пушера к среднему');L('lBase','Базовая скидка');L('lCover','Поправка за твой стек');L('lKo','Поправка за нокаут');
+  const F=FMT[st.f],c=$('cur').value;
+  const pot=num($('pot').value),call=num($('call').value),bb=num($('bb').value);
+  const cover=$('cover').checked;
+  $('headV').textContent=$('head').value+'%';
+  const face=F.progressive?bountyFace():mysAvg();
+  const P=lateParts(face,call);
+  const eqNo=call>0?call/(pot+call):NaN;
+  const disc=cover?P.total:0;
+  const eqW=isFinite(eqNo)?Math.max(0,eqNo-disc/100):NaN;
+  $('eqNo').textContent=pct(eqNo);$('eqWith').textContent=pct(eqW);
+  $('gFill').style.width=(isFinite(eqW)?eqW*100:0)+'%';
+  $('gMark').style.left=(isFinite(eqNo)?eqNo*100:0)+'%';
+  const sg=v=>isFinite(v)?(v>0?'−':v<0?'+':'')+fmt(Math.abs(v),1)+' п.п.':'—';
+  $('lRatio').textContent=isFinite(P.ratio)?fmt(P.ratio,2)+'×':'—';
+  $('lBase').textContent=sg(cover?P.base:0);
+  $('lCover').textContent=sg(cover?P.cov:0)+(isFinite(P.cr)?` (стек ${fmt(P.cr,1)}×)`:'');
+  $('lKo').textContent=sg(cover?P.ko:0)+(isFinite(P.kr)?` (нокаут ${fmt(P.kr,1)}× к среднему)`:'');
+  $('lTotal').textContent=sg(disc);
+  $('lCallBB').textContent=bb>0?fmt(call/bb,1):'—';
+  $('oNote').textContent=cover?'Поправки: твой стек ≥2× пушера −3 п.п., ≥4× −6 п.п.; нокаут ≤½ среднего +3 п.п., ≥2× −3 п.п., ≥4× −6 п.п. Множители и курс фишек в этом режиме не используются.':'Оппонент накрывает тебя: нокаут не получить, считаются только шансы банка.';
+  $('oNote').className='ko-note'+(cover?'':' ko-warn');
+  $('oFormula').textContent=`эквити = шансы банка − скидка = ${pct(eqNo)} − ${fmt(disc,1)} п.п.`;
+  const rows=F.levels.map(l=>[l[0],levelVal(l)]);
+  if(!F.progressive)rows.unshift(['Текущий средний',face]);
+  $('tTitle').textContent='Нужное эквити по размеру нокаута (поздняя стадия)';
+  $('thead').innerHTML='<tr><th>Нокаут оппонента</th><th>На голове</th><th>К среднему</th><th>Поправка за нокаут</th><th>Скидка всего</th><th>Нужно эквити</th></tr>';
+  $('tbody').innerHTML=rows.map(r=>{
+    const q=lateParts(r[1],call),d=cover?q.total:0,e=isFinite(eqNo)?Math.max(0,eqNo-d/100):NaN;
+    const cur=Math.abs(r[1]-face)<1e-9;
+    return `<tr class="${cur?'ko-cur':''}"><td>${r[0]}</td><td>${fmt(r[1],r[1]<10?2:0)} ${c}</td><td>${fmt(q.kr,2)}×</td><td>${sg(cover?q.ko:0)}</td><td>${sg(d)}</td><td class="ko-eq">${pct(e)}</td></tr>`}).join('');
+  renderLevelsActive(face);
+  save();
+}
+function renderLevelsActive(face){
+  $('levels').querySelectorAll('button').forEach(bt=>bt.classList.toggle('ko-on',Math.abs(num(bt.dataset.v)-face)<1e-9));
+}
+
+root.querySelectorAll('#ko-tabs button').forEach(b=>b.onclick=()=>{
+  if(st.f===b.dataset.f)return;
+  if(b.dataset.f==='mystery'||st.f==='mystery')$('cpu').value='';
+  setFormat(b.dataset.f)});
+root.querySelectorAll('input,select').forEach(i=>{i.addEventListener('input',()=>{if(['buyin','cur','prize','bshare'].includes(i.id))renderLevels();calc()})});
+root.querySelectorAll('input[name=ko-inmode]').forEach(r=>r.addEventListener('change',()=>{
+  const v=num($('bounty').value);
+  $('bounty').value=String(+(r.value==='min'?v*.4:v/.4).toFixed(2)).replace('.',',');calc()}));
+
+const s=loadSaved();
+if(s){Object.keys(s).forEach(k=>{const el=$(k);if(el&&k!=='cover'&&el.type!=='radio')el.value=s[k]});$('cover').checked=s.cover!==false;if(s.inmode){const r=root.querySelector(`input[name=ko-inmode][value="${s.inmode}"]`);if(r)r.checked=true}st.mult=s.mult||'full';setFormat(s.f||'ocean',true)}
+else setFormat('ocean');
+
+})();
+</script>
+
+<script>
+(function(){
+  var nav=document.getElementById('pageNav');
+  if(!nav)return;
+  nav.addEventListener('click',function(e){
+    var b=e.target.closest('[data-page]'); if(!b)return;
+    var p=b.dataset.page;
+    nav.querySelectorAll('[data-page]').forEach(function(x){x.classList.toggle('active',x===b)});
+    document.getElementById('pageBank').hidden = p!=='bank';
+    document.getElementById('pageKo').hidden = p!=='ko';
+    window.scrollTo(0,0);
+    if(p==='bank') window.dispatchEvent(new Event('resize'));
+  });
+})();
+</script>
 </body>
 </html>
