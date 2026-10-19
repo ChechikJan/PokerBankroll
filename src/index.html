@@ -548,7 +548,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v25 · 19.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v26 · 19.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -4852,6 +4852,8 @@ const SEED_DATA = [];
 
   // the same tournament once more: room, buy-in and tags stay, the «Ре-энтри» tag is added
   $('reentryBtn').addEventListener('click', async ()=>{
+    // нажали «Ре-энтри» — значит этот вход уже закончился: пустой результат считаем нулём
+    if(!$('eResult').value.trim() && !readTags('etag').some(id=>EXPENSE_IDS.includes(id))) $('eResult').value = '0';
     const t = await applyEdit();
     if(!t) return;
     const tags = (t.tags || []).filter(x=>x !== 'RE').concat(['RE']);
