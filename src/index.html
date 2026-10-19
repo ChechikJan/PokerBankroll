@@ -423,6 +423,8 @@ tr:last-child td{border-bottom:none;}
 .tag.rub{background:rgba(199,154,75,.18);color:var(--rub);}
 .pending{color:var(--text-faint);font-style:italic;}
 .row-actions{display:flex;gap:6px;}
+.row-x{color:#E8A999;border-color:#5E3A33;padding-left:9px;padding-right:9px;line-height:1;}
+.row-x:hover{color:#FFD9CF;border-color:var(--rust);background:rgba(190,90,70,.18);}
 .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
 #tableMore .btn{font-size:12px;padding:9px 16px;}
 
@@ -546,7 +548,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">чистая · 11.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v25 · 19.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -1266,6 +1268,7 @@ tr:last-child td{border-bottom:none;}
     <div class="modal-actions">
       <button class="btn danger" id="deleteBtn">Удалить</button>
       <button class="btn ghost" id="cancelEdit">Отмена</button>
+      <button class="btn ghost" id="reentryBtn" title="Сохранить этот турнир и добавить такой же с тегом «Ре-энтри»">+ Ре-энтри</button>
       <button class="btn" id="saveEdit">Сохранить</button>
     </div>
   </div>
@@ -2730,11 +2733,24 @@ const SEED_DATA = [];
         <td class="mono">${t.result !== null ? fmt(t.result) : '<span class="pending">—</span>'}</td>
         <td class="mono">${t.ticket ? fmt(t.ticket) : '<span class="pending">—</span>'}</td>
         <td>${profitHtml}</td>
-        <td><div class="row-actions"><button class="btn ghost tiny" data-edit="${t.id}">Изм.</button></div></td>
+        <td><div class="row-actions"><button class="btn ghost tiny" data-edit="${t.id}">Изм.</button><button class="btn ghost tiny row-x" data-trash="${t.id}" title="Удалить турнир">×</button></div></td>
       </tr>`;
     }).join('');
     document.querySelectorAll('[data-edit]').forEach(btn=>{
       btn.addEventListener('click', ()=> openEdit(btn.getAttribute('data-edit')));
+    });
+    document.querySelectorAll('[data-trash]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.getAttribute('data-trash');
+        const t = tournaments.find(x=>x.id === id);
+        if(!t) return;
+        const what = `${t.date} · ${t.note || 'без рума'} · байин ${fmt(cost(t))} ${SYM[t.currency]}`;
+        if(!await uiConfirm('Удалить запись?\n\n' + what)) return;
+        tournaments = tournaments.filter(x=>x.id !== id);
+        await saveTournaments();
+        renderAll();
+        if(typeof toast === 'function') toast('Запись удалена', 'ok');
+      });
     });
   }
 
@@ -4802,12 +4818,13 @@ const SEED_DATA = [];
   $('cancelEdit').addEventListener('click', ()=> $('editModal').classList.remove('open'));
   $('editModal').addEventListener('click', (e)=>{ if(e.target.id==='editModal') $('editModal').classList.remove('open'); });
 
-  $('saveEdit').addEventListener('click', async ()=>{
+  // saves what the edit window holds and hands the record back
+  async function applyEdit(){
     const t = tournaments.find(x=>x.id===editingId);
-    if(!t) return;
+    if(!t) return null;
     const date = $('eDate').value;
     const buyin = parseFloat($('eBuyin').value);
-    if(!date || isNaN(buyin) || buyin<0){ alert('Проверьте дату и байин'); return; }
+    if(!date || isNaN(buyin) || buyin<0){ alert('Проверьте дату и байин'); return null; }
     const rv = $('eResult').value;
     const tags = readTags('etag');
     const newRoom = $('eNote').value === '__ADD__' ? (t.note || '') : $('eNote').value;
@@ -4823,8 +4840,28 @@ const SEED_DATA = [];
     if(tags.some(id=>EXPENSE_IDS.includes(id))){ t.rebuy = 0; t.ticket = 0; t.result = 0; t.note = ''; }
     t.tags = tags;
     await saveTournaments();
+    return t;
+    }
+
+  $('saveEdit').addEventListener('click', async ()=>{
+    const t = await applyEdit();
+    if(!t) return;
     $('editModal').classList.remove('open');
     renderAll();
+  });
+
+  // the same tournament once more: room, buy-in and tags stay, the «Ре-энтри» tag is added
+  $('reentryBtn').addEventListener('click', async ()=>{
+    const t = await applyEdit();
+    if(!t) return;
+    const tags = (t.tags || []).filter(x=>x !== 'RE').concat(['RE']);
+    tournaments.push({id: uid(), date: t.date, currency: t.currency, buyin: t.buyin, rebuy: 0,
+                      result: null, ticket: 0, note: t.note, tags, imported: false});
+    await saveTournaments();
+    $('editModal').classList.remove('open');
+    renderAll();
+    if(typeof toast === 'function')
+      toast(`Ре-энтри добавлен: ${t.note || 'без рума'} · ${fmt(t.buyin)} ${SYM[t.currency]} — результат пока не задан`, 'ok');
   });
 
   $('deleteBtn').addEventListener('click', async ()=>{
