@@ -548,7 +548,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v26 · 19.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v27 · 20.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -557,6 +557,7 @@ tr:last-child td{border-bottom:none;}
 
   <div class="tabs page-nav" id="pageNav">
     <button type="button" class="tab active" data-page="bank">Банкролл</button>
+    <button type="button" class="tab" data-page="poker">Покер</button>
     <button type="button" class="tab" data-page="ko">Калькулятор KO</button>
   </div>
 
@@ -668,6 +669,32 @@ tr:last-child td{border-bottom:none;}
     <div class="cash-list" id="xList"></div>
   </div>
 
+  <div class="panel">
+    <h2>Курс обмена</h2>
+    <div class="rate-row">
+      <div class="field">
+        <label>1 EUR = ? USD</label>
+        <input type="number" step="0.0001" id="rateEurUsd">
+      </div>
+      <div class="field">
+        <label>1 USD = ? RUB</label>
+        <input type="number" step="0.01" id="rateUsdRub">
+      </div>
+      <div class="rate-derived">1 EUR ≈ <b id="derivedEurRub">—</b> RUB</div>
+      <button class="btn" id="saveRates">Сохранить курс</button>
+    </div>
+    <div class="rb-head" style="margin-top:16px;">Криптовалюты и свои курсы <span style="text-transform:none;letter-spacing:0;">— цена 1 единицы в USD, по ней крипта из кошельков входит в общий банкролл</span></div>
+    <div class="asset-rates" id="assetRates"></div>
+    <div class="bd-note" style="margin-top:8px;">Кнопка «БР» у курса — считать ли эту криптовалюту в покерном банкролле. Выключенная остаётся только в общем банкролле.</div>
+    <div class="bd-note" id="storageNote"></div>
+    <div class="bd-note mono" id="saveStatus" style="margin-top:4px;"></div>
+    <div style="display:none;">
+    </div>
+  </div>
+
+  </div><!-- /pageBank -->
+
+  <div id="pagePoker" hidden>
   <div class="panel period-panel">
     <div class="bank-head">
       <h2 style="margin:0;">Период</h2>
@@ -700,29 +727,6 @@ tr:last-child td{border-bottom:none;}
 
     <div class="rate-row" style="margin-top:14px;">
       <div class="bd-note" id="bankNote" style="margin:0;flex:1;min-width:220px;"></div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h2>Курс обмена</h2>
-    <div class="rate-row">
-      <div class="field">
-        <label>1 EUR = ? USD</label>
-        <input type="number" step="0.0001" id="rateEurUsd">
-      </div>
-      <div class="field">
-        <label>1 USD = ? RUB</label>
-        <input type="number" step="0.01" id="rateUsdRub">
-      </div>
-      <div class="rate-derived">1 EUR ≈ <b id="derivedEurRub">—</b> RUB</div>
-      <button class="btn" id="saveRates">Сохранить курс</button>
-    </div>
-    <div class="rb-head" style="margin-top:16px;">Криптовалюты и свои курсы <span style="text-transform:none;letter-spacing:0;">— цена 1 единицы в USD, по ней крипта из кошельков входит в общий банкролл</span></div>
-    <div class="asset-rates" id="assetRates"></div>
-    <div class="bd-note" style="margin-top:8px;">Кнопка «БР» у курса — считать ли эту криптовалюту в покерном банкролле. Выключенная остаётся только в общем банкролле.</div>
-    <div class="bd-note" id="storageNote"></div>
-    <div class="bd-note mono" id="saveStatus" style="margin-top:4px;"></div>
-    <div style="display:none;">
     </div>
   </div>
 
@@ -878,7 +882,8 @@ tr:last-child td{border-bottom:none;}
       </div>
     </div>
   </div>
-  </div><!-- /pageBank -->
+  </div><!-- /pagePoker -->
+
 
   <div id="pageKo" hidden>
 <div class="ko-wrap">
@@ -4852,7 +4857,7 @@ const SEED_DATA = [];
 
   // the same tournament once more: room, buy-in and tags stay, the «Ре-энтри» tag is added
   $('reentryBtn').addEventListener('click', async ()=>{
-    // нажали «Ре-энтри» — значит этот вход уже закончился: пустой результат считаем нулём
+    // a re-entry means this attempt is over: an empty result counts as zero
     if(!$('eResult').value.trim() && !readTags('etag').some(id=>EXPENSE_IDS.includes(id))) $('eResult').value = '0';
     const t = await applyEdit();
     if(!t) return;
@@ -5183,14 +5188,25 @@ else setFormat('ocean');
 (function(){
   var nav=document.getElementById('pageNav');
   if(!nav)return;
+  // come back to the page that was open last time
+  try{
+    var saved=localStorage.getItem('ptPage');
+    if(saved && saved!=='bank'){
+      var btn=nav.querySelector('[data-page="'+saved+'"]');
+      if(btn) setTimeout(function(){ btn.click(); }, 0);
+    }
+  }catch(e){}
   nav.addEventListener('click',function(e){
     var b=e.target.closest('[data-page]'); if(!b)return;
     var p=b.dataset.page;
     nav.querySelectorAll('[data-page]').forEach(function(x){x.classList.toggle('active',x===b)});
     document.getElementById('pageBank').hidden = p!=='bank';
+    document.getElementById('pagePoker').hidden = p!=='poker';
     document.getElementById('pageKo').hidden = p!=='ko';
     window.scrollTo(0,0);
-    if(p==='bank') window.dispatchEvent(new Event('resize'));
+    try{ localStorage.setItem('ptPage', p); }catch(e){}
+    // the chart only measures itself when its page is on screen
+    if(p!=='ko'){ window.dispatchEvent(new Event('resize')); setTimeout(function(){ window.dispatchEvent(new Event('resize')); }, 180); }
   });
 })();
 </script>
