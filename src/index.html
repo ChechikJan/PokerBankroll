@@ -440,6 +440,13 @@ tr:last-child td{border-bottom:none;}
 .preset .pt{color:var(--text-dim);font-size:11px;}
 .preset .pn{color:var(--text-faint);font-size:10px;font-family:'IBM Plex Mono',ui-monospace,monospace;}
 .preset.eur{border-color:#40587B;} .preset.usd{border-color:#2F6B4C;} .preset.rub{border-color:#7A5F2E;}
+.row-reb{color:#9FD9C0;border-color:#2F6B4C;font-size:13px;line-height:1;}
+.row-reb:hover{color:#DFF6EA;border-color:var(--usd);background:rgba(60,160,110,.18);}
+.reb-row td{background:rgba(0,0,0,.2);}
+.reb-box{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:4px 0;}
+.reb-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);}
+.reb-in{width:120px;padding:6px 9px;font-size:12.5px;}
+.reb-now{font-size:11.5px;color:var(--gold);font-family:'IBM Plex Mono',ui-monospace,monospace;}
 .row-cp{color:#E7CE9B;border-color:#6B5526;}
 .row-cp:hover{color:#F8ECD2;border-color:var(--rub);background:rgba(200,160,80,.18);}
 .row-res{color:#A9C7E6;border-color:#35527A;}
@@ -581,7 +588,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v33 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v34 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -2931,11 +2938,20 @@ const SEED_DATA = [];
         <td><div class="row-actions">${t.result === null && !isExpense(t)
             ? `<button class="btn ghost tiny row-fin" data-finish="${t.id}" title="Завершить турнир: результат 0">✓</button>` : ''}
           <button class="btn ghost tiny row-re" data-reentry="${t.id}" title="Ре-энтри: закрыть этот вход и добавить такой же турнир с тегом «Ре-энтри»">↻</button>
+          ${isExpense(t) ? '' : `<button class="btn ghost tiny row-reb" data-rebuy="${t.id}" title="Ребай или аддон: добавить к байину">+</button>`}
           ${isExpense(t) ? '' : `<button class="btn ghost tiny row-cp" data-copy="${t.id}" title="Повторить: добавить такой же турнир сегодня">+1</button>`}
           <button class="btn ghost tiny row-res" data-res="${t.id}" title="Вписать результат и выигранный билет">Результат</button>
           <button class="btn ghost tiny row-pen" data-edit="${t.id}" title="Изменить всё: дату, рум, байин, ребай, теги">✎</button>
           <button class="btn ghost tiny row-x" data-trash="${t.id}" title="Удалить турнир">×</button></div></td>
-      </tr>`;
+      </tr>
+      ${isExpense(t) ? '' : `<tr class="reb-row" data-rebuyrow="${t.id}" hidden><td colspan="8">
+        <div class="reb-box">
+          <span class="reb-lbl">Ребай / аддон, ${SYM[t.currency]}</span>
+          <input type="number" step="0.01" class="reb-in" data-rebuyin="${t.id}" placeholder="0.00">
+          <button type="button" class="btn ghost tiny" data-rebuyadd="${t.id}">Добавить</button>
+          <button type="button" class="btn ghost tiny" data-rebuybi="${t.id}">+ байин ${fmt(t.buyin)}</button>
+          <span class="reb-now">${t.rebuy ? 'сейчас ' + fmt(t.rebuy) + ' ' + SYM[t.currency] + ' · всего вложено ' + fmt(cost(t)) : 'ребаев пока нет'}</span>
+        </div></td></tr>`}`;
     }).join('');
     document.querySelectorAll('[data-edit]').forEach(btn=>{
       btn.addEventListener('click', ()=> openEdit(btn.getAttribute('data-edit')));
@@ -2955,6 +2971,51 @@ const SEED_DATA = [];
     });
     document.querySelectorAll('[data-reentry]').forEach(btn=>{
       btn.addEventListener('click', ()=> addReentry(btn.getAttribute('data-reentry')));
+    });
+    document.querySelectorAll('[data-rebuy]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-rebuy');
+        const row = document.querySelector(`[data-rebuyrow="${id}"]`);
+        if(!row) return;
+        const show = row.hidden;
+        document.querySelectorAll('[data-rebuyrow]').forEach(r=>{ r.hidden = true; });
+        row.hidden = !show;
+        if(show){ const i = row.querySelector('.reb-in'); if(i){ i.value = ''; i.focus(); } }
+      });
+    });
+    const addRebuy = async (id, amount)=>{
+      const t = tournaments.find(x=>x.id === id);
+      if(!t || !(amount > 0)) return;
+      t.rebuy = Math.round(((t.rebuy || 0) + amount) * 100) / 100;
+      await saveTournaments();
+      renderAll();
+      if(typeof toast === 'function')
+        toast(`Ребай ${fmt(amount)} ${SYM[t.currency]} · ${t.note || 'без рума'}: вложено ${fmt(cost(t))} ${SYM[t.currency]}`, 'ok');
+    };
+    document.querySelectorAll('[data-rebuyadd]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-rebuyadd');
+        const inp = document.querySelector(`[data-rebuyin="${id}"]`);
+        const v = parseFloat(((inp && inp.value) || '').replace(',', '.'));
+        if(!(v > 0)){ toast('Укажите сумму ребая или аддона'); if(inp) inp.focus(); return; }
+        addRebuy(id, v);
+      });
+    });
+    document.querySelectorAll('[data-rebuybi]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-rebuybi');
+        const t = tournaments.find(x=>x.id === id);
+        if(t) addRebuy(id, t.buyin);
+      });
+    });
+    document.querySelectorAll('[data-rebuyin]').forEach(inp=>{
+      inp.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){
+          const v = parseFloat((inp.value || '').replace(',', '.'));
+          if(v > 0) addRebuy(inp.getAttribute('data-rebuyin'), v);
+        }
+        if(e.key === 'Escape'){ const row = inp.closest('.reb-row'); if(row) row.hidden = true; }
+      });
     });
     document.querySelectorAll('[data-copy]').forEach(btn=>{
       btn.addEventListener('click', ()=> repeatTournament(btn.getAttribute('data-copy')));
