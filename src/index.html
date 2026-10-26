@@ -263,6 +263,7 @@ input:focus,select:focus{border-color:var(--felt-bright);}
 .rate-derived{color:var(--text-dim);font-size:12px;padding-bottom:9px;}
 .rate-derived b{color:var(--gold);font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;}
 
+.grid-one{grid-template-columns:1fr!important;}
 .grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:18px;align-items:start;}
 .grid > *{min-width:0;}
 @media(min-width:1500px){.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;}}
@@ -588,7 +589,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v34 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v35 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -598,6 +599,7 @@ tr:last-child td{border-bottom:none;}
   <div class="tabs page-nav" id="pageNav">
     <button type="button" class="tab active" data-page="bank">Банкролл</button>
     <button type="button" class="tab" data-page="poker">Покер</button>
+    <button type="button" class="tab" data-page="stats">Статистика</button>
     <button type="button" class="tab" data-page="ko">Калькулятор KO</button>
   </div>
 
@@ -777,7 +779,7 @@ tr:last-child td{border-bottom:none;}
     </div>
   </div>
 
-  <div class="grid">
+  <div class="grid grid-one">
     <div>
       <div class="panel">
         <h2>Добавить турнир</h2>
@@ -833,72 +835,6 @@ tr:last-child td{border-bottom:none;}
 
     </div>
 
-    <div>
-      <div class="panel">
-        <h2>Статистика</h2>
-        <div class="tabs" id="statTabs">
-          <div class="tab active" data-stat="TOTAL">Общая</div>
-          <div class="tab" data-stat="CURRENCY">По валютам</div>
-          <div class="tab" data-stat="ROOM">По покеррумам</div>
-          <div class="tab" data-stat="BI">По байинам</div>
-          <div class="tab" data-stat="FORMAT">По типам</div>
-          <div class="tab" data-stat="SPEED">По скорости</div>
-          <div class="tab" data-stat="WEEKDAY">По дням недели</div>
-          <div class="tab" data-stat="SESSION">По размеру сессии</div>
-        </div>
-        <div class="tabs" id="statSideTabs" style="margin-top:-4px;">
-          <div class="tab active" data-side="ALL">Всё вместе</div>
-          <div class="tab" data-side="NOSIDE">Только турниры</div>
-          <div class="tab" data-side="SAT">Сателлиты</div>
-          <div class="tab" data-side="SIDE">Доп. ставки</div>
-          <div class="tab" data-side="CASINO">Казино</div>
-          <div class="tab" data-side="EXPENSE">Текущие расходы</div>
-          <div class="tab" data-side="RAKE">Рейкбек</div>
-          <div class="tab" data-side="MIX" id="mixTab">Своя статистика</div>
-        </div>
-        <div class="stat-grid" id="statGrid"></div>
-        <div class="bd-note" id="countNote" style="margin-top:10px;"></div>
-        <div id="ticketPanel"></div>
-        <div id="statBreakdown" style="overflow-x:auto;"></div>
-      </div>
-
-      <div class="panel">
-        <h2>Графики</h2>
-        <div class="tabs" id="chartTabs">
-          <div class="tab active" data-mode="per">По валютам</div>
-          <div class="tab" data-mode="combined">Общий (конвертация)</div>
-          <div class="tab" data-mode="days">Банкролл по дням</div>
-        </div>
-        <div id="perCurrencyControls" class="chip-row" style="margin-bottom:12px;">
-          <button type="button" class="chip-btn eur small active" data-chartcur="EUR"><span>€</span></button>
-          <button type="button" class="chip-btn usd small" data-chartcur="USD"><span>$</span></button>
-          <button type="button" class="chip-btn rub small" data-chartcur="RUB"><span>₽</span></button>
-        </div>
-        <div id="combinedControls" class="field" style="display:none;margin-bottom:12px;max-width:160px;">
-          <label>Показать в валюте</label>
-          <select id="baseCurrencySelect">
-            <option value="EUR">EUR €</option>
-            <option value="USD" selected>USD $</option>
-            <option value="RUB">RUB ₽</option>
-          </select>
-        </div>
-        <div class="field" style="margin-bottom:12px;">
-          <label>Покеррум</label>
-          <select id="chartRoomSelect"><option value="ALL">Все румы</option></select>
-        </div>
-        <div class="field" style="margin-bottom:14px;">
-          <label>Диапазон байинов <span id="biRangeLabel" class="mono" style="color:var(--gold);"></span></label>
-          <div class="range-row">
-            <input type="number" id="biMin" min="0" max="25000" step="1" value="0" placeholder="0">
-            <span style="color:var(--text-faint);">—</span>
-            <input type="number" id="biMax" min="0" max="25000" step="1" value="25000" placeholder="25000">
-          </div>
-        </div>
-        <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
-        <div class="bd-note" id="chartNote"></div>
-        <div id="topWins"></div>
-      </div>
-    </div>
   </div>
   <div class="panel">
     <h2>Турниры <span class="n" id="tableCount"></span></h2>
@@ -936,6 +872,94 @@ tr:last-child td{border-bottom:none;}
   </div>
   </div><!-- /pagePoker -->
 
+
+
+  <div id="pageStats" hidden>
+  <div class="panel period-panel">
+    <div class="bank-head">
+      <h2 style="margin:0;">Период</h2>
+      <div class="chip-row" id="periodTabs2" style="flex-wrap:wrap;gap:8px;">
+        <div class="tab" data-period="DAY">Сегодня</div>
+        <div class="tab" data-period="WEEK">Неделя</div>
+        <div class="tab" data-period="MONTH">Месяц</div>
+        <div class="tab" data-period="YEAR">Год</div>
+        <div class="tab" data-period="CUSTOM">Свой период</div>
+        <div class="tab active" data-period="ALL">Всё время</div>
+      </div>
+    </div>
+    <div class="rate-row" id="customPeriodRow2" style="display:none;margin:12px 0 0;">
+      <div class="field"><label>С</label><input type="date" id="periodFrom2"></div>
+      <div class="field"><label>По</label><input type="date" id="periodTo2"></div>
+      <button class="btn ghost" id="applyCustomPeriod2">Применить</button>
+    </div>
+    <div class="bd-note" id="periodNote2" style="margin:10px 0 0;"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Статистика</h2>
+    <div class="tabs" id="statTabs">
+      <div class="tab active" data-stat="TOTAL">Общая</div>
+      <div class="tab" data-stat="CURRENCY">По валютам</div>
+      <div class="tab" data-stat="ROOM">По покеррумам</div>
+      <div class="tab" data-stat="BI">По байинам</div>
+      <div class="tab" data-stat="FORMAT">По типам</div>
+      <div class="tab" data-stat="SPEED">По скорости</div>
+      <div class="tab" data-stat="WEEKDAY">По дням недели</div>
+      <div class="tab" data-stat="SESSION">По размеру сессии</div>
+    </div>
+    <div class="tabs" id="statSideTabs" style="margin-top:-4px;">
+      <div class="tab active" data-side="ALL">Всё вместе</div>
+      <div class="tab" data-side="NOSIDE">Только турниры</div>
+      <div class="tab" data-side="SAT">Сателлиты</div>
+      <div class="tab" data-side="SIDE">Доп. ставки</div>
+      <div class="tab" data-side="CASINO">Казино</div>
+      <div class="tab" data-side="EXPENSE">Текущие расходы</div>
+      <div class="tab" data-side="RAKE">Рейкбек</div>
+      <div class="tab" data-side="MIX" id="mixTab">Своя статистика</div>
+    </div>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="bd-note" id="countNote" style="margin-top:10px;"></div>
+    <div id="ticketPanel"></div>
+    <div id="statBreakdown" style="overflow-x:auto;"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Графики</h2>
+    <div class="tabs" id="chartTabs">
+      <div class="tab active" data-mode="per">По валютам</div>
+      <div class="tab" data-mode="combined">Общий (конвертация)</div>
+      <div class="tab" data-mode="days">Банкролл по дням</div>
+    </div>
+    <div id="perCurrencyControls" class="chip-row" style="margin-bottom:12px;">
+      <button type="button" class="chip-btn eur small active" data-chartcur="EUR"><span>€</span></button>
+      <button type="button" class="chip-btn usd small" data-chartcur="USD"><span>$</span></button>
+      <button type="button" class="chip-btn rub small" data-chartcur="RUB"><span>₽</span></button>
+    </div>
+    <div id="combinedControls" class="field" style="display:none;margin-bottom:12px;max-width:160px;">
+      <label>Показать в валюте</label>
+      <select id="baseCurrencySelect">
+        <option value="EUR">EUR €</option>
+        <option value="USD" selected>USD $</option>
+        <option value="RUB">RUB ₽</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>Покеррум</label>
+      <select id="chartRoomSelect"><option value="ALL">Все румы</option></select>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>Диапазон байинов <span id="biRangeLabel" class="mono" style="color:var(--gold);"></span></label>
+      <div class="range-row">
+        <input type="number" id="biMin" min="0" max="25000" step="1" value="0" placeholder="0">
+        <span style="color:var(--text-faint);">—</span>
+        <input type="number" id="biMax" min="0" max="25000" step="1" value="25000" placeholder="25000">
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+    <div class="bd-note" id="chartNote"></div>
+    <div id="topWins"></div>
+  </div>
+  </div><!-- /pageStats -->
 
   <div id="pageKo" hidden>
 <div class="ko-wrap">
@@ -1357,6 +1381,7 @@ tr:last-child td{border-bottom:none;}
     </div>
   </div>
 </div>
+
 
 <script>
 const SEED_DATA = [];
@@ -2009,12 +2034,15 @@ const SEED_DATA = [];
     // reported separately so the split original/repeat stays visible
     const reCount = counted.filter(t=>(t.tags||[]).includes('RE')).length;
     const flightCount = counted.filter(t=>(t.tags||[]).includes('FLIGHT')).length;
+    const turboCount = counted.filter(t=>(t.tags||[]).includes('C_mtzvs6ft')).length;
+    const hyperCount = counted.filter(t=>(t.tags||[]).includes('C_mtzvska9')).length;
     // a session is one poker day with at least one tournament played
     const sessDays = new Set(counted.map(t=>t.date));
     const allDays = new Set(list.map(t=>t.date));
     const sessions = sessDays.size;
     const perSession = sessions ? counted.length / sessions : 0;
     return {count:counted.length, sideCount, casinoCount, outCounts, outsideCount, satCount, reCount, flightCount,
+            turboCount, hyperCount,
             doneCount:countedDone.length, pendingCount:counted.length-countedDone.length,
             allCount:list.length, allDone:done.length, allPending:list.length-done.length,
             totalBuyin:cashCost, totalBuyinDone:cashCostDone, stakeCounted,
@@ -2237,12 +2265,15 @@ const SEED_DATA = [];
     renderRoomBanks();
     renderGeneral();
 
+    const pn2 = $('periodNote2');
     const pn = $('periodNote');
+    if(pn2 && pn) pn2.textContent = '';
     if(pn){
       const {from, to} = getPeriodRange();
       pn.textContent = 'Игровые сутки идут с 12:00 до 12:00 следующего дня — «сегодня» это ' + pokerToday() + '. ' +
         (from || to ? `Выбрано: ${lbl} — с ${from || 'начала'} по ${to || pokerToday()}.` : 'Выбрано: всё время.') +
         ' Период меняет карточки в окнах «Покер», «Общий банкролл» и статистику.';
+      if(pn2) pn2.textContent = pn.textContent;
     }
 
     const note = $('bankNote');
@@ -3183,6 +3214,17 @@ const SEED_DATA = [];
           <div class="stat-sub">${x.dd ? `${ddBi.toFixed(1)} байинов · ${x.ddFrom} → ${x.ddTo}` : 'провалов ниже пика не было'}</div></div>
         <div class="stat"><div class="lbl">Серия сессий</div><div class="val ${x.sign>0?'pos':(x.sign<0?'neg':'neutral')}">${x.streak ? (x.sign>0?'+':'−') + x.streak : '—'}</div>
           <div class="stat-sub">${x.streak ? (x.sign>0 ? 'плюсовых подряд' : 'минусовых подряд') : 'последняя сессия в ноль'}</div></div>`;
+      })()}
+      ${(()=>{
+        const n = s.count || 0;
+        const pct = (v)=> n ? (v / n * 100).toFixed(1) + '%' : '—';
+        const normal = Math.max(0, n - s.turboCount - s.hyperCount);
+        return `<div class="stat"><div class="lbl">Ре-энтри ${lblPeriod}</div><div class="val">${pct(s.reCount)}</div>
+          <div class="stat-sub">${s.reCount} повторных входов из ${n}</div></div>
+        <div class="stat"><div class="lbl">Турбо ${lblPeriod}</div><div class="val">${pct(s.turboCount)}</div>
+          <div class="stat-sub">${s.turboCount} турбо · ${pct(s.hyperCount)} гипертурбо (${s.hyperCount})</div></div>
+        <div class="stat"><div class="lbl">Нормальная скорость</div><div class="val">${pct(normal)}</div>
+          <div class="stat-sub">${normal} турниров без отметки скорости</div></div>`;
       })()}
       <div class="stat"><div class="lbl">В игре / завершено</div><div class="val neutral">${statSide === 'SIDE' ? s.allPending : s.pendingCount} / ${statSide === 'SIDE' ? s.allDone : s.doneCount}</div></div>
       ${statSide === 'ALL' ? `<div class="stat"><div class="lbl">Профит с билетами</div><div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div><div class="stat-sub">${fmt(s.profit)} + ${fmt(Math.max(0, s.ticketBalance))} билетами ${period === 'ALL' ? '' : lblPeriod}</div></div>` : ''}
@@ -5371,20 +5413,35 @@ const SEED_DATA = [];
     });
   });
 
-  // --- period tabs ---
-  document.querySelectorAll('#periodTabs .tab').forEach(tab=>{
+  // --- period tabs: окно периода есть и в «Покере», и в «Статистике» ---
+  function syncPeriodUI(){
+    document.querySelectorAll('#periodTabs .tab, #periodTabs2 .tab').forEach(t=>
+      t.classList.toggle('active', t.getAttribute('data-period') === period));
+    ['customPeriodRow','customPeriodRow2'].forEach(id=>{
+      const el = $(id); if(el) el.style.display = period === 'CUSTOM' ? 'flex' : 'none';
+    });
+    [['periodFrom','periodFrom2'],['periodTo','periodTo2']].forEach(([a,b])=>{
+      if($(a) && $(b)) $(b).value = $(a).value;
+    });
+  }
+  document.querySelectorAll('#periodTabs .tab, #periodTabs2 .tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
       period = tab.getAttribute('data-period');
-      document.querySelectorAll('#periodTabs .tab').forEach(t=>t.classList.remove('active'));
-      tab.classList.add('active');
-      $('customPeriodRow').style.display = period === 'CUSTOM' ? 'flex' : 'none';
+      syncPeriodUI();
       if(period !== 'CUSTOM') renderAll(); else renderBankroll();
     });
   });
-  $('applyCustomPeriod').addEventListener('click', ()=>{
-    customFrom = $('periodFrom').value || null;
-    customTo = $('periodTo').value || null;
-    renderAll();
+  [['applyCustomPeriod','periodFrom','periodTo'],['applyCustomPeriod2','periodFrom2','periodTo2']].forEach(([btn, f, t])=>{
+    const b = $(btn);
+    if(b) b.addEventListener('click', ()=>{
+      customFrom = $(f).value || null;
+      customTo = $(t).value || null;
+      if($('periodFrom')) $('periodFrom').value = customFrom || '';
+      if($('periodTo')) $('periodTo').value = customTo || '';
+      if($('periodFrom2')) $('periodFrom2').value = customFrom || '';
+      if($('periodTo2')) $('periodTo2').value = customTo || '';
+      renderAll();
+    });
   });
 
   // --- chart tabs ---
@@ -5841,6 +5898,7 @@ else setFormat('ocean');
     nav.querySelectorAll('[data-page]').forEach(function(x){x.classList.toggle('active',x===b)});
     document.getElementById('pageBank').hidden = p!=='bank';
     document.getElementById('pagePoker').hidden = p!=='poker';
+    document.getElementById('pageStats').hidden = p!=='stats';
     document.getElementById('pageKo').hidden = p!=='ko';
     window.scrollTo(0,0);
     try{ localStorage.setItem('ptPage', p); }catch(e){}
