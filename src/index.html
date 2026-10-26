@@ -565,7 +565,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v29 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v30 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -3980,8 +3980,7 @@ const SEED_DATA = [];
       try{
         const data = JSON.parse(reader.result);
         if(!data || !Array.isArray(data.tournaments)) throw new Error('bad format');
-        if(!await uiConfirm(`Загрузить ${data.tournaments.length} турниров из файла?\n\nТекущая база будет заменена.`)) return;
-        tournaments = data.tournaments.map(t=>({
+        const inc = data.tournaments.map(t=>({
           id: t.id || uid(),
           date: t.date, currency: t.currency,
           buyin: Number(t.buyin) || 0,
@@ -3991,6 +3990,82 @@ const SEED_DATA = [];
           note: t.note || '', tags: Array.isArray(t.tags) ? t.tags : [],
           imported: !!t.imported
         }));
+        const mode = await uiAsk({
+          title: 'Загрузка из файла',
+          note: `В файле ${inc.length} турниров.\n\n«Добавить» — записи из файла лягут рядом с вашими, совпадающие будут пропущены.\n«Заменить» — текущая база будет стёрта и заменена файлом.`,
+          choices: [{label:'Добавить к текущим', value:'merge', cls:'ext dep'},
+                    {label:'Заменить всё', value:'replace', cls:'ext wd'},
+                    {label:'Отмена', value:''}]
+        });
+        if(!mode) return;
+
+        if(mode === 'merge'){
+          // a record already here if date, room, currency, money and tags all line up
+          const sig = (t)=> [t.date, t.currency, +t.buyin || 0, +t.rebuy || 0,
+                             t.result === null ? 'null' : +t.result, +t.ticket || 0,
+                             (t.note || '').trim(), (t.tags || []).slice().sort().join('|')].join('~');
+          const have = {}, ids = {};
+          tournaments.forEach(t=>{ const k = sig(t); have[k] = (have[k] || 0) + 1; ids[t.id] = 1; });
+          let added = 0, dup = 0;
+          inc.forEach(t=>{
+            const k = sig(t);
+            if(have[k]){ have[k]--; dup++; return; }
+            if(ids[t.id]) t.id = uid();
+            tournaments.push(t); ids[t.id] = 1; added++;
+          });
+          await saveTournaments();
+
+          // rooms, custom tags, wallets and operations: add what is missing, keep what is here
+          let addRooms = 0;
+          if(Array.isArray(data.rooms)) data.rooms.forEach(r=>{
+            const o = typeof r === 'string' ? {name:r, currency:null} : r;
+            if(o && o.name && !rooms.some(x=>x.name === o.name)){ rooms.push(o); addRooms++; }
+          });
+          if(addRooms) await saveRooms();
+
+          let addTags = 0;
+          if(Array.isArray(data.customTags)) data.customTags.forEach(t=>{
+            if(t && t.id && !customTags.some(x=>x.id === t.id)){ customTags.push(t); addTags++; }
+          });
+          if(addTags) await saveCustomTags();
+
+          let addWallets = 0;
+          if(Array.isArray(data.wallets)) data.wallets.forEach(w=>{
+            if(w && w.name && !wallets.some(x=>x.name === w.name)){
+              wallets.push(Object.assign({}, w, {assets: Array.isArray(w.assets) ? w.assets
+                : DEFAULT_CRYPTO.map(code=>({code, amount:0, ts:0, date:''}))}));
+              addWallets++;
+            }
+          });
+          if(addWallets) await saveWallets();
+
+          let addOps = 0;
+          if(Array.isArray(data.cashflow)){
+            const osig = (f)=> [f.date, f.kind || '', f.type || '', f.from || f.wallet || '', f.to || f.target || f.room || '',
+                                +f.amount || 0, +f.fee || 0, f.currency || ''].join('~');
+            const oh = {}, oid = {};
+            cashflow.forEach(f=>{ oh[osig(f)] = (oh[osig(f)] || 0) + 1; oid[f.id] = 1; });
+            data.cashflow.forEach(f=>{
+              const k = osig(f);
+              if(oh[k]){ oh[k]--; return; }
+              const copy = Object.assign({}, f);
+              if(!copy.id || oid[copy.id]) copy.id = uid();
+              cashflow.push(copy); oid[copy.id] = 1; addOps++;
+            });
+            if(addOps) await saveCashflow();
+          }
+
+          renderRates(); renderTagUI(); renderAll();
+          const extra = [addRooms ? `румов ${addRooms}` : '', addWallets ? `кошельков ${addWallets}` : '',
+                         addTags ? `тегов ${addTags}` : '', addOps ? `операций ${addOps}` : ''].filter(Boolean).join(', ');
+          toast(`Добавлено турниров: ${added}` + (dup ? `, пропущено совпадающих: ${dup}` : '') +
+                (extra ? `. Ещё добавлено: ${extra}` : '') +
+                '. Курсы, стартовый банкролл и балансы счетов остались вашими.', 'ok');
+          return;
+        }
+
+        // full replacement
+        tournaments = inc;
         if(data.rates && data.rates.eurUsd && data.rates.usdRub){
           rates = data.rates;
           if(!rates.assets) rates.assets = {};
@@ -4014,7 +4089,7 @@ const SEED_DATA = [];
         await saveTournaments();
         await store.set('seedVersion', SEED_VERSION);
         renderRates(); renderTagUI(); renderAll();
-        alert('Данные загружены.');
+        toast(`База заменена: ${inc.length} турниров из файла.`, 'ok');
       }catch(err){
         alert('Не удалось прочитать файл: он повреждён или создан другой программой.');
       }finally{
