@@ -426,13 +426,21 @@ tr:last-child td{border-bottom:none;}
 .row-x{color:#E8A999;border-color:#5E3A33;padding-left:9px;padding-right:9px;line-height:1;}
 .row-fin{color:#A9E0C3;border-color:#2F6B4C;}
 .row-fin:hover{color:#DFF6EA;border-color:var(--usd);background:rgba(60,160,110,.16);}
+.row-res{color:#A9C7E6;border-color:#35527A;}
+.row-res:hover{color:#DCE8F8;border-color:var(--eur);background:rgba(80,120,190,.18);}
+.row-pen{padding-left:8px;padding-right:8px;}
 .row-re{color:#C7B9EE;border-color:#4A4273;}
 .row-re:hover{color:#E8E1FF;border-color:#7A6BC4;background:rgba(120,100,200,.16);}
 .re-mark{color:var(--gold);margin-left:2px;}
 .tk-par{color:var(--gold);font-size:11.5px;}
-.row-actions{flex-wrap:nowrap;justify-content:flex-end;gap:4px;}
-.row-actions .btn{padding:4px 7px;font-size:10.5px;white-space:nowrap;}
-#tourTable{min-width:760px;}
+.row-actions{flex-wrap:nowrap;justify-content:flex-end;gap:3px;}
+.row-actions .btn{padding:4px 6px;font-size:10.5px;white-space:nowrap;}
+#tourTable td:first-child{font-size:11.5px;}
+#tourTable{min-width:600px;}
+#tourTable td,#tourTable th{padding-left:6px;padding-right:6px;}
+#tourTable td:nth-child(4){white-space:normal;}
+.row-fin,.row-re{padding-left:6px;padding-right:6px;font-size:12px;}
+.row-actions{white-space:nowrap;}
 .row-x:hover{color:#FFD9CF;border-color:var(--rust);background:rgba(190,90,70,.18);}
 .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
 #tableMore .btn{font-size:12px;padding:9px 16px;}
@@ -557,7 +565,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v28 · 24.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v29 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -648,6 +656,13 @@ tr:last-child td{border-bottom:none;}
       </div>
       <div class="op-preview" id="opPreview"></div>
       <div class="bd-note" id="opHint" style="margin:0 0 6px;"></div>
+      <div class="rate-row" style="margin:12px 0 0;">
+        <div class="field"><label>Операции с</label><input type="date" id="opListFrom"></div>
+        <div class="field"><label>по</label><input type="date" id="opListTo"></div>
+        <button class="btn ghost tiny" id="opListClear">Все даты</button>
+        <button class="btn ghost tiny" id="opListMonth">Этот месяц</button>
+        <div class="bd-note mono" id="opListSum" style="margin:0;flex:1;min-width:200px;color:var(--gold);"></div>
+      </div>
       <div class="rb-head" id="opListHead" style="margin:10px 0 4px;"></div>
       <div class="cash-list" id="opList"></div>
     </div>
@@ -1262,6 +1277,19 @@ tr:last-child td{border-bottom:none;}
     <div class="cash-list" id="cashList"></div>
     <div class="modal-actions">
       <button class="btn ghost" id="cfClose">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="resModal">
+  <div class="modal">
+    <h3>Результат турнира</h3>
+    <div class="bd-note" id="resWhat" style="margin:0 0 12px;"></div>
+    <div class="field"><label>Результат, деньги (пусто — если ещё неизвестен)</label><input type="number" step="0.01" id="rResult"></div>
+    <div class="field"><label>Билет (выигран)</label><input type="text" inputmode="decimal" id="rTicket" placeholder="0.00 или 5.5 x 4"></div>
+    <div class="bd-note mono" id="rTicketHint" style="margin:-6px 0 10px;color:var(--gold);"></div>
+    <div class="modal-actions">
+      <button class="btn" id="rSave">Сохранить</button>
     </div>
   </div>
 </div>
@@ -2528,14 +2556,32 @@ const SEED_DATA = [];
     const box = $('opList');
     if(!box) return;
     const focus = (isExt(opFrom) ? opFrom : '') || (isExt(opTo) ? opTo : '') || opFrom || opTo;
-    const list = cashflow
+    const from = $('opListFrom').value, to = $('opListTo').value;
+    const dated = !!(from || to);
+    const matched = cashflow
       .filter(f => !focus || (isExt(focus)
           ? f.kind !== 'tr' && (f.type === 'WD') === (focus === EXT_WD)
           : opLegs(f).some(l=>l.acct === focus)))
+      .filter(f => (!from || f.date >= from) && (!to || f.date <= to))
       .slice()
-      .sort((a,b)=> b.date.localeCompare(a.date) || recTs(b) - recTs(a))
-      .slice(0, focus ? 100 : 15);
-    $('opListHead').textContent = focus ? 'Операции: ' + (focus === EXT_DEP ? 'общий депозит' : focus === EXT_WD ? 'общий вывод' : focus) : 'Последние операции';
+      .sort((a,b)=> b.date.localeCompare(a.date) || recTs(b) - recTs(a));
+    const list = dated ? matched.slice(0, 300) : matched.slice(0, focus ? 100 : 15);
+    // what the selected period adds up to, in the base currency
+    const cur = baseCurrency;
+    let sDep = 0, sWd = 0, sFee = 0, sTr = 0;
+    matched.forEach(f=>{
+      sFee += convert(f.fee || 0, f.currency, cur);
+      const v = convert(f.amount, f.currency, cur);
+      if(f.kind === 'tr') sTr += v;
+      else if(f.type === 'WD') sWd += v; else sDep += v;
+    });
+    $('opListSum').textContent = matched.length
+      ? `${matched.length} оп. · извне +${fmt(sDep)} · наружу −${fmt(sWd)} · переводы ${fmt(sTr)} · комиссии ${fmt(sFee)} ${SYM[cur]}`
+      : '';
+    const what = focus ? 'Операции: ' + (focus === EXT_DEP ? 'общий депозит' : focus === EXT_WD ? 'общий вывод' : focus) : 'Последние операции';
+    $('opListHead').textContent = dated
+      ? `${focus ? what : 'Операции'} · ${from || 'начало'} — ${to || 'сегодня'}: найдено ${matched.length}`
+      : what;
     box.innerHTML = list.length
       ? list.map(f=>{
           const conv = f.kind === 'tr' && f.toCurrency !== f.currency
@@ -2549,7 +2595,7 @@ const SEED_DATA = [];
             <span class="cf-sum ${f.type === 'WD' ? 'pos' : 'neutral'}">${fmtA(f.amount, f.currency)} ${SYM[f.currency]}${conv}</span>
             <button class="btn ghost tiny" data-opdel="${f.id}">×</button>
           </div>`;}).join('')
-      : '<div class="bd-note" style="margin:0;">Операций пока нет.</div>';
+      : `<div class="bd-note" style="margin:0;">${($('opListFrom').value || $('opListTo').value) ? 'За выбранные даты операций нет.' : 'Операций пока нет.'}</div>`;
   }
 
   async function saveOpRates(){
@@ -2754,14 +2800,18 @@ const SEED_DATA = [];
         <td class="mono">${t.result !== null ? fmt(t.result) : '<span class="pending">—</span>'}</td>
         <td>${profitHtml}${ticketHtml}</td>
         <td><div class="row-actions">${t.result === null && !isExpense(t)
-            ? `<button class="btn ghost tiny row-fin" data-finish="${t.id}" title="Завершить: результат 0">Заверш.</button>` : ''}
-          <button class="btn ghost tiny row-re" data-reentry="${t.id}" title="Сохранить этот вход и добавить такой же с тегом «Ре-энтри»">Ре-энтри</button>
-          <button class="btn ghost tiny" data-edit="${t.id}">Изм.</button>
+            ? `<button class="btn ghost tiny row-fin" data-finish="${t.id}" title="Завершить турнир: результат 0">✓</button>` : ''}
+          <button class="btn ghost tiny row-re" data-reentry="${t.id}" title="Ре-энтри: закрыть этот вход и добавить такой же турнир с тегом «Ре-энтри»">↻</button>
+          <button class="btn ghost tiny row-res" data-res="${t.id}" title="Вписать результат и выигранный билет">Результат</button>
+          <button class="btn ghost tiny row-pen" data-edit="${t.id}" title="Изменить всё: дату, рум, байин, ребай, теги">✎</button>
           <button class="btn ghost tiny row-x" data-trash="${t.id}" title="Удалить турнир">×</button></div></td>
       </tr>`;
     }).join('');
     document.querySelectorAll('[data-edit]').forEach(btn=>{
       btn.addEventListener('click', ()=> openEdit(btn.getAttribute('data-edit')));
+    });
+    document.querySelectorAll('[data-res]').forEach(btn=>{
+      btn.addEventListener('click', ()=> openResult(btn.getAttribute('data-res')));
     });
     document.querySelectorAll('[data-finish]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
@@ -4632,6 +4682,15 @@ const SEED_DATA = [];
   $('balModal').addEventListener('click', (e)=>{ if(e.target.id === 'balModal'){ balTarget = null; $('balModal').classList.remove('open'); } });
   $('balFields').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') saveBalance(); if(e.key === 'Escape') $('balCancel').click(); });
 
+  ['opListFrom','opListTo'].forEach(id=> $(id).addEventListener('change', renderOpList));
+  $('opListClear').addEventListener('click', ()=>{ $('opListFrom').value = ''; $('opListTo').value = ''; renderOpList(); });
+  $('opListMonth').addEventListener('click', ()=>{
+    const d = pokerToday();
+    $('opListFrom').value = d.slice(0, 8) + '01';
+    $('opListTo').value = d;
+    renderOpList();
+  });
+
   $('trSave').addEventListener('click', async ()=>{
     const eu = parseFloat($('trEurUsd').value), ur = parseFloat($('trUsdRub').value);
     opRates = {EURUSD: eu > 0 ? eu : null, USDRUB: ur > 0 ? ur : null};
@@ -4852,6 +4911,45 @@ const SEED_DATA = [];
   });
 
   // --- edit modal ---
+  let resId = null;
+  function openResult(id){
+    const t = tournaments.find(x=>x.id === id);
+    if(!t) return;
+    resId = id;
+    $('resWhat').textContent = `${t.date} · ${t.note || 'без рума'} · байин ${fmt(cost(t))} ${SYM[t.currency]}` +
+      ((t.tags || []).length ? ' · ' + t.tags.map(tagLabel).join(', ') : '');
+    $('rResult').value = t.result !== null ? t.result : '';
+    $('rTicket').value = t.ticket ? t.ticket : '';
+    $('rTicketHint').textContent = '';
+    $('resModal').classList.add('open');
+    setTimeout(()=>{ try{ $('rResult').focus(); $('rResult').select(); }catch(e){} }, 60);
+  }
+  async function saveResult(){
+    const t = tournaments.find(x=>x.id === resId);
+    if(!t) return;
+    const rv = $('rResult').value.trim();
+    t.result = rv === '' ? null : parseFloat(rv);
+    const tk = parseAmount($('rTicket').value);
+    t.ticket = isNaN(tk) || tk < 0 ? 0 : tk;
+    await saveTournaments();
+    $('resModal').classList.remove('open');
+    renderAll();
+    if(typeof toast === 'function')
+      toast(t.result === null ? 'Результат убран — турнир в незавершённых'
+            : `Результат сохранён: ${fmt(t.result)} ${SYM[t.currency]}${t.ticket ? ' + билет ' + fmt(t.ticket) : ''}`, 'ok');
+  }
+  $('rSave').addEventListener('click', saveResult);
+  $('resModal').addEventListener('click', (e)=>{ if(e.target.id === 'resModal') $('resModal').classList.remove('open'); });
+  ['rResult','rTicket'].forEach(id=> $(id).addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') saveResult();
+    if(e.key === 'Escape') $('resModal').classList.remove('open');
+  }));
+  $('rTicket').addEventListener('input', ()=>{
+    const raw = $('rTicket').value;
+    const v = parseAmount(raw);
+    $('rTicketHint').textContent = (/x/i.test(raw) && !isNaN(v)) ? 'итого ' + fmt(v) : '';
+  });
+
   function openEdit(id){
     const t = tournaments.find(x=>x.id===id);
     if(!t) return;
