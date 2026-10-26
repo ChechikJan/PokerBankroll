@@ -426,6 +426,22 @@ tr:last-child td{border-bottom:none;}
 .row-x{color:#E8A999;border-color:#5E3A33;padding-left:9px;padding-right:9px;line-height:1;}
 .row-fin{color:#A9E0C3;border-color:#2F6B4C;}
 .row-fin:hover{color:#DFF6EA;border-color:var(--usd);background:rgba(60,160,110,.16);}
+.preset-room{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:7px;}
+.preset-wrap{display:inline-flex;align-items:center;}
+.preset-del{border:1px solid #5E3A33;border-left:0;border-radius:0 9px 9px 0;background:transparent;color:#E8A999;
+  cursor:pointer;font-size:12px;padding:7px 8px;font-family:inherit;}
+.preset-del:hover{background:rgba(190,90,70,.18);color:#FFD9CF;}
+.preset-room .rname{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);min-width:64px;}
+.preset{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:9px;cursor:pointer;font-family:inherit;
+  font-size:12.5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);}
+.preset:hover{transform:translateY(-1px);filter:brightness(1.15);}
+.preset:active{transform:translateY(1px);}
+.preset b{font-weight:600;}
+.preset .pt{color:var(--text-dim);font-size:11px;}
+.preset .pn{color:var(--text-faint);font-size:10px;font-family:'IBM Plex Mono',ui-monospace,monospace;}
+.preset.eur{border-color:#40587B;} .preset.usd{border-color:#2F6B4C;} .preset.rub{border-color:#7A5F2E;}
+.row-cp{color:#E7CE9B;border-color:#6B5526;}
+.row-cp:hover{color:#F8ECD2;border-color:var(--rub);background:rgba(200,160,80,.18);}
 .row-res{color:#A9C7E6;border-color:#35527A;}
 .row-res:hover{color:#DCE8F8;border-color:var(--eur);background:rgba(80,120,190,.18);}
 .row-pen{padding-left:8px;padding-right:8px;}
@@ -434,12 +450,12 @@ tr:last-child td{border-bottom:none;}
 .re-mark{color:var(--gold);margin-left:2px;}
 .tk-par{color:var(--gold);font-size:11.5px;}
 .row-actions{flex-wrap:nowrap;justify-content:flex-end;gap:3px;}
-.row-actions .btn{padding:4px 6px;font-size:10.5px;white-space:nowrap;}
+.row-actions .btn{padding:4px 7px;font-size:10.5px;white-space:nowrap;}
 #tourTable td:first-child{font-size:11.5px;}
-#tourTable{min-width:600px;}
+#tourTable{min-width:700px;}
 #tourTable td,#tourTable th{padding-left:6px;padding-right:6px;}
 #tourTable td:nth-child(4){white-space:normal;}
-.row-fin,.row-re{padding-left:6px;padding-right:6px;font-size:12px;}
+.row-fin,.row-re,.row-cp{padding-left:5px;padding-right:5px;font-size:11.5px;}
 .row-actions{white-space:nowrap;}
 .row-x:hover{color:#FFD9CF;border-color:var(--rust);background:rgba(190,90,70,.18);}
 .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
@@ -565,7 +581,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v30 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v33 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -758,6 +774,8 @@ tr:last-child td{border-bottom:none;}
     <div>
       <div class="panel">
         <h2>Добавить турнир</h2>
+        <div class="rb-head" style="margin:0 0 8px;">Частые турниры <span id="presetNote" style="text-transform:none;letter-spacing:0;color:var(--text-faint);"></span></div>
+        <div id="presetBox" style="margin-bottom:16px;"></div>
         <div class="form-grid">
           <div class="field">
             <label>Дата</label>
@@ -806,40 +824,6 @@ tr:last-child td{border-bottom:none;}
         <button class="btn" id="addBtn">Добавить турнир</button>
       </div>
 
-      <div class="panel">
-        <h2>Турниры <span class="n" id="tableCount"></span></h2>
-        <div class="rate-row" style="margin-bottom:12px;">
-          <div class="field">
-            <label>Показать турниры за дату</label>
-            <input type="date" id="tableDateInput">
-          </div>
-          <button class="btn ghost tiny" id="clearTableDate">Показать все даты</button>
-        </div>
-        <div class="chip-row" style="margin-bottom:10px;">
-          <button type="button" class="chip-btn all small active" data-filter="ALL"><span>Все</span></button>
-          <button type="button" class="chip-btn eur small" data-filter="EUR"><span>€</span></button>
-          <button type="button" class="chip-btn usd small" data-filter="USD"><span>$</span></button>
-          <button type="button" class="chip-btn rub small" data-filter="RUB"><span>₽</span></button>
-        </div>
-        <div class="chip-row" id="tagTabs" style="margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-        </div>
-        <div class="chip-row" id="statusTabs" style="margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-          <div class="tab active" data-status="ALL">Все</div>
-          <div class="tab" data-status="PENDING">Незавершённые</div>
-          <div class="tab" data-status="DONE">Завершённые</div>
-        </div>
-        <div class="room-btns" id="tableRoomBtns" style="margin-bottom:14px;"></div>
-        <div style="overflow-x:auto;" id="tourScroll">
-          <table id="tourTable">
-            <thead>
-              <tr><th>Дата</th><th>Покеррум</th><th>Валюта</th><th>Теги</th><th>Байин</th><th>Результат</th><th>Профит</th><th></th></tr>
-            </thead>
-            <tbody id="tourBody"></tbody>
-          </table>
-        </div>
-        <div class="empty" id="emptyMsg" style="display:none;">Пока нет турниров — добавьте первый выше.</div>
-        <div id="tableMore"></div>
-      </div>
     </div>
 
     <div>
@@ -852,6 +836,8 @@ tr:last-child td{border-bottom:none;}
           <div class="tab" data-stat="BI">По байинам</div>
           <div class="tab" data-stat="FORMAT">По типам</div>
           <div class="tab" data-stat="SPEED">По скорости</div>
+          <div class="tab" data-stat="WEEKDAY">По дням недели</div>
+          <div class="tab" data-stat="SESSION">По размеру сессии</div>
         </div>
         <div class="tabs" id="statSideTabs" style="margin-top:-4px;">
           <div class="tab active" data-side="ALL">Всё вместе</div>
@@ -874,6 +860,7 @@ tr:last-child td{border-bottom:none;}
         <div class="tabs" id="chartTabs">
           <div class="tab active" data-mode="per">По валютам</div>
           <div class="tab" data-mode="combined">Общий (конвертация)</div>
+          <div class="tab" data-mode="days">Банкролл по дням</div>
         </div>
         <div id="perCurrencyControls" class="chip-row" style="margin-bottom:12px;">
           <button type="button" class="chip-btn eur small active" data-chartcur="EUR"><span>€</span></button>
@@ -905,6 +892,40 @@ tr:last-child td{border-bottom:none;}
         <div id="topWins"></div>
       </div>
     </div>
+  </div>
+  <div class="panel">
+    <h2>Турниры <span class="n" id="tableCount"></span></h2>
+    <div class="rate-row" style="margin-bottom:12px;">
+      <div class="field">
+        <label>Показать турниры за дату</label>
+        <input type="date" id="tableDateInput">
+      </div>
+      <button class="btn ghost tiny" id="clearTableDate">Показать все даты</button>
+    </div>
+    <div class="chip-row" style="margin-bottom:10px;">
+      <button type="button" class="chip-btn all small active" data-filter="ALL"><span>Все</span></button>
+      <button type="button" class="chip-btn eur small" data-filter="EUR"><span>€</span></button>
+      <button type="button" class="chip-btn usd small" data-filter="USD"><span>$</span></button>
+      <button type="button" class="chip-btn rub small" data-filter="RUB"><span>₽</span></button>
+    </div>
+    <div class="chip-row" id="tagTabs" style="margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+    </div>
+    <div class="chip-row" id="statusTabs" style="margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div class="tab active" data-status="ALL">Все</div>
+      <div class="tab" data-status="PENDING">Незавершённые</div>
+      <div class="tab" data-status="DONE">Завершённые</div>
+    </div>
+    <div class="room-btns" id="tableRoomBtns" style="margin-bottom:14px;"></div>
+    <div style="overflow-x:auto;" id="tourScroll">
+      <table id="tourTable">
+        <thead>
+          <tr><th>Дата</th><th>Покеррум</th><th>Валюта</th><th>Теги</th><th>Байин</th><th>Результат</th><th>Профит</th><th></th></tr>
+        </thead>
+        <tbody id="tourBody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="emptyMsg" style="display:none;">Пока нет турниров — добавьте первый выше.</div>
+    <div id="tableMore"></div>
   </div>
   </div><!-- /pagePoker -->
 
@@ -1281,6 +1302,23 @@ tr:last-child td{border-bottom:none;}
   </div>
 </div>
 
+<div class="modal-bg" id="presetModal">
+  <div class="modal wide">
+    <h3>Новая кнопка частого турнира</h3>
+    <div class="bd-note" style="margin:0 0 12px;">Кнопка добавляет запись одним нажатием: рум, байин и теги. Если тип турнира не выбран, запись получит «Фризаут».</div>
+    <div class="field"><label>Покеррум</label><div class="room-btns" id="pRoomBtns"></div></div>
+    <div class="form-grid">
+      <div class="field"><label>Байин</label><input type="number" step="0.01" id="pBuyin" placeholder="0.00"></div>
+      <div class="field"><label>Валюта</label><div class="bd-note mono" id="pCurNote" style="margin:6px 0 0;color:var(--gold);"></div></div>
+    </div>
+    <div class="field"><label>Теги</label><div id="pTagBox"></div></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="pCancel">Отмена</button>
+      <button class="btn" id="pAdd">Добавить кнопку</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="resModal">
   <div class="modal">
     <h3>Результат турнира</h3>
@@ -1349,6 +1387,9 @@ const SEED_DATA = [];
   let statSide = 'ALL';
   let mixTags = [];    // теги, выбранные в «своей статистике» (условие И)
   let mixRooms = [];   // и/или конкретные румы
+  let presets = [];    // кнопки частых турниров
+  let presetEdit = false;
+  let pRoom = '', pCur = 'USD';
   let mixBiFrom = null, mixBiTo = null;   // диапазон байина в USD ('своя статистика')
   let cfRoomValue = '';  // куда идёт операция: '' — общий банкролл, иначе имя рума
   let bankroll = null;      // {date, amount, currency}
@@ -1469,6 +1510,15 @@ const SEED_DATA = [];
   const TAG_SHORT = {SAT:'sat', TICKET:'Tiket', C_mtzpa28g:'PSKO', C_mtzp9ax3:'MysKO', C_mtzp9hfc:'SpKO'};
   function tagShort(id){ return TAG_SHORT[id] || tagLabel(id); }
 
+  const FREEZE_ID = 'C_mtzp940f';          // «Фризаут» — ставится, когда тип турнира не выбран
+  // только для записей, которые заводят руками: старые турниры из Excel не трогаем
+  function withDefaultTag(tags){
+    const list = (tags || []).filter(x=>x !== FREEZE_ID);
+    const hasType = list.some(id=> FORMAT_TAGS.some(f=>f.id === id));
+    if(hasType) return list;
+    return allTags().some(t=>t.id === FREEZE_ID) ? list.concat([FREEZE_ID]) : list;
+  }
+
   function tagClass(id){
     const t = BUILTIN_TAGS.find(x=>x.id === id);
     return t ? t.cls : 'custom';
@@ -1550,7 +1600,7 @@ const SEED_DATA = [];
         // every key this build ever saved, not a fixed list — otherwise the
         // bankroll, operations and wallets would vanish after a reload
         const keys = ['tournaments','rates','rooms','seedVersion','bankroll','cashflow',
-                      'roomBank','wallets','customTags','opRates'];
+                      'roomBank','wallets','customTags','opRates','presets'];
         const ls = window.localStorage;
         if(typeof ls.length === 'number' && typeof ls.key === 'function'){
           for(let i = 0; i < ls.length; i++){
@@ -1733,6 +1783,9 @@ const SEED_DATA = [];
       if(walletsMigrated && wv) await saveWallets();
       const orv = await store.get('opRates');
       if(orv) opRates = Object.assign({EURUSD: null, USDRUB: null}, JSON.parse(orv) || {});
+      const pv = await store.get('presets');
+      presets = pv ? (JSON.parse(pv) || []) : DEFAULT_PRESETS.map(p=>({...p, tags: p.tags.slice()}));
+      if(!pv) await savePresets();
       const ct = await store.get('customTags');
       if(ct){
         const saved = JSON.parse(ct) || [];
@@ -2589,7 +2642,9 @@ const SEED_DATA = [];
           return `
           <div class="cash-row">
             <span class="cf-date">${f.date}</span>
-            <span>${f.kind === 'tr' ? (f.type === 'WD' ? 'Вывод' : 'Депозит') : (f.type === 'WD' ? 'Общий вывод' : 'Общий депозит')}</span>
+            <span>${f.adj ? (f.type === 'WD' ? 'Сверка −' : 'Сверка +')
+                   : f.kind === 'tr' ? (f.type === 'WD' ? 'Вывод' : 'Депозит')
+                   : (f.type === 'WD' ? 'Общий вывод' : 'Общий депозит')}</span>
             <span class="cf-acct">${opDescr(f)}</span>
             ${f.fee ? `<span class="cf-fee">комиссия ${fmtA(f.fee, f.currency)}</span>` : ''}
             <span class="cf-sum ${f.type === 'WD' ? 'pos' : 'neutral'}">${fmtA(f.amount, f.currency)} ${SYM[f.currency]}${conv}</span>
@@ -2627,6 +2682,80 @@ const SEED_DATA = [];
   }
 
   // ================= Running costs panel =================
+  // кнопки частых турниров: свой список, его можно менять
+  const PRESET_DAYS = 90;
+  const SPKO = 'C_mtzp9hfc';
+  const DEFAULT_PRESETS = [
+    {room:'Winamax', currency:'EUR', buyin:5,  tags:[SPKO]},
+    {room:'Winamax', currency:'EUR', buyin:10, tags:[SPKO]},
+    {room:'Winamax', currency:'EUR', buyin:20, tags:[SPKO]},
+    {room:'Chiko',   currency:'USD', buyin:5.5,  tags:[]},
+    {room:'Chiko',   currency:'USD', buyin:11,   tags:[]},
+    {room:'Chiko',   currency:'USD', buyin:22,   tags:[]},
+    {room:'Покердом', currency:'RUB', buyin:500,  tags:[]},
+    {room:'Покердом', currency:'RUB', buyin:750,  tags:[]},
+    {room:'Покердом', currency:'RUB', buyin:1000, tags:[]},
+    {room:'Покердом', currency:'RUB', buyin:1500, tags:[]}
+  ];
+  // сколько раз такой турнир сыгран за последние три месяца
+  function presetCount(p){
+    const from = new Date(Date.now() - PRESET_DAYS * 86400000).toISOString().slice(0, 10);
+    const want = withDefaultTag(p.tags).slice().sort().join('|');
+    let n = 0;
+    tournaments.forEach(t=>{
+      if(t.date < from || isExpense(t)) return;
+      if((t.note || '').trim() !== p.room || t.currency !== p.currency || +t.buyin !== +p.buyin) return;
+      const tags = (t.tags || []).filter(x=>x !== 'RE').slice().sort().join('|');
+      if(tags === want || tags === (p.tags || []).slice().sort().join('|')) n++;
+    });
+    return n;
+  }
+  async function savePresets(){
+    try{ await store.set('presets', JSON.stringify(presets)); }catch(e){}
+  }
+  function renderPresets(){
+    const box = $('presetBox');
+    if(!box) return;
+    $('presetNote').textContent = '— нажмите, чтобы добавить запись (результат впишете позже). Если тип турнира не выбран, ставится «Фризаут»';
+    const byRoom = {};
+    presets.forEach((p, i)=>{ (byRoom[p.room] = byRoom[p.room] || []).push({p, i}); });
+    const rows = Object.keys(byRoom).map(room=>{
+      const items = byRoom[room].map(({p, i})=>{
+        const tags = withDefaultTag(p.tags);
+        const tg = tags.filter(x=>x !== FREEZE_ID).map(tagShort).join(' ');
+        const n = presetCount(p);
+        return `<span class="preset-wrap"><button type="button" class="preset ${p.currency.toLowerCase()}" data-preset="${i}"
+          title="${escapeHtml(p.room + ' · ' + fmt(p.buyin) + ' ' + SYM[p.currency] + ' · ' + tags.map(tagLabel).join(', ') + ' · за 3 мес.: ' + n)}">
+          <b>${fmt(p.buyin)} ${SYM[p.currency]}</b>${tg ? `<span class="pt">${escapeHtml(tg)}</span>` : ''}${n ? `<span class="pn">${n}</span>` : ''}</button>${
+          presetEdit ? `<button type="button" class="preset-del" data-presetdel="${i}" title="Убрать кнопку">×</button>` : ''}</span>`;
+      }).join('');
+      return `<div class="preset-room"><span class="rname">${escapeHtml(room)}</span>${items}</div>`;
+    }).join('');
+    box.innerHTML = (rows || '<div class="bd-note" style="margin:0 0 8px;">Кнопок пока нет — добавьте свою.</div>') +
+      `<div class="preset-room" style="margin-top:4px;">
+         <button type="button" class="btn ghost tiny" id="presetAddBtn">+ своя кнопка</button>
+         <button type="button" class="btn ghost tiny${presetEdit ? ' danger' : ''}" id="presetEditBtn">${presetEdit ? 'готово' : 'изменить'}</button>
+       </div>`;
+    const ab = $('presetAddBtn'); if(ab) ab.addEventListener('click', openPresetAdd);
+    const eb = $('presetEditBtn'); if(eb) eb.addEventListener('click', ()=>{ presetEdit = !presetEdit; renderPresets(); });
+  }
+
+  // окно «новая кнопка»
+  function openPresetAdd(){
+    pRoom = formRoom || (knownRooms()[0] || {}).name || '';
+    pCur = roomCurrency(pRoom) || 'USD';
+    $('pBuyin').value = '';
+    setTags('ptag', []);
+    renderPresetForm();
+    $('presetModal').classList.add('open');
+    setTimeout(()=>{ try{ $('pBuyin').focus(); }catch(e){} }, 60);
+  }
+  function renderPresetForm(){
+    $('pRoomBtns').innerHTML = knownRooms().map(r=>
+      `<button type="button" class="room-btn ${(r.currency || '').toLowerCase()} ${pRoom === r.name ? 'active' : ''}" data-proom="${escapeHtml(r.name)}">${escapeHtml(r.name)}<span class="cur">${r.currency || ''}</span></button>`).join('');
+    $('pCurNote').textContent = pRoom ? `${pRoom} — ${pCur}` : 'Выберите покеррум';
+  }
+
   function renderExpenses(){
     if(!$('xCatBtns')) return;
     $('xCatBtns').innerHTML = EXPENSE_TAGS.map(t=>
@@ -2802,6 +2931,7 @@ const SEED_DATA = [];
         <td><div class="row-actions">${t.result === null && !isExpense(t)
             ? `<button class="btn ghost tiny row-fin" data-finish="${t.id}" title="Завершить турнир: результат 0">✓</button>` : ''}
           <button class="btn ghost tiny row-re" data-reentry="${t.id}" title="Ре-энтри: закрыть этот вход и добавить такой же турнир с тегом «Ре-энтри»">↻</button>
+          ${isExpense(t) ? '' : `<button class="btn ghost tiny row-cp" data-copy="${t.id}" title="Повторить: добавить такой же турнир сегодня">+1</button>`}
           <button class="btn ghost tiny row-res" data-res="${t.id}" title="Вписать результат и выигранный билет">Результат</button>
           <button class="btn ghost tiny row-pen" data-edit="${t.id}" title="Изменить всё: дату, рум, байин, ребай, теги">✎</button>
           <button class="btn ghost tiny row-x" data-trash="${t.id}" title="Удалить турнир">×</button></div></td>
@@ -2826,6 +2956,9 @@ const SEED_DATA = [];
     document.querySelectorAll('[data-reentry]').forEach(btn=>{
       btn.addEventListener('click', ()=> addReentry(btn.getAttribute('data-reentry')));
     });
+    document.querySelectorAll('[data-copy]').forEach(btn=>{
+      btn.addEventListener('click', ()=> repeatTournament(btn.getAttribute('data-copy')));
+    });
     document.querySelectorAll('[data-trash]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         const id = btn.getAttribute('data-trash');
@@ -2839,6 +2972,29 @@ const SEED_DATA = [];
         if(typeof toast === 'function') toast('Запись удалена', 'ok');
       });
     });
+  }
+
+  // the same tournament once more, dated today, with its result still open
+  async function repeatTournament(id){
+    const t = tournaments.find(x=>x.id === id);
+    if(!t) return;
+    await addQuick({room: t.note, currency: t.currency, buyin: t.buyin,
+                    tags: (t.tags || []).filter(x=>x !== 'RE')});
+  }
+
+  // one shared way to drop a fresh, result-free entry into the base
+  async function addQuick(p){
+    const rec = {id: uid(), date: pokerToday(), currency: p.currency, buyin: Number(p.buyin) || 0,
+                 rebuy: 0, result: null, ticket: 0, note: p.room || '',
+                 tags: withDefaultTag(p.tags), imported: false};
+    tournaments.push(rec);
+    await saveTournaments();
+    renderAll();
+    if(typeof toast === 'function'){
+      const tg = rec.tags.length ? ' · ' + rec.tags.map(tagLabel).join(', ') : '';
+      toast(`Добавлен: ${rec.note || 'без рума'} · ${fmt(rec.buyin)} ${SYM[rec.currency]}${tg} — результат впишете позже`, 'ok');
+    }
+    return rec;
   }
 
   // closes this entry (an empty result means a bust) and adds the same tournament again
@@ -2857,6 +3013,52 @@ const SEED_DATA = [];
 
   function escapeHtml(s){
     const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+  }
+
+  const WEEKDAYS = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+  function weekdayOf(date){
+    const d = new Date(date + 'T00:00:00');
+    return (d.getDay() + 6) % 7;            // 0 = понедельник
+  }
+  // сколько турниров сыграно в каждый игровой день выборки
+  function sessionSizes(list){
+    const n = {};
+    list.forEach(t=>{ if(isCountable(t)) n[t.date] = (n[t.date] || 0) + 1; });
+    return n;
+  }
+  const SESSION_BUCKETS = [[1,5,'1–5 турниров'],[6,15,'6–15 турниров'],[16,30,'16–30 турниров'],[31,Infinity,'31 и больше']];
+
+  // просадка, серия сессий, ITM и профит на сессию по выбранной выборке
+  function seriesStats(list, conv){
+    const done = list.filter(t=>t.result !== null);
+    const byDay = {};
+    let total = 0;
+    done.forEach(t=>{
+      const p = conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency);
+      byDay[t.date] = (byDay[t.date] || 0) + p;
+      total += p;
+    });
+    const days = Object.keys(byDay).sort();
+    let run = 0, peak = 0, peakDate = days[0] || '', dd = 0, ddFrom = '', ddTo = '';
+    days.forEach(d=>{
+      run += byDay[d];
+      if(run > peak){ peak = run; peakDate = d; }
+      const gap = peak - run;
+      if(gap > dd){ dd = gap; ddFrom = peakDate; ddTo = d; }
+    });
+    let streak = 0, sign = 0;
+    for(let i = days.length - 1; i >= 0; i--){
+      const sg = byDay[days[i]] > 0 ? 1 : (byDay[days[i]] < 0 ? -1 : 0);
+      if(!sg) break;
+      if(!sign){ sign = sg; streak = 1; }
+      else if(sg === sign) streak++;
+      else break;
+    }
+    const counted = done.filter(isCountable);
+    const itm = counted.filter(t=> t.result > 0 || (t.ticket || 0) > 0).length;
+    return {dd, ddFrom, ddTo, streak, sign, sessions: days.length,
+            itm, itmTotal: counted.length, itmPct: counted.length ? itm / counted.length * 100 : 0,
+            perSession: days.length ? total / days.length : 0};
   }
 
   function renderStats(){
@@ -2906,6 +3108,20 @@ const SEED_DATA = [];
         return `<div class="stat"><div class="lbl">Сессий ${lblPeriod}</div><div class="val">${ses}</div></div>
         <div class="stat"><div class="lbl">${outView ? 'Записей' : 'Турниров'} в сессию</div><div class="val">${per.toFixed(1)}</div>
           <div class="stat-sub">${outView ? s.allCount : s.count} / ${ses || 0}</div></div>`;
+      })()}
+      ${(()=>{
+        const x = seriesStats(periodList, conv);
+        const abi = s.abi || 0;
+        const ddBi = abi ? (x.dd / abi) : 0;
+        const psCls = x.perSession > 0 ? 'pos' : (x.perSession < 0 ? 'neg' : 'neutral');
+        return `<div class="stat"><div class="lbl">ITM ${lblPeriod}</div><div class="val">${x.itmPct.toFixed(1)}%</div>
+          <div class="stat-sub">${x.itm} из ${x.itmTotal} завершённых турниров</div></div>
+        <div class="stat"><div class="lbl">Профит на сессию</div><div class="val ${psCls}">${x.perSession>0?'+':''}${fmt(x.perSession)} ${SYM[baseCurrency]}</div>
+          <div class="stat-sub">в среднем за игровой день</div></div>
+        <div class="stat"><div class="lbl">Макс. просадка</div><div class="val ${x.dd ? 'neg' : 'neutral'}">${x.dd ? '−' : ''}${fmt(x.dd)} ${SYM[baseCurrency]}</div>
+          <div class="stat-sub">${x.dd ? `${ddBi.toFixed(1)} байинов · ${x.ddFrom} → ${x.ddTo}` : 'провалов ниже пика не было'}</div></div>
+        <div class="stat"><div class="lbl">Серия сессий</div><div class="val ${x.sign>0?'pos':(x.sign<0?'neg':'neutral')}">${x.streak ? (x.sign>0?'+':'−') + x.streak : '—'}</div>
+          <div class="stat-sub">${x.streak ? (x.sign>0 ? 'плюсовых подряд' : 'минусовых подряд') : 'последняя сессия в ноль'}</div></div>`;
       })()}
       <div class="stat"><div class="lbl">В игре / завершено</div><div class="val neutral">${statSide === 'SIDE' ? s.allPending : s.pendingCount} / ${statSide === 'SIDE' ? s.allDone : s.doneCount}</div></div>
       ${statSide === 'ALL' ? `<div class="stat"><div class="lbl">Профит с билетами</div><div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div><div class="stat-sub">${fmt(s.profit)} + ${fmt(Math.max(0, s.ticketBalance))} билетами ${period === 'ALL' ? '' : lblPeriod}</div></div>` : ''}
@@ -3029,6 +3245,28 @@ const SEED_DATA = [];
       }
       rows.sort((a,b)=> b.st.count - a.st.count);
       rows.push({name: 'ИТОГО в ' + baseCurrency, st: s, cur: baseCurrency, total: true});
+    } else if(statView === 'WEEKDAY'){
+      const map = {};
+      periodList.forEach(t=>{ (map[weekdayOf(t.date)] = map[weekdayOf(t.date)] || []).push(t); });
+      WEEKDAYS.forEach((name, i)=>{
+        const sub = map[i];
+        if(!sub || !sub.length) return;
+        const x = seriesStats(sub, conv);
+        rows.push({name: `${name} · ${x.sessions} сес.`, st: computeStats(sub, conv, foldSat), cur: baseCurrency});
+      });
+      rows.push({name: 'ИТОГО в ' + baseCurrency, st: s, cur: baseCurrency, total: true});
+    } else if(statView === 'SESSION'){
+      const sizes = sessionSizes(periodList);
+      SESSION_BUCKETS.forEach(([lo, hi, name])=>{
+        const sub = periodList.filter(t=>{
+          const n = sizes[t.date] || 0;
+          return n >= lo && n <= hi;
+        });
+        if(!sub.length) return;
+        const dayN = new Set(sub.map(t=>t.date)).size;
+        rows.push({name: `${name} · ${dayN} сес.`, st: computeStats(sub, conv, foldSat), cur: baseCurrency});
+      });
+      rows.push({name: 'ИТОГО в ' + baseCurrency, st: s, cur: baseCurrency, total: true});
     } else if(statView === 'BI'){
       // buy-in brackets, everything converted to USD
       const usd = (amt, cur) => convert(amt, cur, 'USD');
@@ -3078,7 +3316,9 @@ const SEED_DATA = [];
                 : statView === 'ROOM' ? 'Покеррум'
                 : (statView === 'BI' ? 'Диапазон байина'
                 : (statView === 'FORMAT' ? 'Тип турнира'
-                : (statView === 'SPEED' ? 'Скорость' : 'Валюта')));
+                : (statView === 'SPEED' ? 'Скорость'
+                : (statView === 'WEEKDAY' ? 'День недели'
+                : (statView === 'SESSION' ? 'Размер сессии' : 'Валюта')))));
     let html = `<table class="bd-table"><thead><tr>
       <th>${label}</th><th>Вал.</th><th>МТТ</th><th>Байины</th><th>Выплаты</th><th>Билеты</th><th>Профит</th><th>ROI</th><th>ABI</th>
     </tr></thead><tbody>`;
@@ -3126,6 +3366,10 @@ const SEED_DATA = [];
       rows.push({name: 'ИТОГО в ' + baseCurrency, st: s, cur: baseCurrency, total: true});
     } else if(statView === 'FORMAT' || statView === 'SPEED'){
       html += `<div class="bd-note">Все суммы пересчитаны в ${baseCurrency} по вашему курсу. Турнир с несколькими отметками попадёт в каждую строку, поэтому сумма строк может превышать итог.</div>`;
+    } else if(statView === 'WEEKDAY' || statView === 'SESSION'){
+      html += `<div class="bd-note">Все суммы пересчитаны в ${baseCurrency}. ${statView === 'WEEKDAY'
+        ? 'Сессия — игровой день с 12:00 до 12:00, поэтому ночная игра относится к предыдущему дню недели.'
+        : 'Турнир попадает в строку по тому, сколько турниров сыграно в тот же игровой день.'}</div>`;
     } else if(statView === 'BI'){
       html += `<div class="bd-note">Все валюты пересчитаны в USD по вашему курсу; турнир попадает в диапазон по полной стоимости входа (байин + ребай).</div>`;
     } else {
@@ -3160,10 +3404,11 @@ const SEED_DATA = [];
     if(!chartData || !chartData.dates.length) return;
 
     const {dates, values, cur, color} = chartData;
+    const values2 = chartData.values2 || null;
     const padL = 62, padR = 10, padT = 12, padB = 26;
     const cw = W - padL - padR, ch = H - padT - padB;
 
-    let mn = Math.min(...values, 0), mx = Math.max(...values, 0);
+    let mn = Math.min(...values, ...(values2 || []), 0), mx = Math.max(...values, ...(values2 || []), 0);
     if(mn === mx){ mn -= 1; mx += 1; }
     const span = mx - mn;
     mn -= span * 0.08; mx += span * 0.08;
@@ -3193,10 +3438,11 @@ const SEED_DATA = [];
     const n = values.length;
     const maxLbl = Math.max(2, Math.floor(cw/55));
     const stepL = Math.max(1, Math.ceil(n/maxLbl));
+    const lbl = (i)=> chartData.xMode === 'date' ? (dates[i] || '').slice(5) : '#' + (i+1);
     for(let i=0;i<n;i+=stepL){
-      g.fillText('#' + (i+1), X(i), H-padB+7);
+      g.fillText(lbl(i), X(i), H-padB+7);
     }
-    if(n > 1 && (n-1) % stepL !== 0) g.fillText('#' + n, X(n-1), H-padB+7);
+    if(n > 1 && (n-1) % stepL !== 0) g.fillText(lbl(n-1), X(n-1), H-padB+7);
 
     // area fill
     g.beginPath();
@@ -3218,6 +3464,19 @@ const SEED_DATA = [];
     g.strokeStyle = color; g.lineWidth = 2;
     g.lineJoin = 'round'; g.stroke();
 
+    // second line — the whole bankroll, no fill under it
+    if(values2){
+      g.beginPath();
+      g.moveTo(X(0), Y(values2[0]));
+      for(let i=1;i<values2.length;i++) g.lineTo(X(i), Y(values2[i]));
+      g.strokeStyle = chartData.color2 || '#4CAF7D'; g.lineWidth = 2; g.stroke();
+      // legend
+      g.font = '10px "IBM Plex Mono", monospace'; g.textAlign = 'left'; g.textBaseline = 'middle';
+      g.fillStyle = color; g.fillText('— ' + (chartData.label || 'игра'), padL + 6, padT + 8);
+      g.fillStyle = chartData.color2 || '#4CAF7D';
+      g.fillText('— ' + (chartData.label2 || 'банкролл'), padL + 6, padT + 22);
+    }
+
     // points (only when sparse enough)
     if(values.length <= 60){
       g.fillStyle = color;
@@ -3233,7 +3492,9 @@ const SEED_DATA = [];
       g.beginPath(); g.moveTo(hx, padT); g.lineTo(hx, padT+ch); g.stroke();
       g.fillStyle = '#ECE9E0';
       g.beginPath(); g.arc(hx, hy, 4, 0, Math.PI*2); g.fill();
-      const txt = '#' + (hoverIdx+1) + ' · ' + dates[hoverIdx] + '  ' + fmt(values[hoverIdx], cur);
+      const txt = (chartData.xMode === 'date' ? dates[hoverIdx] : '#' + (hoverIdx+1) + ' · ' + dates[hoverIdx]) +
+        '  ' + (chartData.label || '') + ' ' + fmt(values[hoverIdx], cur) +
+        (values2 ? '  ·  ' + (chartData.label2 || '') + ' ' + fmt(values2[hoverIdx], cur) : '');
       g.font = '11px "IBM Plex Mono", monospace';
       const tw = g.measureText(txt).width + 12;
       let bx = Math.min(Math.max(hx - tw/2, padL), W - padR - tw);
@@ -3286,7 +3547,72 @@ const SEED_DATA = [];
 
   let hoverIdx = null;
 
+  // сколько банкролл прибавил или потерял за каждый игровой день:
+  // игра, расходы, приходы и выводы наружу, комиссии. Переводы банкролл не меняют.
+  function dailyDeltas(){
+    const cur = baseCurrency, d = {};
+    const add = (date, v)=>{ d[date] = (d[date] || 0) + v; };
+    tournaments.forEach(t=>{
+      if(isExpense(t)){ add(t.date, -convert(cost(t), t.currency, cur)); return; }
+      if(t.result === null) return;
+      add(t.date, convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur));
+    });
+    cashflow.forEach(f=>{
+      add(f.date, -convert(f.fee || 0, f.currency, cur));
+      if(f.kind === 'tr') return;
+      const v = convert(f.amount, f.currency, cur);
+      add(f.date, f.type === 'WD' ? -v : v);
+    });
+    return d;
+  }
+  // банкролл на конец каждого дня: идём назад от сегодняшнего итога
+  function bankrollByDay(days){
+    const deltas = dailyDeltas();
+    const all = Object.keys(deltas).sort();
+    const total = generalState().total;
+    const after = {};
+    let acc = 0;
+    for(let i = all.length - 1; i >= 0; i--){ after[all[i]] = acc; acc += deltas[all[i]]; }
+    return days.map(d=>{
+      // всё, что случилось строго позже этого дня
+      let tail = 0;
+      for(let i = all.length - 1; i >= 0 && all[i] > d; i--) tail += deltas[all[i]];
+      return Math.round((total - tail) * 100) / 100;
+    });
+  }
+
+  function renderDaysChart(){
+    const list = filterByTag(filterByPeriod(tournaments));
+    const cur = baseCurrency;
+    const byDay = {};
+    list.forEach(t=>{
+      if(isExpense(t)){ byDay[t.date] = (byDay[t.date] || 0) - convert(cost(t), t.currency, cur); return; }
+      if(t.result === null) return;
+      byDay[t.date] = (byDay[t.date] || 0) + convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur);
+    });
+    const {from, to} = getPeriodRange();
+    cashflow.forEach(f=>{
+      if((from && f.date < from) || (to && f.date > to)) return;
+      if(byDay[f.date] === undefined) byDay[f.date] = 0;
+    });
+    const dates = Object.keys(byDay).sort();
+    let run = 0;
+    const values = dates.map(d=>{ run += byDay[d]; return Math.round(run * 100) / 100; });
+    const values2 = bankrollByDay(dates);
+    const st = computeStats(list.filter(t=>t.result !== null), (a, cc)=> convert(a, cc, cur));
+    $('chartNote').textContent = dates.length
+      ? `${dates.length} игровых дней · игра ${values[values.length-1] > 0 ? '+' : ''}${fmt(values[values.length-1])} ${SYM[cur]} · ` +
+        `банкролл на конец периода ${fmt(values2[values2.length-1])} ${SYM[cur]}`
+      : 'Нет данных под выбранные фильтры.';
+    renderTopWins(list.filter(t=>t.result !== null), cur);
+    hoverIdx = null;
+    chartData = {dates, values, values2, cur, color: '#D4AF37', color2: '#4CAF7D', xMode: 'date',
+                 label: 'игра', label2: 'банкролл'};
+    drawChart();
+  }
+
   function renderChart(){
+    if(chartMode === 'days'){ renderDaysChart(); return; }
     let list = filterByTag(filterByPeriod(tournaments)).filter(t=>t.result!==null);
     const cur = chartMode === 'per' ? chartCurrency : baseCurrency;
     if(chartMode === 'per') list = list.filter(t=>t.currency===chartCurrency);
@@ -3359,6 +3685,7 @@ const SEED_DATA = [];
       el.querySelectorAll('input[type=checkbox]').forEach(i=> prev[i.getAttribute('data-tag')] = i.checked);
 
       const chip = (t)=>{
+        if(t.id === FREEZE_ID) return '';     // ставится автоматически
         const on = prev[t.id] ? ' checked' : '';
         const del = (tagEditMode && !BUILTIN_TAGS.some(b=>b.id===t.id))
           ? `<span class="tag-del" data-deltag="${t.id}" title="удалить тег">×</span>` : '';
@@ -3383,6 +3710,7 @@ const SEED_DATA = [];
       `<button type="button" class="room-btn add tiny-tag" id="addTagBtn">+ свой тег</button>` +
       `<button type="button" class="room-btn add tiny-tag${tagEditMode?' editing':''}" id="editTagBtn">${tagEditMode?'готово':'изменить'}</button>`);
     box('etag', 'eTagBox', '');
+    box('ptag', 'pTagBox', '');
     box('itag', 'iTagBox', '');
 
     // freeroll needs its own handler again after a redraw
@@ -3621,6 +3949,7 @@ const SEED_DATA = [];
     fillRoomSelects();
     renderBankroll();
     renderExpenses();
+    renderPresets();
     renderLedger();
     renderTable();
     renderStats();
@@ -3672,7 +4001,8 @@ const SEED_DATA = [];
       rebuy: isTrain ? 0 : rebuy,
       result: isTrain ? 0 : result,
       ticket: isTrain ? 0 : ticket,
-      note: isTrain ? '' : formRoom.trim(), tags, imported: false
+      note: isTrain ? '' : formRoom.trim(),
+      tags: isTrain ? tags : withDefaultTag(tags), imported: false
     });
     await saveTournaments();
     $('fBuyin').value=''; $('fRebuy').value=''; $('fResult').value=''; $('fTicket').value='';
@@ -3721,7 +4051,7 @@ const SEED_DATA = [];
       app:'poker-tracker', version:1,
       exportedAt: new Date().toISOString(),
       rates, rooms, tournaments,
-      bankroll, roomBank, cashflow, wallets, customTags, opRates
+      bankroll, roomBank, cashflow, wallets, customTags, opRates, presets
     };
     const blob = new Blob([JSON.stringify(payload, null, 1)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
@@ -4086,6 +4416,7 @@ const SEED_DATA = [];
         }
         if(data.opRates){ opRates = Object.assign({EURUSD: null, USDRUB: null}, data.opRates); await saveOpRates(); }
         if(Array.isArray(data.customTags)){ customTags = data.customTags; await saveCustomTags(); }
+        if(Array.isArray(data.presets)){ presets = data.presets; await savePresets(); }
         await saveTournaments();
         await store.set('seedVersion', SEED_VERSION);
         renderRates(); renderTagUI(); renderAll();
@@ -4672,6 +5003,27 @@ const SEED_DATA = [];
       return;
     }
 
+    const pdel = el.closest('[data-presetdel]');
+    if(pdel){
+      presets.splice(Number(pdel.getAttribute('data-presetdel')), 1);
+      await savePresets();
+      renderPresets();
+      return;
+    }
+    const pr = el.closest('[data-preset]');
+    if(pr){
+      const p = presets[Number(pr.getAttribute('data-preset'))];
+      if(p) await addQuick(p);
+      return;
+    }
+    const prm = el.closest('[data-proom]');
+    if(prm){
+      pRoom = prm.getAttribute('data-proom');
+      pCur = roomCurrency(pRoom) || pCur;
+      renderPresetForm();
+      return;
+    }
+
     const xc = el.closest('[data-xcat]');
     if(xc){ xCat = xc.getAttribute('data-xcat'); renderExpenses(); return; }
 
@@ -4701,8 +5053,8 @@ const SEED_DATA = [];
       const st = roomBankrollStates().find(x=>x.name === name);
       if(!st) return;
       fields = [{code: st.cur, current: st.current, main: true}];
-      $('balNote').textContent = 'Введите фактический баланс рума. Разница пойдёт в стартовую сумму рума, ' +
-        'поэтому текущий баланс станет ровно таким, а профит, турниры и операции не изменятся.';
+      $('balNote').textContent = 'Введите фактический баланс рума. Разница запишется отдельной операцией-сверкой ' +
+        'на сегодняшнюю дату: баланс станет ровно таким, а турниры, старт и прежние операции останутся нетронутыми.';
     }
     balTarget = {kind, name, fields};
     $('balTitle').textContent = 'Баланс: ' + name;
@@ -4732,7 +5084,20 @@ const SEED_DATA = [];
         }
       } else {
         const st = roomBankrollStates().find(x=>x.name === t.name);
-        roomBank[t.name] = {amount: Math.round((st.start + (v - st.current)) * 100) / 100, currency: st.cur};
+        const diff = Math.round((v - st.current) * 100) / 100;
+        if(!diff) continue;
+        if(!st.hasStart && !st.n && !cashflow.some(f=>opLegs(f).some(l=>l.acct === t.name))){
+          // совсем новый рум — первая цифра и есть стартовая сумма
+          roomBank[t.name] = {amount: v, currency: st.cur};
+          await saveRoomBank();
+        } else {
+          cashflow.push({id: uid(), ts: now, date: pokerToday(), kind: 'ext', adj: true,
+                         type: diff > 0 ? 'DEP' : 'WD', wallet: t.name,
+                         amount: Math.abs(diff), fee: 0, currency: st.cur});
+          await saveCashflow();
+          if(typeof toast === 'function')
+            toast(`Сверка ${t.name}: ${diff > 0 ? '+' : '−'}${fmt(Math.abs(diff))} ${SYM[st.cur]} записано отдельной операцией`, 'ok');
+        }
       }
     }
     if(t.kind === 'wallet') await saveWallets(); else await saveRoomBank();
@@ -5013,6 +5378,20 @@ const SEED_DATA = [];
       toast(t.result === null ? 'Результат убран — турнир в незавершённых'
             : `Результат сохранён: ${fmt(t.result)} ${SYM[t.currency]}${t.ticket ? ' + билет ' + fmt(t.ticket) : ''}`, 'ok');
   }
+  $('pCancel').addEventListener('click', ()=> $('presetModal').classList.remove('open'));
+  $('presetModal').addEventListener('click', (e)=>{ if(e.target.id === 'presetModal') $('presetModal').classList.remove('open'); });
+  $('pAdd').addEventListener('click', async ()=>{
+    const buyin = parseFloat($('pBuyin').value);
+    if(!pRoom){ toast('Выберите покеррум'); return; }
+    if(isNaN(buyin) || buyin < 0){ toast('Укажите байин'); return; }
+    const tags = readTags('ptag');
+    presets.push({room: pRoom, currency: roomCurrency(pRoom) || pCur, buyin, tags});
+    await savePresets();
+    $('presetModal').classList.remove('open');
+    renderPresets();
+    toast(`Кнопка добавлена: ${pRoom} · ${fmt(buyin)} ${SYM[roomCurrency(pRoom) || pCur]}`, 'ok');
+  });
+
   $('rSave').addEventListener('click', saveResult);
   $('resModal').addEventListener('click', (e)=>{ if(e.target.id === 'resModal') $('resModal').classList.remove('open'); });
   ['rResult','rTicket'].forEach(id=> $(id).addEventListener('keydown', (e)=>{
@@ -5064,7 +5443,7 @@ const SEED_DATA = [];
     t.ticket = isNaN(eTicketRaw) || eTicketRaw < 0 ? 0 : eTicketRaw;
     t.result = rv === '' ? null : parseFloat(rv);
     if(tags.some(id=>EXPENSE_IDS.includes(id))){ t.rebuy = 0; t.ticket = 0; t.result = 0; t.note = ''; }
-    t.tags = tags;
+    t.tags = tags.some(id=>EXPENSE_IDS.includes(id)) ? tags : withDefaultTag(tags);
     await saveTournaments();
     return t;
     }
