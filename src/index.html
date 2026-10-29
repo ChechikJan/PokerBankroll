@@ -589,7 +589,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v37 · 29.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v38 · 29.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -3119,6 +3119,10 @@ const SEED_DATA = [];
       total += p;
     });
     const days = Object.keys(byDay).sort();
+    // сессия — игровой день хотя бы с одним турниром, как в плашке «Сессий»
+    const sessDays = Array.from(new Set(list.filter(isCountable).map(t=>t.date))).sort();
+    const sessSet = {};
+    sessDays.forEach(d=>{ sessSet[d] = true; });
     let run = 0, peak = 0, peakDate = days[0] || '', dd = 0, ddFrom = '', ddTo = '';
     days.forEach(d=>{
       run += byDay[d];
@@ -3127,8 +3131,10 @@ const SEED_DATA = [];
       if(gap > dd){ dd = gap; ddFrom = peakDate; ddTo = d; }
     });
     let streak = 0, sign = 0;
-    for(let i = days.length - 1; i >= 0; i--){
-      const sg = byDay[days[i]] > 0 ? 1 : (byDay[days[i]] < 0 ? -1 : 0);
+    const streakDays = sessDays.length ? sessDays : days;
+    for(let i = streakDays.length - 1; i >= 0; i--){
+      const v = byDay[streakDays[i]] || 0;
+      const sg = v > 0 ? 1 : (v < 0 ? -1 : 0);
       if(!sg) break;
       if(!sign){ sign = sg; streak = 1; }
       else if(sg === sign) streak++;
@@ -3136,9 +3142,10 @@ const SEED_DATA = [];
     }
     const counted = done.filter(isCountable);
     const itm = counted.filter(t=> t.result > 0 || (t.ticket || 0) > 0).length;
-    return {dd, ddFrom, ddTo, streak, sign, sessions: days.length,
+    const sessions = sessDays.length || days.length;
+    return {dd, ddFrom, ddTo, streak, sign, sessions,
             itm, itmTotal: counted.length, itmPct: counted.length ? itm / counted.length * 100 : 0,
-            perSession: days.length ? total / days.length : 0};
+            perSession: sessions ? total / sessions : 0};
   }
 
   function renderStats(){
@@ -3198,7 +3205,7 @@ const SEED_DATA = [];
         return `<div class="stat"><div class="lbl">ITM ${lblPeriod}</div><div class="val">${x.itmPct.toFixed(1)}%</div>
           <div class="stat-sub">${x.itm} из ${x.itmTotal} завершённых турниров</div></div>
         <div class="stat"><div class="lbl">Профит на сессию</div><div class="val ${psCls}">${x.perSession>0?'+':''}${fmt(x.perSession)} ${SYM[baseCurrency]}</div>
-          <div class="stat-sub">в среднем за игровой день</div></div>
+          <div class="stat-sub">${fmt(x.perSession * x.sessions)} ${SYM[baseCurrency]} за ${x.sessions} сессий</div></div>
         <div class="stat"><div class="lbl">Макс. просадка</div><div class="val ${x.dd ? 'neg' : 'neutral'}">${x.dd ? '−' : ''}${fmt(x.dd)} ${SYM[baseCurrency]}</div>
           <div class="stat-sub">${x.dd ? `${ddBi.toFixed(1)} байинов · ${x.ddFrom} → ${x.ddTo}` : 'провалов ниже пика не было'}</div></div>
         <div class="stat"><div class="lbl">Серия сессий</div><div class="val ${x.sign>0?'pos':(x.sign<0?'neg':'neutral')}">${x.streak ? (x.sign>0?'+':'−') + x.streak : '—'}</div>
