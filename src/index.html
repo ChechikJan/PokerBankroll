@@ -589,7 +589,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v36 · 29.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v37 · 29.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -3205,6 +3205,31 @@ const SEED_DATA = [];
           <div class="stat-sub">${x.streak ? (x.sign>0 ? 'плюсовых подряд' : 'минусовых подряд') : 'последняя сессия в ноль'}</div></div>`;
       })()}
       ${(()=>{
+        // по каким байинам больше всего выиграно и где лучший ROI
+        const by = {};
+        periodList.forEach(t=>{
+          if(!isCountable(t) || t.result === null) return;
+          const key = t.currency + '|' + (Math.round(cost(t) * 100) / 100);
+          if(!by[key]) by[key] = {n: 0, profit: 0, stake: 0, cur: t.currency, bi: Math.round(cost(t) * 100) / 100};
+          by[key].n++;
+          by[key].profit += conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency);
+          if(!paidByTicket(t)) by[key].stake += conv(cost(t), t.currency);
+        });
+        const rows = Object.values(by);
+        const bestP = rows.slice().sort((a, b)=> b.profit - a.profit)[0];
+        const MIN_N = 10;
+        const pool = rows.filter(r=> r.n >= MIN_N && r.stake > 0);
+        const use = (pool.length ? pool : rows.filter(r=> r.stake > 0));
+        const bestR = use.map(r=>({...r, roi: r.profit / r.stake * 100})).sort((a, b)=> b.roi - a.roi)[0];
+        const sym = SYM[baseCurrency];
+        return `<div class="stat"><div class="lbl">Самый прибыльный байин</div>
+          <div class="val ${bestP && bestP.profit > 0 ? 'pos' : (bestP ? 'neg' : 'neutral')}">${bestP ? fmtBi(bestP.bi) + ' ' + SYM[bestP.cur] : '—'}</div>
+          <div class="stat-sub">${bestP ? `${bestP.profit > 0 ? '+' : ''}${fmt(bestP.profit)} ${sym} за ${bestP.n} турниров` : 'нет завершённых турниров'}</div></div>
+        <div class="stat"><div class="lbl">Самый высокий ROI</div>
+          <div class="val ${bestR && bestR.roi > 0 ? 'pos' : (bestR ? 'neg' : 'neutral')}">${bestR ? bestR.roi.toFixed(1) + '%' : '—'}</div>
+          <div class="stat-sub">${bestR ? `байин ${fmtBi(bestR.bi)} ${SYM[bestR.cur]} · ${bestR.n} турниров · ${bestR.profit > 0 ? '+' : ''}${fmt(bestR.profit)} ${sym}${pool.length ? '' : ' (мало данных)'}` : 'нет завершённых турниров'}</div></div>`;
+      })()}
+      ${(()=>{
         const n = s.count || 0;
         const pct = (v)=> n ? (v / n * 100).toFixed(1) + '%' : '—';
         const normal = Math.max(0, n - s.turboCount - s.hyperCount);
@@ -3497,6 +3522,57 @@ const SEED_DATA = [];
 
     const {dates, values, cur, color} = chartData;
     const values2 = chartData.values2 || null;
+
+    if(chartData.bars){
+      const padL = 62, padR = 10, padT = 12, padB = 26;
+      const cw = W - padL - padR, ch = H - padT - padB;
+      let mn = Math.min(...values, 0), mx = Math.max(...values, 0);
+      if(mn === mx){ mn -= 1; mx += 1; }
+      const span = mx - mn;
+      mn -= span * 0.08; mx += span * 0.08;
+      const Y = (v)=> padT + ch - ((v - mn) / (mx - mn)) * ch;
+      g.font = '10px "IBM Plex Mono", monospace'; g.textBaseline = 'middle';
+      for(let i = 0; i <= 5; i++){
+        const v = mn + (mx - mn) * i / 5, y = Y(v);
+        g.strokeStyle = '#313A36'; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(padL, y); g.lineTo(W - padR, y); g.stroke();
+        g.fillStyle = '#8FA098'; g.textAlign = 'right';
+        g.fillText(shortNum(v), padL - 6, y);
+      }
+      const zero = Y(0);
+      g.strokeStyle = '#5C6863'; g.setLineDash([4,3]);
+      g.beginPath(); g.moveTo(padL, zero); g.lineTo(W - padR, zero); g.stroke(); g.setLineDash([]);
+      const n = values.length;
+      const step = cw / Math.max(1, n);
+      const bw = Math.max(4, Math.min(44, step * 0.62));
+      g.textBaseline = 'top'; g.textAlign = 'center';
+      values.forEach((v, i)=>{
+        const cx = padL + step * (i + 0.5);
+        const y = Y(v);
+        g.fillStyle = v >= 0 ? 'rgba(76,175,125,.85)' : 'rgba(199,91,74,.85)';
+        g.fillRect(cx - bw / 2, Math.min(y, zero), bw, Math.max(2, Math.abs(zero - y)));
+        if(hoverIdx === i){
+          g.strokeStyle = '#ECE9E0'; g.lineWidth = 1;
+          g.strokeRect(cx - bw / 2 - 1, Math.min(y, zero) - 1, bw + 2, Math.max(2, Math.abs(zero - y)) + 2);
+        }
+        if(n <= 18 || i % Math.ceil(n / 18) === 0){
+          g.fillStyle = '#8FA098';
+          g.fillText(dates[i], cx, H - padB + 7);
+        }
+      });
+      if(hoverIdx !== null && hoverIdx >= 0 && hoverIdx < n){
+        const txt = dates[hoverIdx] + '  ' + (values[hoverIdx] > 0 ? '+' : '') + fmt(values[hoverIdx]) + ' ' + SYM[cur];
+        g.font = '11px "IBM Plex Mono", monospace';
+        const tw = g.measureText(txt).width + 12;
+        const cx = padL + step * (hoverIdx + 0.5);
+        let bx = Math.min(Math.max(cx - tw / 2, padL), W - padR - tw);
+        g.fillStyle = 'rgba(20,25,26,.92)'; g.strokeStyle = '#313A36';
+        g.beginPath(); g.rect(bx, padT + 2, tw, 20); g.fill(); g.stroke();
+        g.fillStyle = '#ECE9E0'; g.textAlign = 'left'; g.textBaseline = 'middle';
+        g.fillText(txt, bx + 6, padT + 12);
+      }
+      return;
+    }
     const padL = 62, padR = 10, padT = 12, padB = 26;
     const cw = W - padL - padR, ch = H - padT - padB;
 
@@ -3703,8 +3779,37 @@ const SEED_DATA = [];
     drawChart();
   }
 
+  // профит по месяцам — столбцами, по тому же срезу, что и статистика
+  function renderMonthsChart(){
+    const cur = baseCurrency;
+    const by = {};
+    statList.forEach(t=>{
+      const m = (t.date || '').slice(0, 7);
+      if(!m) return;
+      if(isExpense(t)){ by[m] = (by[m] || 0) - convert(cost(t), t.currency, cur); return; }
+      if(t.result === null) return;
+      by[m] = (by[m] || 0) + convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur);
+    });
+    const months = Object.keys(by).sort();
+    const MN = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+    const label = (m)=> MN[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(2, 4);
+    const values = months.map(m=> Math.round(by[m] * 100) / 100);
+    const plus = values.filter(v=>v > 0).length;
+    const best = values.length ? Math.max(...values) : 0;
+    const worst = values.length ? Math.min(...values) : 0;
+    $('chartNote').textContent = months.length
+      ? `${months.length} месяцев · плюсовых ${plus} · лучший ${fmt(best)} ${SYM[cur]} · худший ${fmt(worst)} ${SYM[cur]} · ` +
+        `итог ${fmt(values.reduce((a, b)=> a + b, 0))} ${SYM[cur]}`
+      : 'Нет данных под выбранные фильтры.';
+    renderTopWins(statList.filter(t=>t.result !== null), cur);
+    hoverIdx = null;
+    chartData = {dates: months.map(label), values, cur, color: '#D4AF37', bars: true, xMode: 'bar'};
+    drawChart();
+  }
+
   function renderChart(){
     renderChartRoomBtns();
+    if(chartMode === 'months'){ renderMonthsChart(); return; }
     if(chartMode === 'days'){ renderDaysChart(); return; }
     let list = statList.filter(t=>t.result!==null);
     const cur = chartMode === 'room' ? (roomCurrency(chartRoom) || baseCurrency) : baseCurrency;
@@ -3937,8 +4042,11 @@ const SEED_DATA = [];
     html += knownRooms().map(r=>
       `<button type="button" class="room-btn ${cls(r.currency)}${chartMode === 'room' && chartRoom === r.name ? ' active' : ''}" data-chartpick="${escapeHtml(r.name)}">${escapeHtml(r.name)}<span class="cur">${r.currency || ''}</span></button>`).join('');
     html += `<button type="button" class="room-btn${chartMode === 'days' ? ' active' : ''}" data-chartpick="__DAYS__">Банкролл по дням</button>`;
+    html += `<button type="button" class="room-btn${chartMode === 'months' ? ' active' : ''}" data-chartpick="__MONTHS__">По месяцам</button>`;
     box.innerHTML = html;
     $('combinedControls').style.display = chartMode === 'room' ? 'none' : 'block';
+    const bi = $('biMin') && $('biMin').closest('.field');
+    if(bi) bi.style.display = chartMode === 'months' ? 'none' : '';
   }
 
   async function saveRooms(){
@@ -4565,7 +4673,9 @@ const SEED_DATA = [];
       const padL = 62, padR = 10;
       const cw = r.width - padL - padR;
       const n = chartData.dates.length;
-      let i = n === 1 ? 0 : Math.round(((e.clientX - r.left - padL)/cw) * (n-1));
+      let i = chartData.bars
+        ? Math.floor(((e.clientX - r.left - padL) / cw) * n)
+        : (n === 1 ? 0 : Math.round(((e.clientX - r.left - padL)/cw) * (n-1)));
       i = Math.max(0, Math.min(n-1, i));
       if(i !== hoverIdx){ hoverIdx = i; drawChart(); }
     });
@@ -5441,6 +5551,7 @@ const SEED_DATA = [];
     const v = b.getAttribute('data-chartpick');
     if(v === '__ALL__'){ chartMode = 'combined'; chartRoom = 'ALL'; }
     else if(v === '__DAYS__'){ chartMode = 'days'; }
+    else if(v === '__MONTHS__'){ chartMode = 'months'; }
     else { chartMode = 'room'; chartRoom = v; }
     renderChart();
   });
