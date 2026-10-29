@@ -589,7 +589,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v35 · 26.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v36 · 29.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -925,27 +925,15 @@ tr:last-child td{border-bottom:none;}
 
   <div class="panel">
     <h2>Графики</h2>
-    <div class="tabs" id="chartTabs">
-      <div class="tab active" data-mode="per">По валютам</div>
-      <div class="tab" data-mode="combined">Общий (конвертация)</div>
-      <div class="tab" data-mode="days">Банкролл по дням</div>
-    </div>
-    <div id="perCurrencyControls" class="chip-row" style="margin-bottom:12px;">
-      <button type="button" class="chip-btn eur small active" data-chartcur="EUR"><span>€</span></button>
-      <button type="button" class="chip-btn usd small" data-chartcur="USD"><span>$</span></button>
-      <button type="button" class="chip-btn rub small" data-chartcur="RUB"><span>₽</span></button>
-    </div>
-    <div id="combinedControls" class="field" style="display:none;margin-bottom:12px;max-width:160px;">
-      <label>Показать в валюте</label>
+    <div class="bd-note" style="margin:-4px 0 10px;">График идёт по тем же фильтрам, что и статистика выше: период, теги и выбранный срез.</div>
+    <div class="room-btns" id="chartRoomBtns" style="margin-bottom:12px;"></div>
+    <div id="combinedControls" class="field" style="margin-bottom:12px;max-width:160px;">
+      <label>Общий — в валюте</label>
       <select id="baseCurrencySelect">
         <option value="EUR">EUR €</option>
         <option value="USD" selected>USD $</option>
         <option value="RUB">RUB ₽</option>
       </select>
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>Покеррум</label>
-      <select id="chartRoomSelect"><option value="ALL">Все румы</option></select>
     </div>
     <div class="field" style="margin-bottom:14px;">
       <label>Диапазон байинов <span id="biRangeLabel" class="mono" style="color:var(--gold);"></span></label>
@@ -1370,8 +1358,8 @@ tr:last-child td{border-bottom:none;}
     <div class="field"><label>Покеррум</label><select id="eNote"></select></div>
     <div class="field"><label>Байин</label><input type="number" step="0.01" id="eBuyin"></div>
     <div class="field"><label>Ребай / аддон</label><input type="number" step="0.01" id="eRebuy"></div>
-    <div class="field"><label>Результат, деньги (пусто — если ещё неизвестен)</label><input type="number" step="0.01" id="eResult"></div>
-    <div class="field"><label>Билет (выигран)</label><input type="text" inputmode="decimal" id="eTicket" placeholder="0.00 или 5.5 x 4"></div>
+    <div class="bd-note" id="eResNote" style="margin:-4px 0 12px;">Результат и билет — в кнопке «Результат» в строке турнира.</div>
+    <input type="hidden" id="eResult"><input type="hidden" id="eTicket">
     <div class="field">
       <label>Теги</label>
       <div class="tag-toggle-row" id="eTagBox"></div>
@@ -1397,8 +1385,8 @@ const SEED_DATA = [];
   let tournaments = null;
   let rates = {...DEFAULT_RATES};
   let filterCurrency = 'ALL';
-  let chartMode = 'per';
-  let chartCurrency = 'EUR';
+  let chartMode = 'combined';
+  let statList = [];        // то, что сейчас отобрано фильтрами статистики
   let baseCurrency = 'USD';
   let editingId = null;
   let formCurrency = 'EUR';
@@ -3175,6 +3163,7 @@ const SEED_DATA = [];
     else if(statSide === 'SAT')    periodList = periodList.filter(t=>(t.tags||[]).includes('SAT'));
     else if(statSide === 'NOSIDE') periodList = periodList.filter(t=>isCountable(t) && !(t.tags||[]).includes('SAT'));
     const conv = (amt, cur) => convert(amt, cur, baseCurrency);
+    statList = periodList;          // график рисует этот же срез
 
     // --- summary tiles: always in baseCurrency across ALL currencies ---
     // Satellites pay out in tickets, and rakeback often arrives as a ticket too.
@@ -3685,7 +3674,7 @@ const SEED_DATA = [];
   }
 
   function renderDaysChart(){
-    const list = filterByTag(filterByPeriod(tournaments));
+    const list = statList;
     const cur = baseCurrency;
     const byDay = {};
     list.forEach(t=>{
@@ -3715,16 +3704,12 @@ const SEED_DATA = [];
   }
 
   function renderChart(){
+    renderChartRoomBtns();
     if(chartMode === 'days'){ renderDaysChart(); return; }
-    let list = filterByTag(filterByPeriod(tournaments)).filter(t=>t.result!==null);
-    const cur = chartMode === 'per' ? chartCurrency : baseCurrency;
-    if(chartMode === 'per') list = list.filter(t=>t.currency===chartCurrency);
-
-    if(chartRoom !== 'ALL'){
-      list = list.filter(t=>{
-        const room = (t.note && t.note.trim()) ? t.note.trim() : '';
-        return chartRoom === '__NONE__' ? room === '' : room === chartRoom;
-      });
+    let list = statList.filter(t=>t.result!==null);
+    const cur = chartMode === 'room' ? (roomCurrency(chartRoom) || baseCurrency) : baseCurrency;
+    if(chartMode === 'room'){
+      list = list.filter(t=> (t.note || '').trim() === chartRoom);
     }
 
     list = list.filter(t=>{
@@ -3740,22 +3725,22 @@ const SEED_DATA = [];
     const dates = [];
     list.forEach(t=>{
       const net = t.result - (paidByTicket(t) ? 0 : cost(t));
-      const p = chartMode === 'per' ? net : convert(net, t.currency, baseCurrency);
+      const p = convert(net, t.currency, cur);
       running += p;
       values.push(Math.round(running*100)/100);
       dates.push(t.date);
     });
 
-    const st = computeStats(list, chartMode === 'per' ? null : ((a,cc)=>convert(a,cc,cur)));
+    const st = computeStats(list, (a,cc)=>convert(a,cc,cur));
     const dayCount = new Set(dates).size;
     $('chartNote').textContent = values.length
-      ? `${st.count} турниров${st.sideCount ? ' + ' + st.sideCount + ' доп. ставок' : ''} за ${dayCount} дн. · итог ${fmt(running)} ${SYM[cur]}`
+      ? `${chartMode === 'room' ? chartRoom + ': ' : ''}${st.count} турниров${st.sideCount ? ' + ' + st.sideCount + ' доп. ставок' : ''} за ${dayCount} дн. · итог ${fmt(running)} ${SYM[cur]}`
       : 'Нет данных под выбранные фильтры.';
 
     renderTopWins(list, cur);
 
     hoverIdx = null;
-    chartData = {dates, values, cur, color: chartMode === 'per' ? COLOR[chartCurrency] : '#D4AF37'};
+    chartData = {dates, values, cur, color: chartMode === 'room' ? (COLOR[cur] || '#D4AF37') : '#D4AF37'};
     drawChart();
   }
 
@@ -3940,10 +3925,20 @@ const SEED_DATA = [];
         `<button type="button" class="room-btn${tableRoomFilter==='__NONE__'?' active':''}" data-troom="__NONE__">без рума</button>`;
     }
 
-    const s = $('chartRoomSelect');
-    s.innerHTML = '<option value="ALL">Все румы</option>' + opts + '<option value="__NONE__">— без покеррума —</option>';
-    s.value = chartRoom;
-    if(!s.value) { chartRoom = 'ALL'; s.value = 'ALL'; }
+    renderChartRoomBtns();
+  }
+
+  // кнопки графика: общий в базовой валюте, затем румы в своих валютах
+  function renderChartRoomBtns(){
+    const box = $('chartRoomBtns');
+    if(!box) return;
+    const cls = (c)=> (c || '').toLowerCase();
+    let html = `<button type="button" class="room-btn ${cls(baseCurrency)}${chartMode === 'combined' ? ' active' : ''}" data-chartpick="__ALL__">Общий<span class="cur">${baseCurrency}</span></button>`;
+    html += knownRooms().map(r=>
+      `<button type="button" class="room-btn ${cls(r.currency)}${chartMode === 'room' && chartRoom === r.name ? ' active' : ''}" data-chartpick="${escapeHtml(r.name)}">${escapeHtml(r.name)}<span class="cur">${r.currency || ''}</span></button>`).join('');
+    html += `<button type="button" class="room-btn${chartMode === 'days' ? ' active' : ''}" data-chartpick="__DAYS__">Банкролл по дням</button>`;
+    box.innerHTML = html;
+    $('combinedControls').style.display = chartMode === 'room' ? 'none' : 'block';
   }
 
   async function saveRooms(){
@@ -4690,11 +4685,6 @@ const SEED_DATA = [];
     const el = $('eNote');
     if(el.value === '__ADD__'){ handleRoomAdd(el); return; }
   });
-  $('chartRoomSelect').addEventListener('change', ()=>{
-    chartRoom = $('chartRoomSelect').value;
-    renderChart();
-  });
-
   // --- buy-in range ---
   function syncRange(){
     let mn = parseFloat($('biMin').value), mx = parseFloat($('biMax').value);
@@ -4844,7 +4834,7 @@ const SEED_DATA = [];
     statSide = 'MIX';
     document.querySelectorAll('#statSideTabs .tab').forEach(t=>
       t.classList.toggle('active', t.getAttribute('data-side') === 'MIX'));
-    renderStats();
+    renderStats(); renderChart();
   });
 
   // --- statistics: side-bet slice ---
@@ -4853,7 +4843,7 @@ const SEED_DATA = [];
       statSide = tab.getAttribute('data-side');
       document.querySelectorAll('#statSideTabs .tab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');
-      renderStats();
+      renderStats(); renderChart();
     });
   });
 
@@ -4863,7 +4853,7 @@ const SEED_DATA = [];
       statView = tab.getAttribute('data-stat');
       document.querySelectorAll('#statTabs .tab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');
-      renderStats();
+      renderStats(); renderChart();
     });
   });
 
@@ -5444,24 +5434,15 @@ const SEED_DATA = [];
     });
   });
 
-  // --- chart tabs ---
-  document.querySelectorAll('#chartTabs .tab').forEach(tab=>{
-    tab.addEventListener('click', ()=>{
-      chartMode = tab.getAttribute('data-mode');
-      document.querySelectorAll('#chartTabs .tab').forEach(t=>t.classList.remove('active'));
-      tab.classList.add('active');
-      $('perCurrencyControls').style.display = chartMode==='per' ? 'flex' : 'none';
-      $('combinedControls').style.display = chartMode==='combined' ? 'block' : 'none';
-      renderStats(); renderChart();
-    });
-  });
-  document.querySelectorAll('[data-chartcur]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      chartCurrency = btn.getAttribute('data-chartcur');
-      document.querySelectorAll('[data-chartcur]').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      renderStats(); renderChart();
-    });
+  // --- chart: общий, рум или банкролл по дням ---
+  document.addEventListener('click', (ev)=>{
+    const b = ev.target.closest && ev.target.closest('[data-chartpick]');
+    if(!b) return;
+    const v = b.getAttribute('data-chartpick');
+    if(v === '__ALL__'){ chartMode = 'combined'; chartRoom = 'ALL'; }
+    else if(v === '__DAYS__'){ chartMode = 'days'; }
+    else { chartMode = 'room'; chartRoom = v; }
+    renderChart();
   });
   $('baseCurrencySelect').addEventListener('change', ()=>{
     baseCurrency = $('baseCurrencySelect').value;
