@@ -457,6 +457,11 @@ tr:last-child td{border-bottom:none;}
 .row-re:hover{color:#E8E1FF;border-color:#7A6BC4;background:rgba(120,100,200,.16);}
 .re-mark{color:var(--gold);margin-left:2px;}
 .tk-par{color:var(--gold);font-size:11.5px;}
+.mk-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin-bottom:4px;}
+.mk-grid dt{color:var(--text-dim);} .mk-grid dd{margin:0;font-family:'IBM Plex Mono',ui-monospace,monospace;}
+#mainChart{cursor:crosshair;}
+.ft-badge{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;font-size:10px;
+  border:1px solid #7A5F2E;color:#E7CE9B;background:rgba(200,160,80,.12);}
 .row-actions{flex-wrap:nowrap;justify-content:flex-end;gap:3px;}
 .row-actions .btn{padding:4px 7px;font-size:10.5px;white-space:nowrap;}
 #tourTable td:first-child{font-size:11.5px;}
@@ -589,7 +594,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v38 · 29.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v41 · 30.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -1338,6 +1343,17 @@ tr:last-child td{border-bottom:none;}
   </div>
 </div>
 
+<div class="modal-bg" id="markModal">
+  <div class="modal">
+    <h3 id="mkTitle">Занос</h3>
+    <div id="mkBody"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="mkClose">Закрыть</button>
+      <button class="btn" id="mkEdit">Открыть результат</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="resModal">
   <div class="modal">
     <h3>Результат турнира</h3>
@@ -1345,6 +1361,15 @@ tr:last-child td{border-bottom:none;}
     <div class="field"><label>Результат, деньги (пусто — если ещё неизвестен)</label><input type="number" step="0.01" id="rResult"></div>
     <div class="field"><label>Билет (выигран)</label><input type="text" inputmode="decimal" id="rTicket" placeholder="0.00 или 5.5 x 4"></div>
     <div class="bd-note mono" id="rTicketHint" style="margin:-6px 0 10px;color:var(--gold);"></div>
+    <div class="result-toggle" style="margin:4px 0 10px;">
+      <input type="checkbox" id="rFinal">
+      <label for="rFinal">Финалка</label>
+    </div>
+    <div class="field" id="rPlaceField" style="display:none;">
+      <label>Занятое место</label>
+      <input type="number" step="1" min="1" id="rPlace" placeholder="например, 3">
+    </div>
+    <div class="bd-note" id="rBustNote" style="margin:0 0 10px;color:var(--text-faint);"></div>
     <div class="modal-actions">
       <button class="btn" id="rSave">Сохранить</button>
     </div>
@@ -1856,6 +1881,42 @@ const SEED_DATA = [];
     return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
   }
   function pokerToday(){ return dstr(pokerNow()); }
+  // игровой день для произвольного момента времени
+  function pokerDayOf(ms){
+    const d = new Date(ms);
+    if(d.getHours() < DAY_START_HOUR) d.setDate(d.getDate() - 1);
+    return dstr(d);
+  }
+
+  // Сколько турнир продержался: от момента, когда запись завели, до момента,
+  // когда вписали результат. Для турбо и гипертурбо планка вдвое и вчетверо ниже.
+  const BUST_LABEL = {early: 'Выбыл рано', mid: 'Выбыл средне', late: 'Выбыл поздно'};
+  function speedFactor(t){
+    const tags = t.tags || [];
+    if(tags.includes('C_mtzvska9')) return 0.25;   // гипертурбо
+    if(tags.includes('C_mtzvs6ft')) return 0.5;    // турбо
+    return 1;
+  }
+  function bustHours(t){
+    const start = recTs(t), end = t.resTs;
+    if(!start || !end || end < start) return null;
+    return (end - start) / 3600000;
+  }
+  function bustHoursText(t){
+    const h = bustHours(t);
+    if(h === null) return '—';
+    return h < 1 ? Math.round(h * 60) + ' мин' : (Math.round(h * 10) / 10) + ' ч';
+  }
+  function bustBucket(t){
+    if(!t || t.result === null || isExpense(t)) return null;
+    const h = bustHours(t);
+    if(h === null) return null;
+    // многодневка сюда попадает сама: между записью и результатом проходят часы
+    const f = speedFactor(t);
+    if(h < 2 * f) return 'early';
+    if(h <= 4 * f) return 'mid';
+    return 'late';
+  }
 
   function getPeriodRange(){
     const now = pokerNow();
@@ -2944,6 +3005,8 @@ const SEED_DATA = [];
       const stakeHtml = t.rebuy
         ? `<span title="байин ${fmt(t.buyin)} + ребай ${fmt(t.rebuy)}">${fmt(stake)}<span class="re-mark">+</span></span>`
         : fmt(stake);
+      const finalHtml = t.final
+        ? ` <span class="ft-badge" title="Финальный стол${t.place ? ', место ' + t.place : ''}">ФТ${t.place ? ' ' + t.place : ''}</span>` : '';
       const ticketHtml = t.ticket
         ? ` <span class="tk-par mono" title="выигран билет ${fmt(t.ticket)} ${SYM[t.currency]}">(${fmt(t.ticket)})</span>` : '';
       return `<tr>
@@ -2953,7 +3016,7 @@ const SEED_DATA = [];
         <td>${tagsHtml}</td>
         <td class="mono">${stakeHtml}</td>
         <td class="mono">${t.result !== null ? fmt(t.result) : '<span class="pending">—</span>'}</td>
-        <td>${profitHtml}${ticketHtml}</td>
+        <td>${profitHtml}${ticketHtml}${finalHtml}</td>
         <td><div class="row-actions">${t.result === null && !isExpense(t)
             ? `<button class="btn ghost tiny row-fin" data-finish="${t.id}" title="Завершить турнир: результат 0">✓</button>` : ''}
           <button class="btn ghost tiny row-re" data-reentry="${t.id}" title="Ре-энтри: закрыть этот вход и добавить такой же турнир с тегом «Ре-энтри»">↻</button>
@@ -2983,6 +3046,7 @@ const SEED_DATA = [];
         const t = tournaments.find(x=>x.id === btn.getAttribute('data-finish'));
         if(!t || t.result !== null) return;
         t.result = 0;
+        t.resTs = Date.now();
         await saveTournaments();
         renderAll();
         if(typeof toast === 'function') toast(`Завершён: ${t.note || 'без рума'} · ${fmt(cost(t))} ${SYM[t.currency]} · результат 0`, 'ok');
@@ -3064,7 +3128,7 @@ const SEED_DATA = [];
 
   // one shared way to drop a fresh, result-free entry into the base
   async function addQuick(p){
-    const rec = {id: uid(), date: pokerToday(), currency: p.currency, buyin: Number(p.buyin) || 0,
+    const rec = {id: uid(), ts: Date.now(), date: pokerToday(), currency: p.currency, buyin: Number(p.buyin) || 0,
                  rebuy: 0, result: null, ticket: 0, note: p.room || '',
                  tags: withDefaultTag(p.tags), imported: false};
     tournaments.push(rec);
@@ -3081,9 +3145,9 @@ const SEED_DATA = [];
   async function addReentry(id){
     const t = tournaments.find(x=>x.id === id);
     if(!t) return;
-    if(t.result === null && !isExpense(t)) t.result = 0;
+    if(t.result === null && !isExpense(t)){ t.result = 0; t.resTs = Date.now(); }
     const tags = (t.tags || []).filter(x=>x !== 'RE').concat(['RE']);
-    tournaments.push({id: uid(), date: t.date, currency: t.currency, buyin: t.buyin, rebuy: 0,
+    tournaments.push({id: uid(), ts: Date.now(), date: t.date, currency: t.currency, buyin: t.buyin, rebuy: 0,
                       result: null, ticket: 0, note: t.note, tags, imported: false});
     await saveTournaments();
     renderAll();
@@ -3141,7 +3205,8 @@ const SEED_DATA = [];
       else break;
     }
     const counted = done.filter(isCountable);
-    const itm = counted.filter(t=> t.result > 0 || (t.ticket || 0) > 0).length;
+    // ИТМ: выплата (деньги плюс выигранный билет) больше вложенного байина с ребаями
+    const itm = counted.filter(t=> ((t.result || 0) + (t.ticket || 0)) > cost(t)).length;
     const sessions = sessDays.length || days.length;
     return {dd, ddFrom, ddTo, streak, sign, sessions,
             itm, itmTotal: counted.length, itmPct: counted.length ? itm / counted.length * 100 : 0,
@@ -3203,13 +3268,42 @@ const SEED_DATA = [];
         const ddBi = abi ? (x.dd / abi) : 0;
         const psCls = x.perSession > 0 ? 'pos' : (x.perSession < 0 ? 'neg' : 'neutral');
         return `<div class="stat"><div class="lbl">ITM ${lblPeriod}</div><div class="val">${x.itmPct.toFixed(1)}%</div>
-          <div class="stat-sub">${x.itm} из ${x.itmTotal} завершённых турниров</div></div>
+          <div class="stat-sub">${x.itm} из ${x.itmTotal} завершённых · выплата больше вложенного байина</div></div>
         <div class="stat"><div class="lbl">Профит на сессию</div><div class="val ${psCls}">${x.perSession>0?'+':''}${fmt(x.perSession)} ${SYM[baseCurrency]}</div>
           <div class="stat-sub">${fmt(x.perSession * x.sessions)} ${SYM[baseCurrency]} за ${x.sessions} сессий</div></div>
         <div class="stat"><div class="lbl">Макс. просадка</div><div class="val ${x.dd ? 'neg' : 'neutral'}">${x.dd ? '−' : ''}${fmt(x.dd)} ${SYM[baseCurrency]}</div>
           <div class="stat-sub">${x.dd ? `${ddBi.toFixed(1)} байинов · ${x.ddFrom} → ${x.ddTo}` : 'провалов ниже пика не было'}</div></div>
         <div class="stat"><div class="lbl">Серия сессий</div><div class="val ${x.sign>0?'pos':(x.sign<0?'neg':'neutral')}">${x.streak ? (x.sign>0?'+':'−') + x.streak : '—'}</div>
           <div class="stat-sub">${x.streak ? (x.sign>0 ? 'плюсовых подряд' : 'минусовых подряд') : 'последняя сессия в ноль'}</div></div>`;
+      })()}
+      ${(()=>{
+        // как быстро выбывали и сколько было финалок
+        const buckets = {early: {n: 0, profit: 0}, mid: {n: 0, profit: 0}, late: {n: 0, profit: 0}};
+        let known = 0, fin = 0, places = [], finProfit = 0;
+        periodList.forEach(t=>{
+          if(!isCountable(t)) return;
+          if(t.final){ fin++; finProfit += conv(t.result !== null ? t.result - (paidByTicket(t) ? 0 : cost(t)) : 0, t.currency); if(t.place) places.push(t.place); }
+          const b = bustBucket(t);
+          if(!b) return;
+          known++;
+          buckets[b].n++;
+          buckets[b].profit += conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency);
+        });
+        const pc = (v)=> known ? (v / known * 100).toFixed(1) + '%' : '—';
+        const sym = SYM[baseCurrency];
+        const card = (key, hint)=>{
+          const b = buckets[key];
+          return `<div class="stat"><div class="lbl">${BUST_LABEL[key]} ${lblPeriod}</div>
+            <div class="val">${pc(b.n)}</div>
+            <div class="stat-sub">${known ? `${b.n} из ${known} · ${b.profit > 0 ? '+' : ''}${fmt(b.profit)} ${sym}` : 'нет данных о времени'} · ${hint}</div></div>`;
+        };
+        const avgPlace = places.length ? (places.reduce((a, b)=> a + b, 0) / places.length).toFixed(1) : null;
+        return card('early', 'нормал до 2 ч, турбо до 1 ч, гипер до 30 мин') +
+               card('mid', 'нормал 2–4 ч, турбо 1–2 ч, гипер 30–60 мин') +
+               card('late', 'дольше и многодневки') +
+               `<div class="stat"><div class="lbl">Финалки ${lblPeriod}</div>
+                 <div class="val">${fin}</div>
+                 <div class="stat-sub">${fin ? `${avgPlace ? 'среднее место ' + avgPlace + ' · ' : ''}${finProfit > 0 ? '+' : ''}${fmt(finProfit)} ${sym}` : 'отмечайте галочкой «Финалка» в окне результата'}</div></div>`;
       })()}
       ${(()=>{
         // по каким байинам больше всего выиграно и где лучший ROI
@@ -3660,6 +3754,22 @@ const SEED_DATA = [];
       }
     }
 
+    // отметки заносов — квадратик с валютой, как в шаркскопе
+    chartMarks = [];
+    (chartData.marks || []).forEach(m=>{
+      if(m.i >= values.length) return;
+      const x = X(m.i), y = Y(values[m.i]), sz = 13;
+      g.fillStyle = m.color;
+      g.fillRect(x - sz/2, y - sz/2, sz, sz);
+      g.strokeStyle = '#0E1412'; g.lineWidth = 1.5;
+      g.strokeRect(x - sz/2, y - sz/2, sz, sz);
+      g.fillStyle = '#0E1412';
+      g.font = 'bold 9px "IBM Plex Mono", monospace';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(m.sym, x, y + 0.5);
+      chartMarks.push({x, y, sz, m});
+    });
+
     // hover marker
     if(hoverIdx !== null && hoverIdx >= 0 && hoverIdx < values.length){
       const hx = X(hoverIdx), hy = Y(values[hoverIdx]);
@@ -3721,6 +3831,7 @@ const SEED_DATA = [];
   }
 
   let hoverIdx = null;
+  let chartMarks = [];      // экранные координаты отметок заносов
 
   // сколько банкролл прибавил или потерял за каждый игровой день:
   // игра, расходы, приходы и выводы наружу, комиссии. Переводы банкролл не меняют.
@@ -3843,6 +3954,13 @@ const SEED_DATA = [];
       dates.push(t.date);
     });
 
+    // топ заносов: самые крупные плюсы этого среза
+    const marks = list.map((t, i)=>({i, t, profit: convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur)}))
+      .filter(m=> m.profit > 0)
+      .sort((a, b)=> b.profit - a.profit)
+      .slice(0, 5)
+      .map(m=>({i: m.i, profit: m.profit, rec: m.t, sym: SYM[m.t.currency], color: COLOR[m.t.currency] || '#D4AF37'}));
+
     const st = computeStats(list, (a,cc)=>convert(a,cc,cur));
     const dayCount = new Set(dates).size;
     $('chartNote').textContent = values.length
@@ -3852,7 +3970,7 @@ const SEED_DATA = [];
     renderTopWins(list, cur);
 
     hoverIdx = null;
-    chartData = {dates, values, cur, color: chartMode === 'room' ? (COLOR[cur] || '#D4AF37') : '#D4AF37'};
+    chartData = {dates, values, cur, marks, color: chartMode === 'room' ? (COLOR[cur] || '#D4AF37') : '#D4AF37'};
     drawChart();
   }
 
@@ -4215,7 +4333,9 @@ const SEED_DATA = [];
       result: isTrain ? 0 : result,
       ticket: isTrain ? 0 : ticket,
       note: isTrain ? '' : formRoom.trim(),
-      tags: isTrain ? tags : withDefaultTag(tags), imported: false
+      tags: isTrain ? tags : withDefaultTag(tags), imported: false,
+      ts: Date.now(),
+      resTs: (isTrain || result !== null) ? Date.now() : undefined
     });
     await saveTournaments();
     $('fBuyin').value=''; $('fRebuy').value=''; $('fResult').value=''; $('fTicket').value='';
@@ -4687,6 +4807,12 @@ const SEED_DATA = [];
       if(i !== hoverIdx){ hoverIdx = i; drawChart(); }
     });
     cv.addEventListener('mouseleave', ()=>{ if(hoverIdx !== null){ hoverIdx = null; drawChart(); } });
+    cv.addEventListener('click', (e)=>{
+      const r = cv.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      const hit = chartMarks.find(k=> Math.abs(k.x - x) <= k.sz && Math.abs(k.y - y) <= k.sz);
+      if(hit) openMark(hit.m);
+    });
   })();
 
   let resizeTimer = null;
@@ -5568,6 +5694,36 @@ const SEED_DATA = [];
   });
 
   // --- edit modal ---
+  // окно с описанием заноса
+  let markId = null;
+  function openMark(m){
+    const t = m.rec;
+    markId = t.id;
+    const cur = chartData ? chartData.cur : baseCurrency;
+    const prof = t.result - (paidByTicket(t) ? 0 : cost(t));
+    const place = t.final ? (t.place ? `финалка, место ${t.place}` : 'финалка') : '';
+    const tg = (t.tags || []).map(tagLabel).join(', ');
+    $('mkTitle').textContent = 'Занос · ' + (t.note || 'без рума');
+    $('mkBody').innerHTML = `<dl class="mk-grid">
+      <dt>Дата</dt><dd>${t.date}</dd>
+      <dt>Покеррум</dt><dd>${escapeHtml(t.note || '—')}</dd>
+      <dt>Байин</dt><dd>${fmt(cost(t))} ${SYM[t.currency]}${t.rebuy ? ` (байин ${fmt(t.buyin)} + ребай ${fmt(t.rebuy)})` : ''}</dd>
+      <dt>Выплата</dt><dd>${fmt(t.result)} ${SYM[t.currency]}${t.ticket ? ` + билет ${fmt(t.ticket)}` : ''}</dd>
+      <dt>Профит</dt><dd class="${prof > 0 ? 'pos' : 'neg'}">${prof > 0 ? '+' : ''}${fmt(prof)} ${SYM[t.currency]}</dd>
+      ${t.currency !== cur ? `<dt>В ${cur}</dt><dd class="${m.profit > 0 ? 'pos' : 'neg'}">+${fmt(m.profit)} ${SYM[cur]}</dd>` : ''}
+      ${tg ? `<dt>Теги</dt><dd>${escapeHtml(tg)}</dd>` : ''}
+      ${place ? `<dt>Финал</dt><dd>${place}</dd>` : ''}
+      ${bustBucket(t) ? `<dt>Отыграно</dt><dd>${bustHoursText(t)} · ${BUST_LABEL[bustBucket(t)].toLowerCase()}</dd>` : ''}
+    </dl>`;
+    $('markModal').classList.add('open');
+  }
+  $('mkClose').addEventListener('click', ()=> $('markModal').classList.remove('open'));
+  $('markModal').addEventListener('click', (e)=>{ if(e.target.id === 'markModal') $('markModal').classList.remove('open'); });
+  $('mkEdit').addEventListener('click', ()=>{
+    $('markModal').classList.remove('open');
+    if(markId) openResult(markId);
+  });
+
   let resId = null;
   function openResult(id){
     const t = tournaments.find(x=>x.id === id);
@@ -5578,6 +5734,13 @@ const SEED_DATA = [];
     $('rResult').value = t.result !== null ? t.result : '';
     $('rTicket').value = t.ticket ? t.ticket : '';
     $('rTicketHint').textContent = '';
+    $('rFinal').checked = !!t.final;
+    $('rPlace').value = t.place || '';
+    $('rPlaceField').style.display = t.final ? '' : 'none';
+    const b = bustBucket(t);
+    $('rBustNote').textContent = b
+      ? `Отыграно ${bustHoursText(t)} — ${BUST_LABEL[b].toLowerCase()}`
+      : 'Время выбывания посчитается от момента, когда запись была заведена.';
     $('resModal').classList.add('open');
     setTimeout(()=>{ try{ $('rResult').focus(); $('rResult').select(); }catch(e){} }, 60);
   }
@@ -5588,6 +5751,12 @@ const SEED_DATA = [];
     t.result = rv === '' ? null : parseFloat(rv);
     const tk = parseAmount($('rTicket').value);
     t.ticket = isNaN(tk) || tk < 0 ? 0 : tk;
+    if(t.result === null){ delete t.resTs; }
+    else if(!t.resTs){ t.resTs = Date.now(); }
+    t.final = $('rFinal').checked;
+    const pl = parseInt($('rPlace').value, 10);
+    if(t.final && pl > 0) t.place = pl; else delete t.place;
+    if(!t.final) delete t.final;
     await saveTournaments();
     $('resModal').classList.remove('open');
     renderAll();
@@ -5609,6 +5778,11 @@ const SEED_DATA = [];
     toast(`Кнопка добавлена: ${pRoom} · ${fmt(buyin)} ${SYM[roomCurrency(pRoom) || pCur]}`, 'ok');
   });
 
+  $('rFinal').addEventListener('change', ()=>{
+    $('rPlaceField').style.display = $('rFinal').checked ? '' : 'none';
+    if($('rFinal').checked) setTimeout(()=>{ try{ $('rPlace').focus(); }catch(e){} }, 40);
+  });
+  $('rPlace').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') saveResult(); });
   $('rSave').addEventListener('click', saveResult);
   $('resModal').addEventListener('click', (e)=>{ if(e.target.id === 'resModal') $('resModal').classList.remove('open'); });
   ['rResult','rTicket'].forEach(id=> $(id).addEventListener('keydown', (e)=>{
@@ -5659,6 +5833,7 @@ const SEED_DATA = [];
     const eTicketRaw = parseAmount($('eTicket').value);
     t.ticket = isNaN(eTicketRaw) || eTicketRaw < 0 ? 0 : eTicketRaw;
     t.result = rv === '' ? null : parseFloat(rv);
+    if(t.result === null) delete t.resTs; else if(!t.resTs) t.resTs = Date.now();
     if(tags.some(id=>EXPENSE_IDS.includes(id))){ t.rebuy = 0; t.ticket = 0; t.result = 0; t.note = ''; }
     t.tags = tags.some(id=>EXPENSE_IDS.includes(id)) ? tags : withDefaultTag(tags);
     await saveTournaments();
