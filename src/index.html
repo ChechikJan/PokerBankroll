@@ -460,6 +460,8 @@ tr:last-child td{border-bottom:none;}
 .mk-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin-bottom:4px;}
 .mk-grid dt{color:var(--text-dim);} .mk-grid dd{margin:0;font-family:'IBM Plex Mono',ui-monospace,monospace;}
 #mainChart{cursor:crosshair;}
+.btn.rake{background:linear-gradient(180deg,#38598C 0%,#2C4873 100%);border-color:#4A6FA8;color:#E4EDFA;}
+.btn.rake:hover{filter:brightness(1.12);}
 .ft-badge{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;font-size:10px;
   border:1px solid #7A5F2E;color:#E7CE9B;background:rgba(200,160,80,.12);}
 .row-actions{flex-wrap:nowrap;justify-content:flex-end;gap:3px;}
@@ -594,7 +596,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Покерный банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v41 · 30.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v42 · 31.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -835,7 +837,10 @@ tr:last-child td{border-bottom:none;}
           <label>Теги</label>
           <div class="tag-toggle-row" id="fTagBox"></div>
         </div>
-        <button class="btn" id="addBtn">Добавить турнир</button>
+        <div class="rate-row" style="margin:0;gap:10px;">
+          <button class="btn" id="addBtn">Добавить турнир</button>
+          <button class="btn rake" id="rakeBtn" title="Записать начисление рейкбека">+ Рейкбек</button>
+        </div>
       </div>
 
     </div>
@@ -1339,6 +1344,24 @@ tr:last-child td{border-bottom:none;}
     <div class="modal-actions">
       <button class="btn ghost" id="pCancel">Отмена</button>
       <button class="btn" id="pAdd">Добавить кнопку</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="rakeModal">
+  <div class="modal">
+    <h3>Начисление рейкбека</h3>
+    <div class="bd-note" style="margin:0 0 12px;">Сумма идёт в общий профит и в банкролл рума, но вне счёта турниров, ABI и ROI.</div>
+    <div class="field"><label>Дата</label><input type="date" id="rkDate"></div>
+    <div class="field"><label>Покеррум</label><div class="room-btns" id="rkRoomBtns"></div></div>
+    <div class="field"><label id="rkSumLbl">Сумма рейкбека</label><input type="number" step="0.01" id="rkSum" placeholder="0.00"></div>
+    <div class="result-toggle" style="margin:2px 0 10px;">
+      <input type="checkbox" id="rkTicket">
+      <label for="rkTicket">Начислено билетом</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="rkCancel">Отмена</button>
+      <button class="btn" id="rkAdd">Записать</button>
     </div>
   </div>
 </div>
@@ -4004,6 +4027,7 @@ const SEED_DATA = [];
 
       const chip = (t)=>{
         if(t.id === FREEZE_ID) return '';     // ставится автоматически
+        if(t.id === 'RAKE' && prefix !== 'mix') return '';   // начисляется кнопкой «Рейкбек»
         const on = prev[t.id] ? ' checked' : '';
         const del = (tagEditMode && !BUILTIN_TAGS.some(b=>b.id===t.id))
           ? `<span class="tag-del" data-deltag="${t.id}" title="удалить тег">×</span>` : '';
@@ -5352,6 +5376,9 @@ const SEED_DATA = [];
       if(p) await addQuick(p);
       return;
     }
+    const rkr = el.closest('[data-rkroom]');
+    if(rkr){ rkRoom = rkr.getAttribute('data-rkroom'); renderRakeForm(); return; }
+
     const prm = el.closest('[data-proom]');
     if(prm){
       pRoom = prm.getAttribute('data-proom');
@@ -5694,6 +5721,43 @@ const SEED_DATA = [];
   });
 
   // --- edit modal ---
+  // ---- рейкбек: отдельная кнопка вместо тега ----
+  let rkRoom = '';
+  function openRake(){
+    rkRoom = formRoom || (knownRooms()[0] || {}).name || '';
+    $('rkDate').value = pokerToday();
+    $('rkSum').value = '';
+    $('rkTicket').checked = false;
+    renderRakeForm();
+    $('rakeModal').classList.add('open');
+    setTimeout(()=>{ try{ $('rkSum').focus(); }catch(e){} }, 60);
+  }
+  function renderRakeForm(){
+    $('rkRoomBtns').innerHTML = knownRooms().map(r=>
+      `<button type="button" class="room-btn ${(r.currency || '').toLowerCase()} ${rkRoom === r.name ? 'active' : ''}" data-rkroom="${escapeHtml(r.name)}">${escapeHtml(r.name)}<span class="cur">${r.currency || ''}</span></button>`).join('');
+    const cur = roomCurrency(rkRoom);
+    $('rkSumLbl').textContent = 'Сумма рейкбека' + (cur ? ', ' + cur : '');
+  }
+  $('rakeBtn').addEventListener('click', openRake);
+  $('rkCancel').addEventListener('click', ()=> $('rakeModal').classList.remove('open'));
+  $('rakeModal').addEventListener('click', (e)=>{ if(e.target.id === 'rakeModal') $('rakeModal').classList.remove('open'); });
+  $('rkSum').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') $('rkAdd').click(); });
+  $('rkAdd').addEventListener('click', async ()=>{
+    const date = $('rkDate').value;
+    const sum = parseFloat(String($('rkSum').value).replace(',', '.'));
+    if(!rkRoom){ toast('Выберите покеррум'); return; }
+    if(!date || !(sum > 0)){ toast('Укажите дату и сумму больше нуля'); return; }
+    const cur = roomCurrency(rkRoom) || baseCurrency;
+    const byTicket = $('rkTicket').checked;
+    tournaments.push({id: uid(), ts: Date.now(), date, currency: cur, buyin: 0, rebuy: 0,
+                      result: byTicket ? 0 : sum, ticket: byTicket ? sum : 0,
+                      note: rkRoom, tags: ['RAKE'], imported: false, resTs: Date.now()});
+    await saveTournaments();
+    $('rakeModal').classList.remove('open');
+    renderAll();
+    toast(`Рейкбек ${fmt(sum)} ${SYM[cur]} · ${rkRoom}${byTicket ? ' (билетом)' : ''}`, 'ok');
+  });
+
   // окно с описанием заноса
   let markId = null;
   function openMark(m){
