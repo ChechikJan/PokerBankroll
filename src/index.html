@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Покерный банкролл</title>
+<title>Банкролл</title>
 </head>
 <body>
 <style>
@@ -36,9 +36,8 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
 .header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:22px;flex-wrap:wrap;}
 .title-block h1{font-family:'Fraunces',Georgia,'Times New Roman',serif;font-weight:600;font-size:28px;margin:0 0 4px;letter-spacing:.2px;}
 .title-block .sub{color:var(--text-dim);font-size:13px;}
-.chip-logo{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;
-  background:repeating-conic-gradient(var(--felt) 0deg 30deg, var(--felt-bright) 30deg 60deg);
-  border:3px solid var(--bg);box-shadow:0 0 0 2px var(--felt-bright);margin-right:10px;vertical-align:-9px;}
+.chip-logo{display:inline-block;width:38px;height:38px;margin-right:11px;vertical-align:-11px;
+  background:url("data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22 width=%22512%22 height=%22512%22> <defs> <radialGradient id=%22rim%22 cx=%2236%25%22 cy=%2228%25%22 r=%2278%25%22> <stop offset=%220%25%22 stop-color=%22%2333A868%22/> <stop offset=%2258%25%22 stop-color=%22%231F7A4D%22/> <stop offset=%22100%25%22 stop-color=%22%230E3F28%22/> </radialGradient> <radialGradient id=%22face%22 cx=%2236%25%22 cy=%2228%25%22 r=%2280%25%22> <stop offset=%220%25%22 stop-color=%22%231C4A34%22/> <stop offset=%22100%25%22 stop-color=%22%23123123%22/> </radialGradient> <linearGradient id=%22mark%22 x1=%220%22 y1=%220%22 x2=%220.4%22 y2=%221%22> <stop offset=%220%25%22 stop-color=%22%23F0CE86%22/> <stop offset=%2255%25%22 stop-color=%22%23E8C87A%22/> <stop offset=%22100%25%22 stop-color=%22%23A6771F%22/> </linearGradient> <linearGradient id=%22gloss%22 x1=%220.2%22 y1=%220%22 x2=%220.7%22 y2=%221%22> <stop offset=%220%25%22 stop-color=%22%23ffffff%22 stop-opacity=%220.34%22/> <stop offset=%2245%25%22 stop-color=%22%23ffffff%22 stop-opacity=%220.05%22/> <stop offset=%22100%25%22 stop-color=%22%23ffffff%22 stop-opacity=%220%22/> </linearGradient> <filter id=%22soft%22 x=%22-30%25%22 y=%22-30%25%22 width=%22160%25%22 height=%22170%25%22> <feDropShadow dx=%220%22 dy=%2214%22 stdDeviation=%2214%22 flood-color=%22%23000%22 flood-opacity=%220.45%22/> </filter> <clipPath id=%22clipChip%22><circle cx=%22256%22 cy=%22248%22 r=%22226%22/></clipPath> </defs> <!-- %D1%82%D0%BE%D0%BB%D1%89%D0%B8%D0%BD%D0%B0 %D1%84%D0%B8%D1%88%D0%BA%D0%B8: %D0%BD%D0%B8%D0%B6%D0%BD%D0%B8%D0%B5 %D1%81%D0%BB%D0%BE%D0%B8 %D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81%D0%B0 --> <g filter=%22url(%23soft)%22> <circle cx=%22256%22 cy=%22296%22 r=%22226%22 fill=%22%230E3F28%22/> <circle cx=%22256%22 cy=%22286%22 r=%22226%22 fill=%22%230E3F28%22/> <circle cx=%22256%22 cy=%22276%22 r=%22226%22 fill=%22%231F7A4D%22 opacity=%220.5%22/> <circle cx=%22256%22 cy=%22266%22 r=%22226%22 fill=%22%230E3F28%22 opacity=%220.9%22/> </g> <!-- %D0%BB%D0%B8%D1%86%D0%B5%D0%B2%D0%B0%D1%8F %D1%81%D1%82%D0%BE%D1%80%D0%BE%D0%BD%D0%B0 --> <circle cx=%22256%22 cy=%22248%22 r=%22226%22 fill=%22url(%23rim)%22/> <!-- %D0%BD%D0%B0%D1%81%D0%B5%D1%87%D0%BA%D0%B8 %D0%BF%D0%BE %D0%BE%D0%B1%D0%BE%D0%B4%D1%83 --> <circle cx=%22256%22 cy=%22248%22 r=%22200%22 fill=%22none%22 stroke=%22%23E8EFE9%22 stroke-width=%2246%22 stroke-dasharray=%22104.7 104.7%22 stroke-dashoffset=%2252%22 opacity=%220.92%22/> <circle cx=%22256%22 cy=%22248%22 r=%22200%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%2246%22 stroke-dasharray=%22104.7 104.7%22 stroke-dashoffset=%2252%22 opacity=%220.10%22/> <!-- %D0%B2%D0%BD%D1%83%D1%82%D1%80%D0%B5%D0%BD%D0%BD%D1%8F%D1%8F %D1%84%D0%B0%D1%81%D0%BA%D0%B0 --> <circle cx=%22256%22 cy=%22248%22 r=%22176%22 fill=%22none%22 stroke=%22%230E3F28%22 stroke-width=%2210%22 opacity=%220.75%22/> <circle cx=%22256%22 cy=%22248%22 r=%22170%22 fill=%22url(%23face)%22/> <circle cx=%22256%22 cy=%22248%22 r=%22170%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%223%22 opacity=%220.35%22/> <circle cx=%22256%22 cy=%22248%22 r=%22154%22 fill=%22none%22 stroke=%22%23E8C87A%22 stroke-width=%225%22 opacity=%220.85%22/> <!-- %D0%BF%D0%B8%D0%BA%D0%B0 --> <g transform=%22translate(0,-6) scale(1)%22><path d=%22M256 118 C256 118 150 214 150 278 C150 318 180 344 214 344 C232 344 246 336 254 324 C250 352 240 374 222 392 L290 392 C272 374 262 352 258 324 C266 336 280 344 298 344 C332 344 362 318 362 278 C362 214 256 118 256 118 Z%22 fill=%22url(%23mark)%22/> <path d=%22M256 118 C256 118 150 214 150 278 C150 318 180 344 214 344 C232 344 246 336 254 324 C250 352 240 374 222 392 L290 392 C272 374 262 352 258 324 C266 336 280 344 298 344 C332 344 362 318 362 278 C362 214 256 118 256 118 Z%22 fill=%22none%22 stroke=%22%23A6771F%22 stroke-width=%223%22 opacity=%220.5%22/></g> <!-- %D0%B7%D0%B0%D1%82%D0%B5%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5 %D0%BD%D0%B8%D0%B7%D0%B0 %D0%B8 %D0%B1%D0%BB%D0%B8%D0%BA %D1%81%D0%B2%D0%B5%D1%80%D1%85%D1%83 --> <g clip-path=%22url(%23clipChip)%22> <ellipse cx=%22256%22 cy=%22520%22 rx=%22300%22 ry=%22210%22 fill=%22%23000%22 opacity=%220.30%22/> <ellipse cx=%22196%22 cy=%2284%22 rx=%22222%22 ry=%22132%22 fill=%22url(%23gloss)%22/> <path d=%22M30 248 A226 226 0 0 1 482 248%22 fill=%22none%22 stroke=%22%23ffffff%22 stroke-width=%227%22 opacity=%220.30%22/> </g> <circle cx=%22256%22 cy=%22248%22 r=%22223%22 fill=%22none%22 stroke=%22%23ffffff%22 stroke-width=%223%22 opacity=%220.10%22/> </svg>") no-repeat center/contain;}
 
 .ledger{display:flex;gap:14px;flex-wrap:wrap;}
 .ledger-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;min-width:112px;}
@@ -462,6 +461,11 @@ tr:last-child td{border-bottom:none;}
 #mainChart{cursor:crosshair;}
 .btn.rake{background:linear-gradient(180deg,#38598C 0%,#2C4873 100%);border-color:#4A6FA8;color:#E4EDFA;}
 .btn.rake:hover{filter:brightness(1.12);}
+.fp-row{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 4px;}
+.fp{display:inline-flex;align-items:baseline;gap:4px;padding:2px 7px;border-radius:7px;font-size:11.5px;
+  border:1px solid var(--border);color:var(--text-faint);font-family:'IBM Plex Mono',ui-monospace,monospace;}
+.fp b{font-size:10px;font-weight:600;}
+.fp.on{border-color:#7A5F2E;color:#E7CE9B;background:rgba(200,160,80,.12);}
 .ft-badge{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;font-size:10px;
   border:1px solid #7A5F2E;color:#E7CE9B;background:rgba(200,160,80,.12);}
 .row-actions{flex-wrap:nowrap;justify-content:flex-end;gap:3px;}
@@ -478,7 +482,28 @@ tr:last-child td{border-bottom:none;}
 
 /* stats */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-.stat{background:var(--surface-2);border-radius:8px;padding:10px 12px;}
+.stat{position:relative;background:var(--surface-2);border-radius:8px;padding:10px 12px;}
+.stat.has-tip{cursor:help;}
+.stat.has-tip::after{content:'?';position:absolute;top:7px;right:8px;width:13px;height:13px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;
+  border:1px solid var(--border);color:var(--text-faint);transition:color .15s,border-color .15s;}
+.stat.has-tip:hover::after{color:var(--gold);border-color:#7A5F2E;}
+#tipBox{position:fixed;z-index:400;max-width:300px;padding:9px 11px;border-radius:9px;
+  background:#1B221F;border:1px solid var(--border);box-shadow:0 12px 30px rgba(0,0,0,.55);
+  color:var(--text);font-size:12px;line-height:1.5;pointer-events:none;
+  opacity:0;transform:translateY(4px);transition:opacity .12s ease,transform .12s ease;}
+#tipBox.on{opacity:1;transform:none;}
+.bust-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:2px;}
+.bust-c{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.bust-c b{font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-size:16px;font-weight:600;}
+.bust-c i{font-style:normal;font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;}
+.bi3{display:flex;flex-direction:column;gap:4px;margin:4px 0 2px;}
+.bi3-row{display:grid;grid-template-columns:auto auto 1fr auto;gap:9px;align-items:baseline;
+  font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-variant-numeric:tabular-nums;font-size:12.5px;}
+.bi3-row b{font-size:14.5px;font-weight:600;}
+.bi3-row i{font-style:normal;font-size:10px;color:var(--text-faint);}
+.bi3-row s{text-decoration:none;font-weight:600;text-align:right;}
+.bi3-row em{font-style:normal;font-size:11px;color:var(--text-dim);text-align:right;}
 .stat .lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
 .stat .val{font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-size:16px;font-weight:600;}
 .bd-table{width:100%;min-width:580px;border-collapse:collapse;font-size:12px;margin-top:12px;}
@@ -593,10 +618,10 @@ tr:last-child td{border-bottom:none;}
 
   <div class="header">
     <div class="title-block">
-      <h1><span class="chip-logo"></span>Покерный банкролл</h1>
+      <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v42 · 31.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v44 · 31.10.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -1406,6 +1431,7 @@ tr:last-child td{border-bottom:none;}
     <div class="field"><label>Покеррум</label><select id="eNote"></select></div>
     <div class="field"><label>Байин</label><input type="number" step="0.01" id="eBuyin"></div>
     <div class="field"><label>Ребай / аддон</label><input type="number" step="0.01" id="eRebuy"></div>
+    <div class="field"><label>Игроков в турнире (AFS)</label><input type="number" step="1" min="0" id="eField" placeholder="сколько человек было в поле"></div>
     <div class="bd-note" id="eResNote" style="margin:-4px 0 12px;">Результат и билет — в кнопке «Результат» в строке турнира.</div>
     <input type="hidden" id="eResult"><input type="hidden" id="eTicket">
     <div class="field">
@@ -3178,6 +3204,41 @@ const SEED_DATA = [];
       toast(`Ре-энтри добавлен: ${t.note || 'без рума'} · ${fmt(t.buyin)} ${SYM[t.currency]} — результат пока не задан`, 'ok');
   }
 
+  // всплывающее окошко: любой элемент с data-tip показывает его по наведению
+  let tipEl = null;
+  function tipShow(el){
+    if(!tipEl){ tipEl = document.createElement('div'); tipEl.id = 'tipBox'; document.body.appendChild(tipEl); }
+    tipEl.textContent = el.getAttribute('data-tip') || '';
+    tipEl.classList.add('on');
+    const r = el.getBoundingClientRect();
+    tipEl.style.left = '0px'; tipEl.style.top = '0px';
+    const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    let x = r.left + r.width / 2 - w / 2;
+    let y = r.bottom + 8;
+    if(y + h > innerHeight - 8) y = Math.max(8, r.top - h - 8);
+    x = Math.max(8, Math.min(x, innerWidth - w - 8));
+    tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
+  }
+  function tipHide(){ if(tipEl) tipEl.classList.remove('on'); }
+  document.addEventListener('mouseover', (e)=>{
+    const el = e.target.closest && e.target.closest('[data-tip]');
+    if(el) tipShow(el); else tipHide();
+  });
+  document.addEventListener('mouseout', (e)=>{
+    const el = e.target.closest && e.target.closest('[data-tip]');
+    if(el && !el.contains(e.relatedTarget)) tipHide();
+  });
+  window.addEventListener('scroll', tipHide, true);
+
+  // 1 турнир / 2 турнира / 5 турниров
+  function plural(n, forms){
+    const a = Math.abs(n) % 100, b = a % 10;
+    if(a > 10 && a < 20) return forms[2];
+    if(b > 1 && b < 5) return forms[1];
+    if(b === 1) return forms[0];
+    return forms[2];
+  }
+
   function escapeHtml(s){
     const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
   }
@@ -3278,6 +3339,24 @@ const SEED_DATA = [];
            <div class="stat"><div class="lbl">Из них билетами</div><div class="val ${s.ticketsWon>0?'pos':'neutral'}">${fmt(s.ticketsWon)} ${SYM[baseCurrency]}</div></div>`
         : `<div class="stat"><div class="lbl">Сумма байинов</div><div class="val neutral">${fmt(s.totalBuyin)} ${SYM[baseCurrency]}</div></div>`}
       ${(()=>{
+        // AFS — среднее поле: только турниры, где количество игроков внесено вручную
+        let fSum = 0, fN = 0, fMin = Infinity, fMax = 0, cN = 0;
+        periodList.forEach(t=>{
+          if(!isCountable(t)) return;
+          cN++;
+          const f = Number(t.field) || 0;
+          if(f > 0){ fSum += f; fN++; if(f < fMin) fMin = f; if(f > fMax) fMax = f; }
+        });
+        const avg = fN ? fSum / fN : 0;
+        return `<div class="stat"><div class="lbl">AFS — среднее поле</div>
+          <div class="val ${fN ? '' : 'neutral'}">${fN ? Math.round(avg).toLocaleString('ru-RU') : '—'}</div>
+          <div class="stat-sub">${fN
+            ? `Среднее количество игроков в турнире: ${fN} ${plural(fN, ['турнир', 'турнира', 'турниров'])} из ${cN} с внесённым вручную полем` +
+              (fMin === fMax ? '' : ` (от ${fMin.toLocaleString('ru-RU')} до ${fMax.toLocaleString('ru-RU')} игроков)`) +
+              '. Турниры без внесённого поля в расчёт не идут.'
+            : 'Количество игроков вносится в строке турнира кнопкой «Изм.» — поле «Игроков в турнире». Турниры без него в AFS не учитываются.'}</div></div>`;
+      })()}
+      ${(()=>{
         const outView = statSide === 'EXPENSE' || OUTSIDE_TAGS.some(o=>o.id === statSide);
         const ses = outView ? s.allSessions : s.sessions;
         const per = outView ? (s.allSessions ? s.allCount / s.allSessions : 0) : s.perSession;
@@ -3314,19 +3393,33 @@ const SEED_DATA = [];
         });
         const pc = (v)=> known ? (v / known * 100).toFixed(1) + '%' : '—';
         const sym = SYM[baseCurrency];
-        const card = (key, hint)=>{
-          const b = buckets[key];
-          return `<div class="stat"><div class="lbl">${BUST_LABEL[key]} ${lblPeriod}</div>
-            <div class="val">${pc(b.n)}</div>
-            <div class="stat-sub">${known ? `${b.n} из ${known} · ${b.profit > 0 ? '+' : ''}${fmt(b.profit)} ${sym}` : 'нет данных о времени'} · ${hint}</div></div>`;
-        };
-        const avgPlace = places.length ? (places.reduce((a, b)=> a + b, 0) / places.length).toFixed(1) : null;
-        return card('early', 'нормал до 2 ч, турбо до 1 ч, гипер до 30 мин') +
-               card('mid', 'нормал 2–4 ч, турбо 1–2 ч, гипер 30–60 мин') +
-               card('late', 'дольше и многодневки') +
+        // рано / средне / поздно живут в одной плашке
+        const BUST_SHORT = {early: 'рано', mid: 'средне', late: 'поздно'};
+        const bustCols = ['early', 'mid', 'late'].map(k=>
+          `<div class="bust-c"><b>${pc(buckets[k].n)}</b><i>${BUST_SHORT[k]}</i></div>`).join('');
+        const bustTip = known
+          ? ['early', 'mid', 'late'].map(k=>
+              `${BUST_SHORT[k]} — ${buckets[k].n} из ${known}, ${buckets[k].profit > 0 ? '+' : ''}${fmt(buckets[k].profit)} ${sym}`).join('; ') +
+            '. Рано: нормал до 2 ч, турбо до 1 ч, гипер до 30 мин. Средне: нормал 2–4 ч, турбо 1–2 ч, гипер 30–60 мин. Поздно: дольше и многодневки.'
+          : 'Время вылета считается от начала турнира до момента внесения результата — пока результаты вносятся задним числом, данных нет.';
+        // разбивка финалок по местам: с 1-го по 8-е, остальное — отдельно
+        const pl = {};
+        let plOther = 0, plNone = 0;
+        places.forEach(v=>{
+          if(v >= 1 && v <= 8) pl[v] = (pl[v] || 0) + 1; else plOther++;
+        });
+        plNone = fin - places.length;
+        const placeRow = Array.from({length: 8}, (_, i)=> i + 1).map(n=>
+          `<span class="fp${pl[n] ? ' on' : ''}"><b>${n}</b>${pl[n] || '—'}</span>`).join('') +
+          (plOther ? `<span class="fp on"><b>9+</b>${plOther}</span>` : '') +
+          (plNone ? `<span class="fp"><b>без места</b>${plNone}</span>` : '');
+        return `<div class="stat"><div class="lbl">Выбывание ${lblPeriod}</div>
+                 <div class="bust-row">${bustCols}</div>
+                 <div class="stat-sub">${bustTip}</div></div>` +
                `<div class="stat"><div class="lbl">Финалки ${lblPeriod}</div>
                  <div class="val">${fin}</div>
-                 <div class="stat-sub">${fin ? `${avgPlace ? 'среднее место ' + avgPlace + ' · ' : ''}${finProfit > 0 ? '+' : ''}${fmt(finProfit)} ${sym}` : 'отмечайте галочкой «Финалка» в окне результата'}</div></div>`;
+                 ${fin ? `<div class="fp-row">${placeRow}</div>` : ''}
+                 <div class="stat-sub">${fin ? `${finProfit > 0 ? '+' : ''}${fmt(finProfit)} ${sym} с финальных столов` : 'отмечайте галочкой «Финалка» в окне результата'}</div></div>`;
       })()}
       ${(()=>{
         // по каким байинам больше всего выиграно и где лучший ROI
@@ -3340,15 +3433,30 @@ const SEED_DATA = [];
           if(!paidByTicket(t)) by[key].stake += conv(cost(t), t.currency);
         });
         const rows = Object.values(by);
-        const bestP = rows.slice().sort((a, b)=> b.profit - a.profit)[0];
         const MIN_N = 10;
         const pool = rows.filter(r=> r.n >= MIN_N && r.stake > 0);
         const use = (pool.length ? pool : rows.filter(r=> r.stake > 0));
         const bestR = use.map(r=>({...r, roi: r.profit / r.stake * 100})).sort((a, b)=> b.roi - a.roi)[0];
         const sym = SYM[baseCurrency];
-        return `<div class="stat"><div class="lbl">Самый прибыльный байин</div>
-          <div class="val ${bestP && bestP.profit > 0 ? 'pos' : (bestP ? 'neg' : 'neutral')}">${bestP ? fmtBi(bestP.bi) + ' ' + SYM[bestP.cur] : '—'}</div>
-          <div class="stat-sub">${bestP ? `${bestP.profit > 0 ? '+' : ''}${fmt(bestP.profit)} ${sym} за ${bestP.n} турниров` : 'нет завершённых турниров'}</div></div>
+        // топ-3 байина по прибыли; в зачёт идут байины, сыгранные больше 100 раз
+        const MIN_BI = 100;
+        const biPool = rows.filter(r=> r.n > MIN_BI);
+        const enough = biPool.length > 0;
+        const top3 = (enough ? biPool : rows).slice().sort((a, b)=> b.profit - a.profit).slice(0, 3);
+        const biRows = top3.map(r=>{
+          const per = r.profit / r.n;
+          const c = r.profit > 0 ? 'pos' : (r.profit < 0 ? 'neg' : 'neutral');
+          return `<div class="bi3-row"><b>${fmtBi(r.bi)} ${SYM[r.cur]}</b><i>${r.n}</i>` +
+                 `<s class="${c}">${r.profit > 0 ? '+' : ''}${fmt(r.profit)} ${sym}</s>` +
+                 `<em>${per > 0 ? '+' : ''}${fmt(per)} ${sym} с турнира</em></div>`;
+        }).join('');
+        return `<div class="stat"><div class="lbl">Самые прибыльные байины</div>
+          ${top3.length ? `<div class="bi3">${biRows}</div>` : '<div class="val neutral">—</div>'}
+          <div class="stat-sub">${top3.length
+            ? (enough
+                ? `Байины, сыгранные больше ${MIN_BI} раз — таких в выборке ${biPool.length}. Вторая колонка — сколько турниров сыграно, последняя — средняя прибыль одного турнира этого байина.`
+                : `Ни один байин не сыгран больше ${MIN_BI} раз — показаны лучшие из того, что есть. Вторая колонка — сколько турниров сыграно, последняя — средняя прибыль одного турнира.`)
+            : 'нет завершённых турниров'}</div></div>
         <div class="stat"><div class="lbl">Самый высокий ROI</div>
           <div class="val ${bestR && bestR.roi > 0 ? 'pos' : (bestR ? 'neg' : 'neutral')}">${bestR ? bestR.roi.toFixed(1) + '%' : '—'}</div>
           <div class="stat-sub">${bestR ? `байин ${fmtBi(bestR.bi)} ${SYM[bestR.cur]} · ${bestR.n} турниров · ${bestR.profit > 0 ? '+' : ''}${fmt(bestR.profit)} ${sym}${pool.length ? '' : ' (мало данных)'}` : 'нет завершённых турниров'}</div></div>`;
@@ -3365,8 +3473,41 @@ const SEED_DATA = [];
           <div class="stat-sub">${normal} турниров без отметки скорости</div></div>`;
       })()}
       <div class="stat"><div class="lbl">В игре / завершено</div><div class="val neutral">${statSide === 'SIDE' ? s.allPending : s.pendingCount} / ${statSide === 'SIDE' ? s.allDone : s.doneCount}</div></div>
-      ${statSide === 'ALL' ? `<div class="stat"><div class="lbl">Профит с билетами</div><div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div><div class="stat-sub">${fmt(s.profit)} + ${fmt(Math.max(0, s.ticketBalance))} билетами ${period === 'ALL' ? '' : lblPeriod}</div></div>` : ''}
+      ${statSide === 'ALL' ? (()=>{
+        // билеты остаются в валюте рума, который их выдал — никакой конвертации
+        const won = {}, spent = {};
+        periodList.forEach(t=>{
+          if(t.result !== null && t.ticket) won[t.currency] = (won[t.currency] || 0) + t.ticket;
+          if(paidByTicket(t)) spent[t.currency] = (spent[t.currency] || 0) + cost(t);
+        });
+        const curs = Array.from(new Set(Object.keys(won).concat(Object.keys(spent)))).sort();
+        const net = {};
+        curs.forEach(c=> net[c] = (won[c] || 0) - (spent[c] || 0));
+        const live = curs.filter(c=> Math.abs(net[c]) > 0.004);
+        const parts = live.map(c=> `${net[c] > 0 ? '+' : '−'}${fmt(Math.abs(net[c]))} ${SYM[c]}`);
+        const tCls = live.length ? (live.every(c=> net[c] >= 0) ? 'pos' : (live.every(c=> net[c] <= 0) ? 'neg' : 'neutral')) : 'neutral';
+        const detail = curs.length
+          ? curs.map(c=> `${SYM[c]}: выиграно ${fmt(won[c] || 0)}, потрачено на входы ${fmt(spent[c] || 0)}`).join('; ') +
+            '. Билеты не конвертируются — они остаются в валюте рума, который их выдал.'
+          : 'За период билеты не выигрывались и не тратились.';
+        return `<div class="stat"><div class="lbl">Профит с билетами (${baseCurrency})</div>
+          <div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div>
+          <div class="stat-sub">Деньги ${fmt(s.profit)} ${SYM[baseCurrency]} плюс неиспользованные билеты на ${fmt(Math.max(0, s.ticketBalance))} ${SYM[baseCurrency]} по текущему курсу${period === 'ALL' ? '' : ', ' + lblPeriod}. Сами билеты — в соседней плашке, в своей валюте.</div></div>
+        <div class="stat"><div class="lbl">Билеты ${lblPeriod}</div>
+          <div class="val ${tCls}"${parts.length > 1 ? ' style="font-size:13.5px;"' : ''}>${parts.length ? parts.join(' · ') : '—'}</div>
+          <div class="stat-sub">${detail}</div></div>`;
+      })() : ''}
     `;
+
+    // Пояснения под плашками занимали половину сетки — теперь они живут
+    // во всплывающем окошке, а плашка остаётся короткой.
+    $('statGrid').querySelectorAll('.stat').forEach(el=>{
+      const sub = el.querySelector('.stat-sub');
+      if(!sub) return;
+      const txt = sub.textContent.replace(/\s+/g, ' ').trim();
+      if(txt){ el.setAttribute('data-tip', txt); el.classList.add('has-tip'); }
+      sub.remove();
+    });
 
     // --- how the headline count is put together ---
     const compNote = $('countNote');
@@ -5867,6 +6008,7 @@ const SEED_DATA = [];
     $('eNote').value = t.note || '';
     $('eBuyin').value = t.buyin;
     $('eRebuy').value = t.rebuy ? t.rebuy : '';
+    $('eField').value = t.field ? t.field : '';
     $('eTicket').value = t.ticket ? t.ticket : '';
     $('eResult').value = t.result !== null ? t.result : '';
     setTags('etag', t.tags);
@@ -5894,6 +6036,8 @@ const SEED_DATA = [];
     const eRebuyRaw = parseFloat($('eRebuy').value);
     t.date = date; t.note = newRoom.trim(); t.buyin = buyin;
     t.rebuy = isNaN(eRebuyRaw) || eRebuyRaw < 0 ? 0 : eRebuyRaw;
+    const eFieldRaw = parseInt($('eField').value, 10);
+    if(isNaN(eFieldRaw) || eFieldRaw <= 0) delete t.field; else t.field = eFieldRaw;
     const eTicketRaw = parseAmount($('eTicket').value);
     t.ticket = isNaN(eTicketRaw) || eTicketRaw < 0 ? 0 : eTicketRaw;
     t.result = rv === '' ? null : parseFloat(rv);

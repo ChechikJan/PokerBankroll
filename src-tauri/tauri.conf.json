@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Poker Tracker",
+  "productName": "Банкролл",
   "version": "1.0.0",
   "identifier": "com.pokertracker.desktop",
   "build": {
@@ -9,7 +9,7 @@
   "app": {
     "windows": [
       {
-        "title": "Покерный банкролл",
+        "title": "Банкролл",
         "width": 1280,
         "height": 900,
         "minWidth": 900,
