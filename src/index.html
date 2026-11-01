@@ -423,6 +423,13 @@ tr:last-child td{border-bottom:none;}
 .tag.rub{background:rgba(199,154,75,.18);color:var(--rub);}
 .pending{color:var(--text-faint);font-style:italic;}
 .row-actions{display:flex;gap:6px;}
+.res-in{width:92px;padding:4px 7px;font-size:11.5px;text-align:right;
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);
+  font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-variant-numeric:tabular-nums;}
+.res-in::placeholder{color:var(--text-faint);}
+.res-in:focus{outline:none;border-color:var(--felt-bright);}
+.res-in::-webkit-inner-spin-button,.res-in::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.row-actions .tk-in{width:66px;}
 .row-actions .afs-in{width:60px;padding:4px 6px;font-size:10.5px;text-align:center;
   background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);
   font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;}
@@ -628,7 +635,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v45 · 31.10.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v46 · 01.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -1438,8 +1445,16 @@ tr:last-child td{border-bottom:none;}
     <div class="field"><label>Покеррум</label><select id="eNote"></select></div>
     <div class="field"><label>Байин</label><input type="number" step="0.01" id="eBuyin"></div>
     <div class="field"><label>Ребай / аддон</label><input type="number" step="0.01" id="eRebuy"></div>
-    <div class="bd-note" id="eResNote" style="margin:-4px 0 12px;">Результат и билет — в кнопке «Результат» в строке турнира.</div>
-    <input type="hidden" id="eResult"><input type="hidden" id="eTicket">
+    <div class="field"><label>Результат, деньги (пусто — вернуть в незавершённые)</label><input type="number" step="0.01" id="eResult"></div>
+    <div class="field"><label>Билет (выигран)</label><input type="text" inputmode="decimal" id="eTicket" placeholder="0.00 или 5.5 x 4"></div>
+    <div class="result-toggle" style="margin:4px 0 10px;">
+      <input type="checkbox" id="eFinal">
+      <label for="eFinal">Финалка</label>
+    </div>
+    <div class="field" id="ePlaceField" style="display:none;">
+      <label>Занятое место</label>
+      <input type="number" step="1" min="1" id="ePlace" placeholder="например, 3">
+    </div>
     <div class="field">
       <label>Теги</label>
       <div class="tag-toggle-row" id="eTagBox"></div>
@@ -1788,7 +1803,7 @@ const SEED_DATA = [];
   // Accepts a plain number or a "value x count" shorthand: 5.5 x 4 -> 22.
   // Both the latin x and the cyrillic х work, with or without spaces.
   function parseAmount(raw){
-    const s = String(raw == null ? '' : raw).trim().replace(',', '.');
+    const s = String(raw == null ? '' : raw).replace(/[\s\u00A0\u202F]/g, '').replace(',', '.');
     if(!s) return NaN;
     const m = s.match(/^(-?\d+(?:\.\d+)?)\s*[xх*]\s*(\d+)$/i);
     if(m) return parseFloat(m[1]) * parseInt(m[2], 10);
@@ -3070,18 +3085,26 @@ const SEED_DATA = [];
         <td><span class="tag ${t.currency.toLowerCase()}">${t.currency}</span></td>
         <td>${tagsHtml}</td>
         <td class="mono">${stakeHtml}</td>
-        <td class="mono">${t.result !== null ? fmt(t.result) : '<span class="pending">—</span>'}</td>
+        <td class="mono">${isExpense(t)
+            ? (t.result !== null ? fmt(t.result) : '<span class="pending">—</span>')
+            : `<input type="text" inputmode="decimal" class="res-in" data-resin="${t.id}" data-rowin="${t.id}"
+                 value="${t.result !== null ? fmt(t.result) : ''}" placeholder="—"
+                 title="Результат в деньгах. Записывается кнопкой «✓» или по Enter.">`}</td>
         <td>${profitHtml}${ticketHtml}${finalHtml}</td>
         <td><div class="row-actions">${isExpense(t) ? '' :
-            `<input type="number" min="0" step="1" class="afs-in" data-afs="${t.id}" value="${t.field || ''}" placeholder="AFS"
-              title="Сколько игроков было в турнире. Запишется при нажатии «✓» или «Результат».">`}
-          ${t.result === null && !isExpense(t)
-            ? `<button class="btn ghost tiny row-fin" data-finish="${t.id}" title="Завершить турнир: результат 0">✓</button>` : ''}
+            `<input type="text" inputmode="decimal" class="afs-in tk-in" data-tkin="${t.id}" data-rowin="${t.id}"
+              value="${t.ticket ? t.ticket : ''}" placeholder="билет"
+              title="Выигранный билет. Можно писать «5.5 x 4». Записывается кнопкой «✓» или по Enter.">
+             <input type="number" min="0" step="1" class="afs-in" data-afs="${t.id}" data-rowin="${t.id}" value="${t.field || ''}" placeholder="AFS"
+              title="Сколько игроков было в турнире. Записывается кнопкой «✓» или по Enter.">`}
+          ${isExpense(t) ? ''
+            : `<button class="btn ghost tiny row-fin" data-finish="${t.id}" title="${t.result === null
+                 ? 'Завершить турнир: записать результат, билет и AFS из полей строки (пустой результат — 0)'
+                 : 'Записать то, что вписано в полях строки'}">✓</button>`}
           <button class="btn ghost tiny row-re" data-reentry="${t.id}" title="Ре-энтри: закрыть этот вход и добавить такой же турнир с тегом «Ре-энтри»">↻</button>
           ${isExpense(t) ? '' : `<button class="btn ghost tiny row-reb" data-rebuy="${t.id}" title="Ребай или аддон: добавить к байину">+</button>`}
           ${isExpense(t) ? '' : `<button class="btn ghost tiny row-cp" data-copy="${t.id}" title="Повторить: добавить такой же турнир сегодня">+1</button>`}
-          <button class="btn ghost tiny row-res" data-res="${t.id}" title="Вписать результат и выигранный билет">Результат</button>
-          <button class="btn ghost tiny row-pen" data-edit="${t.id}" title="Изменить всё: дату, рум, байин, ребай, теги">✎</button>
+          <button class="btn ghost tiny row-pen" data-edit="${t.id}" title="Изменить всё: дату, рум, байин, ребай, теги, финалку и место">✎</button>
           <button class="btn ghost tiny row-x" data-trash="${t.id}" title="Удалить турнир">×</button></div></td>
       </tr>
       ${isExpense(t) ? '' : `<tr class="reb-row" data-rebuyrow="${t.id}" hidden><td colspan="8">
@@ -3099,29 +3122,27 @@ const SEED_DATA = [];
     document.querySelectorAll('[data-res]').forEach(btn=>{
       btn.addEventListener('click', ()=> openResult(btn.getAttribute('data-res')));
     });
-    document.querySelectorAll('[data-afs]').forEach(inp=>{
-      inp.addEventListener('keydown', async (e)=>{
+    async function commitRow(id){
+      const t = tournaments.find(x=>x.id === id);
+      if(!t) return;
+      const wasPending = t.result === null;
+      grabRow(id);
+      await saveTournaments();
+      renderAll();
+      if(typeof toast === 'function'){
+        const extra = (t.ticket ? ` + билет ${fmt(t.ticket)}` : '') + (t.field ? ` · поле ${t.field}` : '');
+        toast(`${wasPending ? 'Завершён' : 'Записано'}: ${t.note || 'без рума'} · результат ${fmt(t.result)} ${SYM[t.currency]}${extra}`, 'ok');
+      }
+    }
+    document.querySelectorAll('[data-rowin]').forEach(inp=>{
+      inp.addEventListener('keydown', (e)=>{
         if(e.key !== 'Enter') return;
         e.preventDefault();
-        const id = inp.getAttribute('data-afs');
-        grabAfs(id);
-        await saveTournaments();
-        const t = tournaments.find(x=>x.id === id);
-        if(typeof toast === 'function')
-          toast(t && t.field ? `Игроков в турнире: ${t.field}` : 'Количество игроков убрано', 'ok');
+        commitRow(inp.getAttribute('data-rowin'));
       });
     });
     document.querySelectorAll('[data-finish]').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const t = tournaments.find(x=>x.id === btn.getAttribute('data-finish'));
-        if(!t || t.result !== null) return;
-        grabAfs(t.id);
-        t.result = 0;
-        t.resTs = Date.now();
-        await saveTournaments();
-        renderAll();
-        if(typeof toast === 'function') toast(`Завершён: ${t.note || 'без рума'} · ${fmt(cost(t))} ${SYM[t.currency]} · результат 0`, 'ok');
-      });
+      btn.addEventListener('click', ()=> commitRow(btn.getAttribute('data-finish')));
     });
     document.querySelectorAll('[data-reentry]').forEach(btn=>{
       btn.addEventListener('click', ()=> addReentry(btn.getAttribute('data-reentry')));
@@ -3263,6 +3284,25 @@ const SEED_DATA = [];
 
   // Количество игроков вводится прямо в строке турнира; число снимается
   // с поля в тот момент, когда нажата «✓» или сохранён результат.
+  // снимает всё, что вписано в полях строки: результат, билет, количество игроков
+  function grabRow(id){
+    const t = tournaments.find(x=>x.id === id);
+    if(!t) return;
+    grabAfs(id);
+    const ti = document.querySelector(`[data-tkin="${id}"]`);
+    if(ti){
+      const v = parseAmount(ti.value);
+      t.ticket = (String(ti.value).trim() === '' || isNaN(v) || v < 0) ? 0 : v;
+    }
+    const ri = document.querySelector(`[data-resin="${id}"]`);
+    if(ri){
+      const raw = String(ri.value).trim();
+      const v = parseAmount(raw);
+      t.result = (raw === '' || isNaN(v)) ? 0 : v;
+      if(!t.resTs) t.resTs = Date.now();
+    }
+  }
+
   function grabAfs(id){
     const inp = document.querySelector(`[data-afs="${id}"]`);
     const t = tournaments.find(x=>x.id === id);
@@ -6044,10 +6084,17 @@ const SEED_DATA = [];
     $('eRebuy').value = t.rebuy ? t.rebuy : '';
     $('eTicket').value = t.ticket ? t.ticket : '';
     $('eResult').value = t.result !== null ? t.result : '';
+    $('eFinal').checked = !!t.final;
+    $('ePlace').value = t.place || '';
+    $('ePlaceField').style.display = t.final ? '' : 'none';
     setTags('etag', t.tags);
     applyEditLocks();
     $('editModal').classList.add('open');
   }
+  $('eFinal').addEventListener('change', ()=>{
+    $('ePlaceField').style.display = $('eFinal').checked ? '' : 'none';
+    if($('eFinal').checked) setTimeout(()=>{ try{ $('ePlace').focus(); }catch(e){} }, 40);
+  });
   $('editModal').addEventListener('click', (e)=>{ if(e.target.id==='editModal') $('editModal').classList.remove('open'); });
   document.addEventListener('keydown', (e)=>{
     if(e.key === 'Escape' && $('editModal').classList.contains('open')) $('editModal').classList.remove('open');
@@ -6073,6 +6120,10 @@ const SEED_DATA = [];
     t.ticket = isNaN(eTicketRaw) || eTicketRaw < 0 ? 0 : eTicketRaw;
     t.result = rv === '' ? null : parseFloat(rv);
     if(t.result === null) delete t.resTs; else if(!t.resTs) t.resTs = Date.now();
+    t.final = $('eFinal').checked;
+    const ePl = parseInt($('ePlace').value, 10);
+    if(t.final && ePl > 0) t.place = ePl; else delete t.place;
+    if(!t.final) delete t.final;
     if(tags.some(id=>EXPENSE_IDS.includes(id))){ t.rebuy = 0; t.ticket = 0; t.result = 0; t.note = ''; }
     t.tags = tags.some(id=>EXPENSE_IDS.includes(id)) ? tags : withDefaultTag(tags);
     await saveTournaments();
