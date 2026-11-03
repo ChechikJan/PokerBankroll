@@ -441,6 +441,17 @@ tr:last-child td{border-bottom:none;}
 .res-cell{display:flex;gap:4px;align-items:center;justify-content:flex-end;}
 td .row-fin{margin-left:10px;}
 .res-in.sm{width:62px;font-size:10.5px;padding:4px 5px;text-align:center;}
+.res-in.has{font-weight:700;}
+.res-in.ylw{color:var(--gold);}
+.rv{display:inline-block;width:62px;text-align:center;font-weight:700;font-size:11.5px;
+  font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-variant-numeric:tabular-nums;
+  color:var(--text);padding:4px 5px;border:1px solid transparent;}
+.rv.main{width:92px;text-align:right;font-size:13px;padding:4px 7px;}
+.rv.ylw{color:var(--gold);}
+.rv.none{color:transparent;}
+.res-cell.ro{cursor:pointer;border-radius:7px;transition:background .12s;}
+.res-cell.ro:hover{background:rgba(255,255,255,.035);}
+.row-pen.on{color:var(--gold);border-color:#7A5F2E;background:rgba(200,160,80,.14);}
 .reb-btns{display:inline-flex;gap:4px;margin-left:9px;vertical-align:1px;}
 .abtn{--tl:#6E8A82;--tc:#55706A;--td:#35453F;--tb:#26312D;
   appearance:none;cursor:pointer;white-space:nowrap;padding:3px 8px;border-radius:7px;
@@ -669,7 +680,7 @@ td .row-fin{margin-left:10px;}
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v52 · 03.11.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v53 · 03.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -1523,6 +1534,7 @@ const SEED_DATA = [];
   let tagFilter = 'ALL';
   let tableDateFilter = null;
   let tableRoomFilter = 'ALL';
+  const rowEdit = new Set();   // завершённые турниры, открытые для правки прямо в строке
   // The list is collapsed so the panel keeps the same height as the charts
   // column next to it; the rest sits behind one click.
   const COLLAPSED_ROWS = 14;
@@ -3155,6 +3167,8 @@ const SEED_DATA = [];
         ? ` <span class="ft-badge" title="Финальный стол${t.place ? ', место ' + t.place : ''}">ФТ${t.place ? ' ' + t.place : ''}</span>` : '';
       const ticketHtml = t.ticket
         ? ` <span class="tk-par mono" title="выигран билет ${fmt(t.ticket)} ${SYM[t.currency]}">(${fmt(t.ticket)})</span>` : '';
+      // незавершённые всегда с активными окошками, завершённые — по карандашу
+      const editing = !isExpense(t) && (t.result === null || rowEdit.has(t.id));
       const tagBtns = isExpense(t) ? '' : rowTagIds().map(id=>{
         const on = (t.tags || []).includes(id);
         return `<button class="rtag${on ? ' on' : ''}" style="${rowTagStyle(id)}" data-rtag="${id}" data-rtagid="${t.id}"` +
@@ -3173,32 +3187,61 @@ const SEED_DATA = [];
             `</span>`}</td>
         <td class="mono">${isExpense(t)
             ? (t.result !== null ? fmt(t.result) : '<span class="pending">—</span>')
-            : `<div class="res-cell">
-                <input type="text" inputmode="decimal" class="res-in" data-resin="${t.id}" data-rowin="${t.id}"
+            : (editing
+              ? `<div class="res-cell">
+                <input type="text" inputmode="decimal" class="res-in${t.result !== null ? ' has' : ''}" data-resin="${t.id}" data-rowin="${t.id}"
                  value="${t.result !== null ? fmt(t.result) : ''}" placeholder="—"
-                 title="Результат в деньгах. ${t.result === null ? 'Записывается кнопкой «✓» или по Enter.' : 'Правка подтверждается Enter; всё остальное — в окне карандаша.'}">
-                <input type="text" inputmode="decimal" class="res-in sm" data-tkin="${t.id}" data-rowin="${t.id}"
+                 title="Результат в деньгах. Записывается кнопкой «✓» или по Enter.">
+                <input type="text" inputmode="decimal" class="res-in sm${t.ticket ? ' has' : ''}" data-tkin="${t.id}" data-rowin="${t.id}"
                  value="${t.ticket ? t.ticket : ''}" placeholder="билет"
-                 title="Выигранный билет. Можно писать «5.5 x 4». ${t.result === null ? 'Записывается кнопкой «✓» или по Enter.' : 'Правка подтверждается Enter.'}">
-                <input type="number" min="1" step="1" class="res-in sm" data-plin="${t.id}" data-rowin="${t.id}"
+                 title="Выигранный билет. Можно писать «5.5 x 4».">
+                <input type="number" min="1" step="1" class="res-in sm ylw${t.place ? ' has' : ''}" data-plin="${t.id}" data-rowin="${t.id}"
                  value="${t.place || ''}" placeholder="место"
-                 title="Занятое место. Место с 1-го по 8-е отмечает турнир как финалку. ${t.result === null ? 'Записывается кнопкой «✓» или по Enter.' : 'Правка подтверждается Enter.'}">
-                <input type="number" min="0" step="1" class="res-in sm" data-afs="${t.id}" data-rowin="${t.id}"
+                 title="Занятое место. Место с 1-го по 8-е отмечает турнир как финалку.">
+                <input type="number" min="0" step="1" class="res-in sm ylw${t.field ? ' has' : ''}" data-afs="${t.id}" data-rowin="${t.id}"
                  value="${t.field || ''}" placeholder="AFS"
-                 title="Сколько игроков было в турнире — поле. ${t.result === null ? 'Записывается кнопкой «✓» или по Enter.' : 'Правка подтверждается Enter.'}">
-               </div>`}</td>
-        <td class="mono" style="white-space:nowrap;">${isExpense(t) || t.result !== null
-            ? profitHtml + (isExpense(t) ? '' : ticketHtml + finalHtml)
-            : `<button class="btn ghost tiny row-fin" data-finish="${t.id}"
-                 title="Завершить турнир: записать результат, билет, место и поле из строки (пустой результат — 0)">✓</button>`}</td>
+                 title="Сколько игроков было в турнире — поле.">
+               </div>`
+              : `<div class="res-cell ro" data-open="${t.id}" title="Нажмите карандаш, чтобы править прямо в строке">
+                <span class="rv main">${fmt(t.result)}</span>
+                <span class="rv${t.ticket ? '' : ' none'}" title="${t.ticket ? 'выигранный билет' : ''}">${t.ticket ? fmt(t.ticket) : '·'}</span>
+                <span class="rv ylw${t.place ? '' : ' none'}" title="${t.place ? 'занятое место' : ''}">${t.place || '·'}</span>
+                <span class="rv ylw${t.field ? '' : ' none'}" title="${t.field ? 'игроков в турнире' : ''}">${t.field || '·'}</span>
+               </div>`)}</td>
+        <td class="mono" style="white-space:nowrap;">${isExpense(t)
+            ? profitHtml
+            : (editing
+                ? `<button class="btn ghost tiny row-fin" data-finish="${t.id}"
+                     title="Записать результат, билет, место и поле из строки (пустой результат — 0)">✓</button>`
+                : profitHtml + ticketHtml + finalHtml)}</td>
         <td><div class="row-actions">
           ${tagBtns}
-          <button class="btn ghost tiny row-pen" data-edit="${t.id}" title="Изменить всё: дату, рум, байин, ребай, теги, финалку и место">✎</button>
+          <button class="btn ghost tiny row-pen${editing ? ' on' : ''}" data-edit="${t.id}" title="${editing
+            ? 'Открыть окно: дата, рум, байин, ребай, результат, билет, финалка, место'
+            : 'Править прямо в строке: окошки станут активными'}">✎</button>
           <button class="btn ghost tiny row-x" data-trash="${t.id}" title="Удалить турнир">×</button></div></td>
       </tr>`;
     }).join('');
     document.querySelectorAll('[data-edit]').forEach(btn=>{
-      btn.addEventListener('click', ()=> openEdit(btn.getAttribute('data-edit')));
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-edit');
+        const t = tournaments.find(x=>x.id === id);
+        // окошки уже активны — значит пора открывать полное окно
+        if(!t || isExpense(t) || t.result === null || rowEdit.has(id)){ openEdit(id); return; }
+        rowEdit.add(id);
+        renderTable();
+        const inp = document.querySelector(`[data-resin="${id}"]`);
+        if(inp){ inp.focus(); inp.select(); }
+      });
+    });
+    document.querySelectorAll('[data-open]').forEach(cell=>{
+      cell.addEventListener('click', ()=>{
+        const id = cell.getAttribute('data-open');
+        rowEdit.add(id);
+        renderTable();
+        const inp = document.querySelector(`[data-resin="${id}"]`);
+        if(inp){ inp.focus(); inp.select(); }
+      });
     });
     document.querySelectorAll('[data-res]').forEach(btn=>{
       btn.addEventListener('click', ()=> openResult(btn.getAttribute('data-res')));
@@ -3208,6 +3251,7 @@ const SEED_DATA = [];
       if(!t) return;
       const wasPending = t.result === null;
       grabRow(id);
+      rowEdit.delete(id);
       await saveTournaments();
       renderAll();
       if(typeof toast === 'function'){
@@ -3219,9 +3263,11 @@ const SEED_DATA = [];
     }
     document.querySelectorAll('[data-rowin]').forEach(inp=>{
       inp.addEventListener('keydown', (e)=>{
+        const id = inp.getAttribute('data-rowin');
+        if(e.key === 'Escape'){ e.preventDefault(); rowEdit.delete(id); renderTable(); return; }
         if(e.key !== 'Enter') return;
         e.preventDefault();
-        commitRow(inp.getAttribute('data-rowin'));
+        commitRow(id);
       });
     });
     document.querySelectorAll('[data-finish]').forEach(btn=>{
