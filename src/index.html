@@ -423,9 +423,40 @@ tr:last-child td{border-bottom:none;}
 .tag.rub{background:rgba(199,154,75,.18);color:var(--rub);}
 .pending{color:var(--text-faint);font-style:italic;}
 .row-actions{display:flex;gap:6px;}
-.reb-btns{display:inline-flex;gap:3px;margin-left:8px;vertical-align:1px;}
-.reb-btns .btn{padding:1px 6px;font-size:10px;line-height:1.6;border-radius:5px;min-width:0;}
-.reb-btns .btn:hover{color:var(--gold);border-color:#7A5F2E;}
+.rtag{--tl:#6E8A82;--tc:#55706A;--td:#35453F;--tb:#26312D;
+  appearance:none;cursor:pointer;white-space:nowrap;padding:3px 8px;border-radius:7px;
+  font-size:10px;font-weight:700;letter-spacing:.02em;color:#F4F1E8;
+  font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;
+  border:1px solid var(--tb);
+  background:linear-gradient(180deg, var(--tl) 0%, var(--tc) 46%, var(--td) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.32), inset 0 -1px 0 rgba(0,0,0,.38), 0 1px 2px rgba(0,0,0,.5);
+  text-shadow:0 1px 1px rgba(0,0,0,.45);
+  transition:filter .13s ease, transform .05s ease, box-shadow .13s ease;}
+.rtag:not(.on){filter:saturate(.5) brightness(.70);}
+.rtag:not(.on):hover{filter:saturate(.85) brightness(.92);}
+.rtag.on{box-shadow:inset 0 1px 0 rgba(255,255,255,.42), inset 0 -1px 0 rgba(0,0,0,.4),
+  0 1px 3px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.16);}
+.rtag:active{transform:translateY(1px);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.55), 0 0 0 0 rgba(0,0,0,0);}
+.res-cell{display:flex;gap:4px;align-items:center;justify-content:flex-end;}
+td .row-fin{margin-left:10px;}
+.res-in.sm{width:62px;font-size:10.5px;padding:4px 5px;text-align:center;}
+.reb-btns{display:inline-flex;gap:4px;margin-left:9px;vertical-align:1px;}
+.abtn{--tl:#6E8A82;--tc:#55706A;--td:#35453F;--tb:#26312D;
+  appearance:none;cursor:pointer;white-space:nowrap;padding:3px 8px;border-radius:7px;
+  font-size:10.5px;font-weight:700;line-height:1.35;color:#F4F1E8;
+  font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;
+  border:1px solid var(--tb);
+  background:linear-gradient(180deg, var(--tl) 0%, var(--tc) 46%, var(--td) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.32), inset 0 -1px 0 rgba(0,0,0,.38), 0 1px 2px rgba(0,0,0,.5);
+  text-shadow:0 1px 1px rgba(0,0,0,.45);
+  transition:filter .13s ease, transform .05s ease, box-shadow .13s ease;}
+.abtn:hover{filter:brightness(1.18) saturate(1.06);}
+.abtn:active{transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(0,0,0,.55);}
+.abtn.a-plus{--tl:#78af92;--tc:#3E8D64;--td:#285a40;--tb:#1a3b2a;}
+.abtn.a-x2{--tl:#d3ad6d;--tc:#C08A2E;--td:#7b581d;--tb:#513a13;}
+.abtn.a-re{--tl:#8c91d3;--tc:#5A62C0;--td:#3a3f7b;--tb:#262951;font-size:12px;line-height:1.15;}
+.abtn.a-cp{--tl:#6daeaa;--tc:#2F8C85;--td:#1e5a55;--tb:#143b38;}
 .res-in{width:92px;padding:4px 7px;font-size:11.5px;text-align:right;
   background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);
   font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-variant-numeric:tabular-nums;}
@@ -638,7 +669,7 @@ tr:last-child td{border-bottom:none;}
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v47 · 01.11.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v50 · 03.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -874,10 +905,6 @@ tr:last-child td{border-bottom:none;}
         <div class="result-toggle">
           <input type="checkbox" id="fUnknown" checked>
           <label for="fUnknown">Результат пока неизвестен — добавлю позже</label>
-        </div>
-        <div class="field" style="margin-bottom:14px;">
-          <label>Теги</label>
-          <div class="tag-toggle-row" id="fTagBox"></div>
         </div>
         <div class="rate-row" style="margin:0;gap:10px;">
           <button class="btn" id="addBtn">Добавить турнир</button>
@@ -1637,6 +1664,38 @@ const SEED_DATA = [];
     return allTags().some(t=>t.id === FREEZE_ID) ? list.concat([FREEZE_ID]) : list;
   }
 
+  // теги, которые можно переключать прямо в строке таблицы
+  const ROW_TAG_SKIP = ['SIDE', 'CASINO', 'RAKE', 'TRAIN', 'MINING', 'SERVER'];
+  function rowTagIds(){
+    return allTags().filter(t=> t.id !== FREEZE_ID && !ROW_TAG_SKIP.includes(t.id)).map(t=>t.id);
+  }
+  const ROW_SHORT = {SAT:'SAT', TICKET:'Tiket', FREE:'Фри', RE:'RE', FLIGHT:'FL',
+    C_mtzpa28g:'PSKO', C_mtzp9ax3:'MysKO', C_mtzp9hfc:'SpKO', C_mtzp9nhc:'TRI',
+    C_mtzvs6ft:'Т', C_mtzvska9:'ГТ'};
+  function rowShort(id){ return ROW_SHORT[id] || tagShort(id); }
+  // свой цвет для каждого тега; неактивная кнопка просто обесцвечивается
+  const ROW_COLOR = {
+    SAT:'#2F8C85', TICKET:'#6E5BB8', FREE:'#3E8D64', RE:'#A4604A', FLIGHT:'#3D6FB5',
+    C_mtzpa28g:'#C08A2E', C_mtzp9ax3:'#A8468C', C_mtzp9hfc:'#5A62C0', C_mtzp9nhc:'#7F9A33',
+    C_mtzvs6ft:'#D97B22', C_mtzvska9:'#C53626'
+  };
+  const CUSTOM_COLORS = ['#4E7FA8', '#8A5BA8', '#2F8C6B', '#B07030', '#9A4A6B', '#5E7F3C'];
+  function rowColor(id){
+    if(ROW_COLOR[id]) return ROW_COLOR[id];
+    let h = 0;
+    for(let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    return CUSTOM_COLORS[h % CUSTOM_COLORS.length];
+  }
+  function hexMix(hex, to, w){
+    const px = (c, i)=> parseInt(c.replace('#','').slice(i * 2, i * 2 + 2), 16);
+    const out = [0, 1, 2].map(i=> Math.round(px(hex, i) + (px(to, i) - px(hex, i)) * w));
+    return '#' + out.map(v=> Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('');
+  }
+  function rowTagStyle(id){
+    const c = rowColor(id);
+    return `--tl:${hexMix(c, '#ffffff', .30)};--tc:${c};--td:${hexMix(c, '#000000', .36)};--tb:${hexMix(c, '#000000', .58)}`;
+  }
+
   function tagClass(id){
     const t = BUILTIN_TAGS.find(x=>x.id === id);
     return t ? t.cls : 'custom';
@@ -1980,8 +2039,22 @@ const SEED_DATA = [];
     if(h === null) return '—';
     return h < 1 ? Math.round(h * 60) + ' мин' : (Math.round(h * 10) / 10) + ' ч';
   }
+  // место с 1-го по 8-е считается финальным столом
+  const FINAL_PLACE = 8;
+
+  // Как далеко дошёл: доля поля, если известны и место, и количество игроков.
+  // Вылет в нижней половине поля — рано, 20–50% — средне, верхние 20% — поздно.
+  // Старые записи, где поля нет, продолжают считаться по времени, как раньше.
   function bustBucket(t){
     if(!t || t.result === null || isExpense(t)) return null;
+    const field = Number(t.field) || 0;
+    const place = Number(t.place) || 0;
+    if(field > 0 && place > 0){
+      const share = place / field;
+      if(share > 0.5) return 'early';
+      if(share > 0.2) return 'mid';
+      return 'late';
+    }
     const h = bustHours(t);
     if(h === null) return null;
     // многодневка сюда попадает сама: между записью и результатом проходят часы
@@ -3082,33 +3155,46 @@ const SEED_DATA = [];
         ? ` <span class="ft-badge" title="Финальный стол${t.place ? ', место ' + t.place : ''}">ФТ${t.place ? ' ' + t.place : ''}</span>` : '';
       const ticketHtml = t.ticket
         ? ` <span class="tk-par mono" title="выигран билет ${fmt(t.ticket)} ${SYM[t.currency]}">(${fmt(t.ticket)})</span>` : '';
+      const tagBtns = isExpense(t) ? '' : rowTagIds().map(id=>{
+        const on = (t.tags || []).includes(id);
+        return `<button class="rtag${on ? ' on' : ''}" style="${rowTagStyle(id)}" data-rtag="${id}" data-rtagid="${t.id}"` +
+               ` title="${escapeHtml(tagLabel(id))} — ${on ? 'нажмите, чтобы снять' : 'нажмите, чтобы поставить'}">${escapeHtml(rowShort(id))}</button>`;
+      }).join('');
       return `<tr>
         <td class="mono" style="white-space:nowrap;">${(t.date || '—').replace(/-/g,'‑')}</td>
         <td>${t.note ? escapeHtml(t.note) : '<span class="pending">—</span>'}</td>
         <td><span class="tag ${t.currency.toLowerCase()}">${t.currency}</span></td>
         <td>${tagsHtml}</td>
-        <td class="mono">${stakeHtml}${isExpense(t) ? '' : `<span class="reb-btns">` +
-            `<button class="btn ghost" data-reb1="${t.id}" title="Ребай: добавить один байин ${fmt(t.buyin)} ${SYM[t.currency]}">+</button>` +
-            `<button class="btn ghost" data-reb2="${t.id}" title="Ребай: добавить двойной байин ${fmt(t.buyin * 2)} ${SYM[t.currency]}">×2</button>` +
+        <td class="mono" style="white-space:nowrap;">${stakeHtml}${isExpense(t) ? '' : `<span class="reb-btns">` +
+            `<button class="abtn a-plus" data-reb1="${t.id}" title="Ребай: добавить один байин ${fmt(t.buyin)} ${SYM[t.currency]}">+</button>` +
+            `<button class="abtn a-x2" data-reb2="${t.id}" title="Ребай: добавить двойной байин ${fmt(t.buyin * 2)} ${SYM[t.currency]}">×2</button>` +
+            `<button class="abtn a-re" data-reentry="${t.id}" title="Ре-энтри: закрыть этот вход и добавить такой же турнир с тегом «Ре-энтри»">↻</button>` +
+            `<button class="abtn a-cp" data-copy="${t.id}" title="Повторить: добавить такой же турнир сегодня">+1</button>` +
             `</span>`}</td>
         <td class="mono">${isExpense(t)
             ? (t.result !== null ? fmt(t.result) : '<span class="pending">—</span>')
-            : `<input type="text" inputmode="decimal" class="res-in" data-resin="${t.id}" data-rowin="${t.id}"
+            : `<div class="res-cell">
+                <input type="text" inputmode="decimal" class="res-in" data-resin="${t.id}" data-rowin="${t.id}"
                  value="${t.result !== null ? fmt(t.result) : ''}" placeholder="—"
-                 title="Результат в деньгах. Записывается кнопкой «✓» или по Enter.">`}</td>
-        <td>${profitHtml}${ticketHtml}${finalHtml}</td>
-        <td><div class="row-actions">${isExpense(t) ? '' :
-            `<input type="text" inputmode="decimal" class="afs-in tk-in" data-tkin="${t.id}" data-rowin="${t.id}"
-              value="${t.ticket ? t.ticket : ''}" placeholder="билет"
-              title="Выигранный билет. Можно писать «5.5 x 4». Записывается кнопкой «✓» или по Enter.">
-             <input type="number" min="0" step="1" class="afs-in" data-afs="${t.id}" data-rowin="${t.id}" value="${t.field || ''}" placeholder="AFS"
-              title="Сколько игроков было в турнире. Записывается кнопкой «✓» или по Enter.">`}
-          ${isExpense(t) ? ''
-            : `<button class="btn ghost tiny row-fin" data-finish="${t.id}" title="${t.result === null
-                 ? 'Завершить турнир: записать результат, билет и AFS из полей строки (пустой результат — 0)'
-                 : 'Записать то, что вписано в полях строки'}">✓</button>`}
-          <button class="btn ghost tiny row-re" data-reentry="${t.id}" title="Ре-энтри: закрыть этот вход и добавить такой же турнир с тегом «Ре-энтри»">↻</button>
-          ${isExpense(t) ? '' : `<button class="btn ghost tiny row-cp" data-copy="${t.id}" title="Повторить: добавить такой же турнир сегодня">+1</button>`}
+                 title="Результат в деньгах. Записывается кнопкой «✓» или по Enter.">
+                <input type="text" inputmode="decimal" class="res-in sm" data-tkin="${t.id}" data-rowin="${t.id}"
+                 value="${t.ticket ? t.ticket : ''}" placeholder="билет"
+                 title="Выигранный билет. Можно писать «5.5 x 4».">
+                <input type="number" min="0" step="1" class="res-in sm" data-afs="${t.id}" data-rowin="${t.id}"
+                 value="${t.field || ''}" placeholder="AFS"
+                 title="Сколько игроков было в турнире — поле.">
+                <input type="number" min="1" step="1" class="res-in sm" data-plin="${t.id}" data-rowin="${t.id}"
+                 value="${t.place || ''}" placeholder="место"
+                 title="Занятое место. Место с 1-го по 8-е отмечает турнир как финалку.">
+               </div>`}</td>
+        <td class="mono" style="white-space:nowrap;">${isExpense(t)
+            ? profitHtml
+            : `${t.result === null ? '' : profitHtml + ticketHtml + finalHtml}` +
+              `<button class="btn ghost tiny row-fin" data-finish="${t.id}" title="${t.result === null
+                 ? 'Завершить турнир: записать результат, билет, поле и место из строки (пустой результат — 0)'
+                 : 'Записать то, что вписано в полях строки'}">✓</button>`}</td>
+        <td><div class="row-actions">
+          ${tagBtns}
           <button class="btn ghost tiny row-pen" data-edit="${t.id}" title="Изменить всё: дату, рум, байин, ребай, теги, финалку и место">✎</button>
           <button class="btn ghost tiny row-x" data-trash="${t.id}" title="Удалить турнир">×</button></div></td>
       </tr>`;
@@ -3127,7 +3213,9 @@ const SEED_DATA = [];
       await saveTournaments();
       renderAll();
       if(typeof toast === 'function'){
-        const extra = (t.ticket ? ` + билет ${fmt(t.ticket)}` : '') + (t.field ? ` · поле ${t.field}` : '');
+        const extra = (t.ticket ? ` + билет ${fmt(t.ticket)}` : '') +
+                      (t.place ? ` · место ${t.place}${t.final ? ' (финалка)' : ''}` : '') +
+                      (t.field ? ` · поле ${t.field}` : '');
         toast(`${wasPending ? 'Завершён' : 'Записано'}: ${t.note || 'без рума'} · результат ${fmt(t.result)} ${SYM[t.currency]}${extra}`, 'ok');
       }
     }
@@ -3148,11 +3236,28 @@ const SEED_DATA = [];
       const t = tournaments.find(x=>x.id === id);
       if(!t || !(amount > 0)) return;
       t.rebuy = Math.round(((t.rebuy || 0) + amount) * 100) / 100;
+      const snap = snapRowInputs();
       await saveTournaments();
       renderAll();
+      restoreRowInputs(snap);
       if(typeof toast === 'function')
         toast(`Ребай ${fmt(amount)} ${SYM[t.currency]} · ${t.note || 'без рума'}: вложено ${fmt(cost(t))} ${SYM[t.currency]}`, 'ok');
     };
+    document.querySelectorAll('[data-rtag]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const t = tournaments.find(x=>x.id === btn.getAttribute('data-rtagid'));
+        if(!t) return;
+        const tag = btn.getAttribute('data-rtag');
+        const tags = (t.tags || []).slice();
+        const i = tags.indexOf(tag);
+        if(i >= 0) tags.splice(i, 1); else tags.push(tag);
+        t.tags = withDefaultTag(tags);
+        const snap = snapRowInputs();
+        await saveTournaments();
+        renderAll();
+        restoreRowInputs(snap);
+      });
+    });
     // «+» — один байин, «×2» — двойной
     document.querySelectorAll('[data-reb1]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -3258,7 +3363,27 @@ const SEED_DATA = [];
 
   // Количество игроков вводится прямо в строке турнира; число снимается
   // с поля в тот момент, когда нажата «✓» или сохранён результат.
-  // снимает всё, что вписано в полях строки: результат, билет, количество игроков
+  // перерисовка таблицы не должна стирать то, что уже набрано, но ещё не записано
+  function rowInKey(i){
+    const id = i.getAttribute('data-rowin');
+    const k = i.hasAttribute('data-resin') ? 'r'
+            : i.hasAttribute('data-tkin') ? 't'
+            : i.hasAttribute('data-plin') ? 'p' : 'a';
+    return id + '|' + k;
+  }
+  function snapRowInputs(){
+    const m = {};
+    document.querySelectorAll('#tourBody [data-rowin]').forEach(i=>{ m[rowInKey(i)] = i.value; });
+    return m;
+  }
+  function restoreRowInputs(m){
+    document.querySelectorAll('#tourBody [data-rowin]').forEach(i=>{
+      const v = m[rowInKey(i)];
+      if(v !== undefined) i.value = v;
+    });
+  }
+
+  // снимает всё, что вписано в полях строки: результат, билет, поле, место
   function grabRow(id){
     const t = tournaments.find(x=>x.id === id);
     if(!t) return;
@@ -3267,6 +3392,16 @@ const SEED_DATA = [];
     if(ti){
       const v = parseAmount(ti.value);
       t.ticket = (String(ti.value).trim() === '' || isNaN(v) || v < 0) ? 0 : v;
+    }
+    const pi = document.querySelector(`[data-plin="${id}"]`);
+    if(pi){
+      const raw = String(pi.value).trim();
+      const v = parseInt(raw, 10);
+      if(raw === '' || isNaN(v) || v <= 0){ delete t.place; }
+      else {
+        t.place = v;
+        if(v <= FINAL_PLACE) t.final = true; else delete t.final;
+      }
     }
     const ri = document.querySelector(`[data-resin="${id}"]`);
     if(ri){
@@ -3447,8 +3582,9 @@ const SEED_DATA = [];
         const bustTip = known
           ? ['early', 'mid', 'late'].map(k=>
               `${BUST_SHORT[k]} — ${buckets[k].n} из ${known}, ${buckets[k].profit > 0 ? '+' : ''}${fmt(buckets[k].profit)} ${sym}`).join('; ') +
-            '. Рано: нормал до 2 ч, турбо до 1 ч, гипер до 30 мин. Средне: нормал 2–4 ч, турбо 1–2 ч, гипер 30–60 мин. Поздно: дольше и многодневки.'
-          : 'Время вылета считается от начала турнира до момента внесения результата — пока результаты вносятся задним числом, данных нет.';
+            '. Считается по месту относительно поля: рано — вылет в нижней половине (место хуже 50% поля), средне — 20–50% поля, поздно — верхние 20% поля. ' +
+            'Старые записи без места или без поля считаются по времени, как раньше: рано — нормал до 2 ч, турбо до 1 ч, гипер до 30 мин; средне — вдвое дольше; поздно — ещё дольше и многодневки.'
+          : 'Вписывайте в строке турнира место и количество игроков — выбывание считается как доля поля. Старые записи считаются по времени.';
         // разбивка финалок по местам: с 1-го по 8-е, остальное — отдельно
         const pl = {};
         let plOther = 0, plNone = 0;
@@ -4236,10 +4372,10 @@ const SEED_DATA = [];
       el.innerHTML = html;
     };
 
-    box('ftag', 'fTagBox',
+    box('ftag', 'fTagBox', '');
+    box('etag', 'eTagBox',
       `<button type="button" class="room-btn add tiny-tag" id="addTagBtn">+ свой тег</button>` +
       `<button type="button" class="room-btn add tiny-tag${tagEditMode?' editing':''}" id="editTagBtn">${tagEditMode?'готово':'изменить'}</button>`);
-    box('etag', 'eTagBox', '');
     box('ptag', 'pTagBox', '');
     box('itag', 'iTagBox', '');
 
@@ -4488,7 +4624,7 @@ const SEED_DATA = [];
 
   function renderAll(){
     const dc = $('dbCount'); if(dc) dc.textContent = tournaments.length;
-    if(!$('fTagBox').innerHTML) renderTagUI();
+    if($('eTagBox') && !$('eTagBox').innerHTML) renderTagUI();
     fillRoomSelects();
     renderBankroll();
     renderExpenses();
