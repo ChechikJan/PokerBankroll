@@ -669,7 +669,7 @@ td .row-fin{margin-left:10px;}
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v50 · 03.11.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v51 · 03.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -3180,12 +3180,12 @@ const SEED_DATA = [];
                 <input type="text" inputmode="decimal" class="res-in sm" data-tkin="${t.id}" data-rowin="${t.id}"
                  value="${t.ticket ? t.ticket : ''}" placeholder="билет"
                  title="Выигранный билет. Можно писать «5.5 x 4».">
-                <input type="number" min="0" step="1" class="res-in sm" data-afs="${t.id}" data-rowin="${t.id}"
-                 value="${t.field || ''}" placeholder="AFS"
-                 title="Сколько игроков было в турнире — поле.">
                 <input type="number" min="1" step="1" class="res-in sm" data-plin="${t.id}" data-rowin="${t.id}"
                  value="${t.place || ''}" placeholder="место"
                  title="Занятое место. Место с 1-го по 8-е отмечает турнир как финалку.">
+                <input type="number" min="0" step="1" class="res-in sm" data-afs="${t.id}" data-rowin="${t.id}"
+                 value="${t.field || ''}" placeholder="AFS"
+                 title="Сколько игроков было в турнире — поле.">
                </div>`}</td>
         <td class="mono" style="white-space:nowrap;">${isExpense(t)
             ? profitHtml
