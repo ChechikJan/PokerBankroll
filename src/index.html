@@ -485,20 +485,26 @@ td .row-fin{margin-left:10px;}
 .row-x{color:#E8A999;border-color:#5E3A33;padding-left:9px;padding-right:9px;line-height:1;}
 .row-fin{color:#A9E0C3;border-color:#2F6B4C;}
 .row-fin:hover{color:#DFF6EA;border-color:var(--usd);background:rgba(60,160,110,.16);}
-.preset-room{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:7px;}
+.preset-room{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:8px;}
 .preset-wrap{display:inline-flex;align-items:center;}
 .preset-del{border:1px solid #5E3A33;border-left:0;border-radius:0 9px 9px 0;background:transparent;color:#E8A999;
   cursor:pointer;font-size:12px;padding:7px 8px;font-family:inherit;}
 .preset-del:hover{background:rgba(190,90,70,.18);color:#FFD9CF;}
 .preset-room .rname{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);min-width:64px;}
-.preset{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:9px;cursor:pointer;font-family:inherit;
-  font-size:12.5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);}
-.preset:hover{transform:translateY(-1px);filter:brightness(1.15);}
-.preset:active{transform:translateY(1px);}
-.preset b{font-weight:600;}
-.preset .pt{color:var(--text-dim);font-size:11px;}
-.preset .pn{color:var(--text-faint);font-size:10px;font-family:'IBM Plex Mono',ui-monospace,monospace;}
-.preset.eur{border-color:#40587B;} .preset.usd{border-color:#2F6B4C;} .preset.rub{border-color:#7A5F2E;}
+.preset{--tl:#6E8A82;--tc:#55706A;--td:#35453F;--tb:#26312D;
+  display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:9px;cursor:pointer;font-family:inherit;
+  font-size:12.5px;color:#F6F3EA;border:1px solid var(--tb);
+  background:linear-gradient(180deg, var(--tl) 0%, var(--tc) 46%, var(--td) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.42);
+  text-shadow:0 1px 1px rgba(0,0,0,.42);
+  transition:filter .13s ease, transform .06s ease, box-shadow .13s ease;}
+.preset:hover{transform:translateY(-1px);filter:brightness(1.16) saturate(1.05);}
+.preset:active{transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(0,0,0,.5);}
+.preset b{font-weight:700;}
+.preset .pt{color:rgba(255,255,255,.8);font-size:11px;}
+.preset .pn{color:rgba(255,255,255,.58);font-size:10px;font-family:'IBM Plex Mono',ui-monospace,monospace;}
+.room-btn.rhead{min-width:148px;justify-content:flex-start;}
+.preset-sep{width:14px;}
 .row-reb{color:#9FD9C0;border-color:#2F6B4C;font-size:13px;line-height:1;}
 .row-reb:hover{color:#DFF6EA;border-color:var(--usd);background:rgba(60,160,110,.18);}
 .reb-row td{background:rgba(0,0,0,.2);}
@@ -685,7 +691,7 @@ td .row-fin{margin-left:10px;}
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v55 · 04.11.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v56 · 04.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -885,10 +891,6 @@ td .row-fin{margin-left:10px;}
           <div class="field">
             <label>Дата</label>
             <input type="date" id="fDate">
-          </div>
-          <div class="field wide">
-            <label>Покеррум</label>
-            <div class="room-btns" id="fRoomBtns"></div>
           </div>
           <div class="field">
             <label>Валюта <span style="color:var(--text-faint);text-transform:none;letter-spacing:0;">(из рума)</span></label>
@@ -1694,7 +1696,8 @@ const SEED_DATA = [];
   const ROW_COLOR = {
     SAT:'#2F8C85', TICKET:'#6E5BB8', FREE:'#3E8D64', RE:'#A4604A', FLIGHT:'#3D6FB5',
     C_mtzpa28g:'#C08A2E', C_mtzp9ax3:'#A8468C', C_mtzp9hfc:'#5A62C0', C_mtzp9nhc:'#7F9A33',
-    C_mtzvs6ft:'#D97B22', C_mtzvska9:'#C53626'
+    C_mtzvs6ft:'#D97B22', C_mtzvska9:'#C53626',
+    C_mtzp940f:'#4C6B63'                       // «Фризаут» — спокойный цвет по умолчанию
   };
   const CUSTOM_COLORS = ['#4E7FA8', '#8A5BA8', '#2F8C6B', '#B07030', '#9A4A6B', '#5E7F3C'];
   function rowColor(id){
@@ -2963,29 +2966,55 @@ const SEED_DATA = [];
   async function savePresets(){
     try{ await store.set('presets', JSON.stringify(presets)); }catch(e){}
   }
+  // кнопка быстрого набора красится в цвет своего тега
+  function presetColorId(tags){
+    const list = withDefaultTag(tags);
+    return list.find(id=> id !== FREEZE_ID && ROW_COLOR[id]) || FREEZE_ID;
+  }
+
   function renderPresets(){
     const box = $('presetBox');
     if(!box) return;
-    $('presetNote').textContent = '— нажмите, чтобы добавить запись (результат впишете позже). Если тип турнира не выбран, ставится «Фризаут»';
+    $('presetNote').textContent = '— выберите рум слева, затем нажмите кнопку, чтобы добавить запись (результат впишете позже). Если тип турнира не выбран, ставится «Фризаут»';
     const byRoom = {};
     presets.forEach((p, i)=>{ (byRoom[p.room] = byRoom[p.room] || []).push({p, i}); });
-    const rows = Object.keys(byRoom).map(room=>{
-      const items = byRoom[room].map(({p, i})=>{
-        const tags = withDefaultTag(p.tags);
-        const tg = tags.filter(x=>x !== FREEZE_ID).map(tagShort).join(' ');
-        const n = presetCount(p);
-        return `<span class="preset-wrap"><button type="button" class="preset ${p.currency.toLowerCase()}" data-preset="${i}"
-          title="${escapeHtml(p.room + ' · ' + fmt(p.buyin) + ' ' + SYM[p.currency] + ' · ' + tags.map(tagLabel).join(', ') + ' · за 3 мес.: ' + n)}">
-          <b>${fmt(p.buyin)} ${SYM[p.currency]}</b>${tg ? `<span class="pt">${escapeHtml(tg)}</span>` : ''}${n ? `<span class="pn">${n}</span>` : ''}</button>${
-          presetEdit ? `<button type="button" class="preset-del" data-presetdel="${i}" title="Убрать кнопку">×</button>` : ''}</span>`;
-      }).join('');
-      return `<div class="preset-room"><span class="rname">${escapeHtml(room)}</span>${items}</div>`;
+    const known = knownRooms();
+    const names = known.map(r=>r.name);
+
+    const items = (room)=> (byRoom[room] || []).map(({p, i})=>{
+      const tags = withDefaultTag(p.tags);
+      const tg = tags.filter(x=>x !== FREEZE_ID).map(tagShort).join(' ');
+      const n = presetCount(p);
+      return `<span class="preset-wrap"><button type="button" class="preset" style="${rowTagStyle(presetColorId(p.tags))}" data-preset="${i}"
+        title="${escapeHtml(p.room + ' · ' + fmt(p.buyin) + ' ' + SYM[p.currency] + ' · ' + tags.map(tagLabel).join(', ') + ' · за 3 мес.: ' + n)}">
+        <b>${fmt(p.buyin)} ${SYM[p.currency]}</b>${tg ? `<span class="pt">${escapeHtml(tg)}</span>` : ''}${n ? `<span class="pn">${n}</span>` : ''}</button>${
+        presetEdit ? `<button type="button" class="preset-del" data-presetdel="${i}" title="Убрать кнопку">×</button>` : ''}</span>`;
     }).join('');
-    box.innerHTML = (rows || '<div class="bd-note" style="margin:0 0 8px;">Кнопок пока нет — добавьте свою.</div>') +
-      `<div class="preset-room" style="margin-top:4px;">
+
+    const rows = known.map(r=>{
+      const cls = (r.currency || '').toLowerCase();
+      const on = r.name === formRoom ? ' active' : '';
+      const cur = r.currency ? `<span class="cur">${r.currency}</span>` : '';
+      return `<div class="preset-room">` +
+        `<button type="button" class="room-btn rhead ${cls}${on}" data-room="${escapeHtml(r.name)}">${escapeHtml(r.name)}${cur}</button>` +
+        items(r.name) + `</div>`;
+    }).join('');
+    // кнопки румов, которых уже нет в списке
+    const orphans = Object.keys(byRoom).filter(n=> n && !names.includes(n))
+      .map(n=>`<div class="preset-room"><span class="rname">${escapeHtml(n)}</span>${items(n)}</div>`).join('');
+
+    box.innerHTML = rows + orphans +
+      `<div class="preset-room" style="margin-top:8px;">
+         <button type="button" class="room-btn${formRoom === '' ? ' active' : ''}" data-room="">— не указан —</button>
+         <button type="button" class="room-btn add" data-room="__ADD__">+ свой рум</button>
+         <button type="button" class="room-btn add${roomEditMode ? ' editing' : ''}" data-room="__EDIT__">${roomEditMode ? 'готово' : 'изменить румы'}</button>
+         <span class="preset-sep"></span>
          <button type="button" class="btn ghost tiny" id="presetAddBtn">+ своя кнопка</button>
          <button type="button" class="btn ghost tiny${presetEdit ? ' danger' : ''}" id="presetEditBtn">${presetEdit ? 'готово' : 'изменить'}</button>
-       </div>`;
+       </div>` +
+      (roomEditMode
+        ? `<div class="bd-note" style="margin:6px 0 0;">Нажмите на рум, чтобы переименовать его или удалить.</div>`
+        : '');
     const ab = $('presetAddBtn'); if(ab) ab.addEventListener('click', openPresetAdd);
     const eb = $('presetEditBtn'); if(eb) eb.addEventListener('click', ()=>{ presetEdit = !presetEdit; renderPresets(); });
   }
@@ -4545,19 +4574,8 @@ const SEED_DATA = [];
     const names = list.map(r=>r.name);
 
     if(formRoom && !names.includes(formRoom)) formRoom = '';
-    $('fRoomBtns').innerHTML =
-      list.map(r=>{
-        const cls = (r.currency || '').toLowerCase();
-        const on = r.name === formRoom ? ' active' : '';
-        const cur = r.currency ? `<span class="cur">${r.currency}</span>` : '';
-        return `<button type="button" class="room-btn ${cls}${on}" data-room="${escapeHtml(r.name)}">${escapeHtml(r.name)}${cur}</button>`;
-      }).join('') +
-      `<button type="button" class="room-btn${formRoom === '' ? ' active' : ''}" data-room="">— не указан —</button>` +
-      `<button type="button" class="room-btn add" data-room="__ADD__">+ свой рум</button>` +
-      `<button type="button" class="room-btn add${roomEditMode ? ' editing' : ''}" data-room="__EDIT__">${roomEditMode ? 'готово' : 'изменить румы'}</button>` +
-      (roomEditMode
-        ? `<div class="bd-note" style="width:100%;margin:6px 0 0;">Нажмите на рум, чтобы переименовать его или удалить.</div>`
-        : '');
+    // кнопки румов живут в блоке частых турниров — там они заголовки строк
+    renderPresets();
 
     const e = $('eNote'), prevE = e.value;
     e.innerHTML = '<option value="">— не указан —</option>' + opts + '<option value="__ADD__">+ Добавить свой рум…</option>';
@@ -5332,7 +5350,7 @@ const SEED_DATA = [];
   });
 
   // --- pokerroom selects ---
-  $('fRoomBtns').addEventListener('click', (ev)=>{
+  $('presetBox').addEventListener('click', (ev)=>{
     const btn = ev.target.closest('.room-btn');
     if(!btn) return;
     const val = btn.getAttribute('data-room');
