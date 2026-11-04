@@ -556,11 +556,16 @@ td .row-fin{margin-left:10px;}
 .bust-c{display:flex;flex-direction:column;gap:1px;min-width:0;}
 .bust-c b{font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-size:16px;font-weight:600;}
 .bust-c i{font-style:normal;font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;}
+.stat.wide{grid-column:1 / -1;}
 .bi3{display:flex;flex-direction:column;gap:4px;margin:4px 0 2px;}
+.bi3.ten{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(5,auto);
+  grid-auto-flow:column;gap:5px 30px;}
+@media (max-width:900px){.bi3.ten{grid-template-columns:1fr;grid-auto-flow:row;grid-template-rows:none;}}
 .bi3-row{display:grid;grid-template-columns:auto auto 1fr auto;gap:9px;align-items:baseline;
   font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-variant-numeric:tabular-nums;font-size:12.5px;}
 .bi3-row b{font-size:14.5px;font-weight:600;}
 .bi3-row i{font-style:normal;font-size:10px;color:var(--text-faint);}
+.bi3-row .rb{font-size:10px;font-weight:600;color:var(--gold);opacity:.8;}
 .bi3-row s{text-decoration:none;font-weight:600;text-align:right;}
 .bi3-row em{font-style:normal;font-size:11px;color:var(--text-dim);text-align:right;}
 .stat .lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
@@ -680,7 +685,7 @@ td .row-fin{margin-left:10px;}
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v53 · 03.11.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v55 · 04.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -3650,20 +3655,26 @@ const SEED_DATA = [];
       })()}
       ${(()=>{
         // по каким байинам больше всего выиграно и где лучший ROI
+        // группируем по номиналу байина: ребай не создаёт отдельный «байин»,
+        // но вложенное с ребаями учитывается, иначе ROI был бы завышен
         const by = {};
         periodList.forEach(t=>{
           if(!isCountable(t) || t.result === null) return;
-          const key = t.currency + '|' + (Math.round(cost(t) * 100) / 100);
-          if(!by[key]) by[key] = {n: 0, profit: 0, stake: 0, cur: t.currency, bi: Math.round(cost(t) * 100) / 100};
+          const bi = Math.round((t.buyin || 0) * 100) / 100;
+          const re = (t.rebuy || 0) > 0;
+          const key = t.currency + '|' + bi + (re ? '|R' : '');
+          if(!by[key]) by[key] = {n: 0, profit: 0, stake: 0, reSum: 0, cur: t.currency, bi, re};
           by[key].n++;
+          by[key].reSum += t.rebuy || 0;
           by[key].profit += conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency);
           if(!paidByTicket(t)) by[key].stake += conv(cost(t), t.currency);
         });
+        // «500 +» — тот же байин, но сыгранный с ребаями; в скобках средний ребай
+        const biName = (r)=> `${fmtBi(r.bi)} ${SYM[r.cur]}${r.re ? ' +' : ''}`;
+        const biAvgRe = (r)=> r.re
+          ? ` <span class="rb" title="средний ребай на турнир">(${fmtBi(Math.round(r.reSum / r.n * 100) / 100)})</span>`
+          : '';
         const rows = Object.values(by);
-        const MIN_N = 10;
-        const pool = rows.filter(r=> r.n >= MIN_N && r.stake > 0);
-        const use = (pool.length ? pool : rows.filter(r=> r.stake > 0));
-        const bestR = use.map(r=>({...r, roi: r.profit / r.stake * 100})).sort((a, b)=> b.roi - a.roi)[0];
         const sym = SYM[baseCurrency];
         // топ-3 байина по прибыли; в зачёт идут байины, сыгранные больше 100 раз
         const MIN_BI = 100;
@@ -3673,7 +3684,7 @@ const SEED_DATA = [];
         const biRows = top3.map(r=>{
           const per = r.profit / r.n;
           const c = r.profit > 0 ? 'pos' : (r.profit < 0 ? 'neg' : 'neutral');
-          return `<div class="bi3-row"><b>${fmtBi(r.bi)} ${SYM[r.cur]}</b><i>${r.n}</i>` +
+          return `<div class="bi3-row"><b>${biName(r)}${biAvgRe(r)}</b><i>${r.n}</i>` +
                  `<s class="${c}">${r.profit > 0 ? '+' : ''}${fmt(r.profit)} ${sym}</s>` +
                  `<em>${per > 0 ? '+' : ''}${fmt(per)} ${sym} с турнира</em></div>`;
         }).join('');
@@ -3681,12 +3692,32 @@ const SEED_DATA = [];
           ${top3.length ? `<div class="bi3">${biRows}</div>` : '<div class="val neutral">—</div>'}
           <div class="stat-sub">${top3.length
             ? (enough
-                ? `Байины, сыгранные больше ${MIN_BI} раз — таких в выборке ${biPool.length}. Вторая колонка — сколько турниров сыграно, последняя — средняя прибыль одного турнира этого байина.`
+                ? `Байин берётся по номиналу. Турниры, сыгранные с ребаями, идут отдельной строкой «500 +», в скобках — средний ребай на турнир. В зачёт идут байины, сыгранные больше ${MIN_BI} раз — таких в выборке ${biPool.length}. Вторая колонка — сколько турниров сыграно, последняя — средняя прибыль одного турнира этого байина.`
                 : `Ни один байин не сыгран больше ${MIN_BI} раз — показаны лучшие из того, что есть. Вторая колонка — сколько турниров сыграно, последняя — средняя прибыль одного турнира.`)
             : 'нет завершённых турниров'}</div></div>
-        <div class="stat"><div class="lbl">Самый высокий ROI</div>
-          <div class="val ${bestR && bestR.roi > 0 ? 'pos' : (bestR ? 'neg' : 'neutral')}">${bestR ? bestR.roi.toFixed(1) + '%' : '—'}</div>
-          <div class="stat-sub">${bestR ? `байин ${fmtBi(bestR.bi)} ${SYM[bestR.cur]} · ${bestR.n} турниров · ${bestR.profit > 0 ? '+' : ''}${fmt(bestR.profit)} ${sym}${pool.length ? '' : ' (мало данных)'}` : 'нет завершённых турниров'}</div></div>`;
+        ${(()=>{
+          const MIN_ROI_N = 50;                      // в зачёт — больше 50 сыгранных турниров
+          const all = rows.filter(r=> r.stake > 0);
+          const qual = all.filter(r=> r.n > MIN_ROI_N);
+          const enoughR = qual.length > 0;
+          const top = (enoughR ? qual : all)
+            .map(r=>({...r, roi: r.profit / r.stake * 100}))
+            .sort((a, b)=> b.roi - a.roi)
+            .slice(0, 10);
+          const roiRows = top.map(r=>{
+            const c = r.roi > 0 ? 'pos' : (r.roi < 0 ? 'neg' : 'neutral');
+            return `<div class="bi3-row"><b>${biName(r)}${biAvgRe(r)}</b><i>${r.n}</i>` +
+                   `<s class="${c}">${r.roi > 0 ? '+' : ''}${r.roi.toFixed(1)}%</s>` +
+                   `<em>${r.profit > 0 ? '+' : ''}${fmt(r.profit)} ${sym}</em></div>`;
+          }).join('');
+          return `<div class="stat wide"><div class="lbl">ROI по байинам — топ-10</div>
+            ${top.length ? `<div class="bi3 ten">${roiRows}</div>` : '<div class="val neutral">—</div>'}
+            <div class="stat-sub">${top.length
+              ? (enoughR
+                  ? `Байин берётся по номиналу. Турниры с ребаями — отдельная строка «500 +», в скобках средний ребай на турнир; во вложенное ребаи входят полностью, иначе ROI был бы завышен. В зачёт идут байины, сыгранные больше ${MIN_ROI_N} раз — таких в выборке ${qual.length}. Вторая колонка — сколько турниров сыграно, дальше ROI и профит.`
+                  : `Ни один байин не сыгран больше ${MIN_ROI_N} раз — показаны все, что есть. Байин берётся по номиналу, турниры с ребаями — отдельной строкой «500 +».`)
+              : 'нет завершённых турниров'}</div></div>`;
+        })()}`;
       })()}
       ${(()=>{
         const n = s.count || 0;
