@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Банкролл</title>
 </head>
-<body>
+<body class="rv3">
 <style>
 
 :root{
@@ -576,6 +576,36 @@ td .row-fin{margin-left:10px;}
 @media (max-width:860px){
   .tour-counter{position:static;margin:-4px 0 12px;flex-wrap:wrap;}
 }
+/* Варианты читаемости строки: класс на body выбирает один из них. */
+.c-date{font-weight:600;}
+.c-room{font-weight:600;}
+.c-bi{font-weight:700;}
+
+/* В1 — светлый контраст */
+body.rv1 .c-date{color:#C2CCC6;font-size:12px;}
+body.rv1 .c-room{color:#F2EEE4;font-size:13.5px;letter-spacing:.01em;}
+body.rv1 .c-bi{color:#FFFFFF;font-size:14px;}
+
+/* В2 — тёплое золото на байине */
+body.rv2 .c-date{color:#B6C1BB;font-size:12px;}
+body.rv2 .c-room{color:#F2EEE4;font-size:13.5px;}
+body.rv2 .c-bi{color:#F0CE86;font-size:14.5px;text-shadow:0 1px 2px rgba(0,0,0,.45);}
+
+/* В3 — байин в цвет валюты рума */
+body.rv3 .c-date{color:#AEB9B3;font-size:12px;}
+body.rv3 .c-room{color:#F4F1E8;font-size:14px;font-weight:700;}
+body.rv3 .c-bi{font-size:14.5px;text-shadow:0 1px 2px rgba(0,0,0,.5);}
+body.rv3 .c-bi.eur{color:#8FB6F0;}
+body.rv3 .c-bi.usd{color:#7FD6A6;}
+body.rv3 .c-bi.rub{color:#F0C476;}
+
+/* В4 — плашка под байином */
+body.rv4 .c-date{color:#B6C1BB;font-size:12px;}
+body.rv4 .c-room{color:#F4F1E8;font-size:14px;font-weight:700;}
+body.rv4 .c-bi{display:inline-block;padding:3px 9px;border-radius:7px;font-size:13.5px;color:#F6F3EA;
+  background:rgba(255,255,255,.07);border:1px solid var(--border);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);}
+
 .more-row{display:flex;gap:8px;margin-top:10px;}
 .more-row .btn{flex:1;}
 .wide-modal{max-width:640px;}
@@ -719,7 +749,7 @@ td .row-fin{margin-left:10px;}
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v60 · 06.11.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v62 · 06.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -3379,11 +3409,11 @@ const SEED_DATA = [];
                ` title="${escapeHtml(tagLabel(id))} — ${on ? 'нажмите, чтобы снять' : 'нажмите, чтобы поставить'}">${escapeHtml(rowShort(id))}</button>`;
       }).join('');
       return `<tr>
-        <td class="mono" style="white-space:nowrap;">${(t.date || '—').replace(/-/g,'‑')}</td>
-        <td>${t.note ? escapeHtml(t.note) : '<span class="pending">—</span>'}</td>
+        <td class="mono c-date" style="white-space:nowrap;">${(t.date || '—').replace(/-/g,'‑')}</td>
+        <td class="c-room">${t.note ? escapeHtml(t.note) : '<span class="pending">—</span>'}</td>
         <td><span class="tag ${t.currency.toLowerCase()}">${t.currency}</span></td>
         <td>${tagsHtml}</td>
-        <td class="mono" style="white-space:nowrap;">${stakeHtml}${isExpense(t) ? '' : `<span class="reb-btns">` +
+        <td class="mono" style="white-space:nowrap;"><span class="c-bi ${t.currency.toLowerCase()}">${stakeHtml}</span>${isExpense(t) ? '' : `<span class="reb-btns">` +
             `<button class="abtn a-plus" data-reb1="${t.id}" title="Ребай: добавить один байин ${fmt(t.buyin)} ${SYM[t.currency]}">+</button>` +
             `<button class="abtn a-x2" data-reb2="${t.id}" title="Ребай: добавить двойной байин ${fmt(t.buyin * 2)} ${SYM[t.currency]}">×2</button>` +
             `<button class="abtn a-re" data-reentry="${t.id}" title="Ре-энтри: закрыть этот вход и добавить такой же турнир с тегом «Ре-энтри»">↻</button>` +
