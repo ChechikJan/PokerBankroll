@@ -563,6 +563,21 @@ td .row-fin{margin-left:10px;}
 .bust-c b{font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-size:16px;font-weight:600;}
 .bust-c i{font-style:normal;font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;}
 .stat.wide{grid-column:1 / -1;}
+.more-row{display:flex;gap:8px;margin-top:10px;}
+.more-row .btn{flex:1;}
+.wide-modal{max-width:640px;}
+.rh-wrap{max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:9px;}
+.rh-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.rh-table th{position:sticky;top:0;background:var(--surface-2);text-align:left;padding:8px 10px;
+  font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);z-index:1;}
+.rh-table td{padding:5px 10px;border-top:1px solid var(--border);}
+.rh-table td.m{font-family:'IBM Plex Mono',ui-monospace,monospace;white-space:nowrap;}
+.rh-table input{width:104px;padding:5px 8px;font-size:12px;background:var(--surface);
+  border:1px solid var(--border);border-radius:6px;color:var(--text);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;}
+.rh-table input:focus{outline:none;border-color:var(--felt-bright);}
+.rh-table .cnt{color:var(--text-faint);font-size:11px;}
+.rh-table tr.now td{background:rgba(200,160,80,.08);}
 .bi3{display:flex;flex-direction:column;gap:4px;margin:4px 0 2px;}
 .bi3.ten{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(5,auto);
   grid-auto-flow:column;gap:5px 30px;}
@@ -691,7 +706,7 @@ td .row-fin{margin-left:10px;}
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v56 · 04.11.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v58 · 06.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -710,6 +725,8 @@ td .row-fin{margin-left:10px;}
     <button class="btn ghost" id="exportBtn">Сохранить копию в файл</button>
     <button class="btn ghost" id="importBtn">Загрузить из файла</button>
     <button class="btn ghost" id="xlsBtn">Загрузить из Excel</button>
+    <button class="btn ghost" id="bkBtn">Резервные копии</button>
+    <button class="btn ghost" id="checkBtn">Проверка базы</button>
     <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
     <input type="file" id="xlsFile" accept=".xlsx,.csv" style="display:none;">
     <button class="btn ghost" id="reloadSeed" style="display:none;">Восстановить исходные данные</button>
@@ -833,6 +850,7 @@ td .row-fin{margin-left:10px;}
       </div>
       <div class="rate-derived">1 EUR ≈ <b id="derivedEurRub">—</b> RUB</div>
       <button class="btn" id="saveRates">Сохранить курс</button>
+      <button class="btn ghost" id="openRateHist">Курсы по месяцам</button>
     </div>
     <div class="rb-head" style="margin-top:16px;">Криптовалюты и свои курсы <span style="text-transform:none;letter-spacing:0;">— цена 1 единицы в USD, по ней крипта из кошельков входит в общий банкролл</span></div>
     <div class="asset-rates" id="assetRates"></div>
@@ -1315,6 +1333,52 @@ td .row-fin{margin-left:10px;}
   </div>
 </div>
 
+<div class="modal-bg" id="bkModal">
+  <div class="modal wide-modal">
+    <h3>Резервные копии</h3>
+    <div class="bd-note" style="margin:0 0 10px;">
+      Копия базы снимается автоматически раз в день при запуске и хранится отдельно от основного файла,
+      в хранилище окна программы, — поэтому переживает порчу <b>poker_data.json</b>. Держится последних 10 копий.
+      Это страховка на случай сбоя, а не замена файловой копии: раз в месяц сохраняйте базу кнопкой «Сохранить копию в файл».
+    </div>
+    <div class="rh-wrap"><table class="rh-table" id="bkTable"></table></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="bkNow">Снять копию сейчас</button>
+      <button class="btn ghost" id="bkClose">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="ckModal">
+  <div class="modal wide-modal">
+    <h3>Проверка базы</h3>
+    <div class="bd-note" style="margin:0 0 10px;">
+      Ищу то, что portит статистику: случайные двойные записи, фрирольные «байины-копейки» и турниры без типа.
+      Ничего не меняется, пока вы сами не нажмёте кнопку исправления.
+    </div>
+    <div id="ckBody"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="ckClose">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="rhModal">
+  <div class="modal wide-modal">
+    <h3>Курсы по месяцам</h3>
+    <div class="bd-note" style="margin:0 0 10px;">
+      Профит турниров и график считаются по курсу того месяца, в котором сыграна запись, — прошлое больше не «плывёт» при смене текущего курса.
+      Месяц без своего курса считается по текущему. Балансы румов и кошельков всегда идут по текущему курсу: это живые деньги.
+    </div>
+    <div class="rh-wrap"><table class="rh-table" id="rhTable"></table></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="rhFill">Заполнить пустые текущим</button>
+      <button class="btn ghost" id="rhClose">Закрыть</button>
+      <button class="btn" id="rhSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="askModal">
   <div class="modal">
     <h3 id="askTitle">Ввод</h3>
@@ -1527,6 +1591,7 @@ const SEED_DATA = [];
 
   let tournaments = null;
   let rates = {...DEFAULT_RATES};
+  let rateHist = {};            // {'2026-03': {eurUsd, usdRub}} — курс на месяц записи
   let filterCurrency = 'ALL';
   let chartMode = 'combined';
   let statList = [];        // то, что сейчас отобрано фильтрами статистики
@@ -1546,6 +1611,9 @@ const SEED_DATA = [];
   // column next to it; the rest sits behind one click.
   const COLLAPSED_ROWS = 14;
   let tableExpanded = false;
+  let tablePage = 1;            // окно таблицы: по PAGE_ROWS строк за шаг
+  let tableSig = '';            // смена фильтров сбрасывает окно в начало
+  const PAGE_ROWS = 50;
   let statusFilter = 'ALL';
   let statView = 'TOTAL';
   let statSide = 'ALL';
@@ -1951,6 +2019,10 @@ const SEED_DATA = [];
       const v = await store.get('rates');
       if(v) rates = JSON.parse(v);
     }catch(e){ rates = {...DEFAULT_RATES}; }
+    try{
+      const rh = await store.get('rateHist');
+      if(rh) rateHist = JSON.parse(rh) || {};
+    }catch(e){ rateHist = {}; }
     if(!rates.assets) rates.assets = {};
     if(!rates.assetsInit){
       DEFAULT_CRYPTO.forEach(c=>{ if(!(c in rates.assets)) rates.assets[c] = 0; });
@@ -2171,6 +2243,38 @@ const SEED_DATA = [];
     if(c === 'RUB') return 1 / rates.usdRub;
     return assetRate(c);
   }
+  const monthOf = (d)=> String(d || '').slice(0, 7);
+  // курс на дату: по месяцу записи, если он вбит, иначе текущий
+  function rateAt(dateStr){
+    const h = rateHist[monthOf(dateStr)];
+    return (h && h.eurUsd > 0 && h.usdRub > 0) ? h : rates;
+  }
+  function convertAt(amount, from, to, dateStr){
+    if(from === to) return amount;
+    if(!isFiat(from) || !isFiat(to)) return convert(amount, from, to);   // крипта — всегда по текущему
+    const r = rateAt(dateStr);
+    let usd;
+    if(from === 'USD') usd = amount;
+    else if(from === 'EUR') usd = amount * r.eurUsd;
+    else if(from === 'RUB') usd = amount / r.usdRub;
+    else return convert(amount, from, to);
+    if(to === 'USD') return usd;
+    if(to === 'EUR') return usd / r.eurUsd;
+    if(to === 'RUB') return usd * r.usdRub;
+    return convert(amount, from, to);
+  }
+  async function saveRateHist(){
+    try{ await store.set('rateHist', JSON.stringify(rateHist)); }catch(e){}
+  }
+  // месяцы, которые встречаются в базе, от свежего к старому
+  function monthsInBase(){
+    const set = new Set();
+    tournaments.forEach(t=>{ if(t.date) set.add(monthOf(t.date)); });
+    cashflow.forEach(f=>{ if(f.date) set.add(monthOf(f.date)); });
+    set.add(monthOf(pokerToday()));
+    return Array.from(set).filter(Boolean).sort().reverse();
+  }
+
   function convert(amount, from, to){
     if(from === to) return amount;
     if(!isFiat(from) || !isFiat(to)){
@@ -2205,6 +2309,13 @@ const SEED_DATA = [];
   // entered with a ticket: the buy-in comes out of the ticket balance, not cash
   function paidByTicket(t){ return (t.tags || []).includes('TICKET'); }
 
+  // Фриролл: вход ничего не стоил. Любая статистика «в байинах» на нём ломается —
+  // делёж на ноль или на копейку даёт тысячи процентов, поэтому ROI, ABI и сигма
+  // считаются без фрироллов, а их профит показывается отдельной плашкой.
+  function isFreeroll(t){
+    return (t.tags || []).includes('FREE') || cost(t) < 0.05;
+  }
+
   // foldTicketsWon: treat a won ticket as the payout it really is. Used for the
   // satellites view, where the ticket IS the prize — otherwise every satellite
   // looks like a pure loss. Never used for the whole base, where tickets are
@@ -2214,13 +2325,13 @@ const SEED_DATA = [];
     const done = list.filter(t => t.result !== null);
 
     // cash side
-    const cashCost     = list.filter(t=>!paidByTicket(t)).reduce((s,t)=> s + conv(cost(t), t.currency), 0);
-    const cashCostDone = done.filter(t=>!paidByTicket(t)).reduce((s,t)=> s + conv(cost(t), t.currency), 0);
-    const cashWon      = done.reduce((s,t)=> s + conv(t.result, t.currency), 0);
+    const cashCost     = list.filter(t=>!paidByTicket(t)).reduce((s,t)=> s + conv(cost(t), t.currency, t.date), 0);
+    const cashCostDone = done.filter(t=>!paidByTicket(t)).reduce((s,t)=> s + conv(cost(t), t.currency, t.date), 0);
+    const cashWon      = done.reduce((s,t)=> s + conv(t.result, t.currency, t.date), 0);
 
     // ticket side: tickets won in, ticket buy-ins out (within this slice)
-    const ticketsWon   = done.reduce((s,t)=> s + conv(t.ticket || 0, t.currency), 0);
-    const ticketsSpent = list.filter(paidByTicket).reduce((s,t)=> s + conv(cost(t), t.currency), 0);
+    const ticketsWon   = done.reduce((s,t)=> s + conv(t.ticket || 0, t.currency, t.date), 0);
+    const ticketsSpent = list.filter(paidByTicket).reduce((s,t)=> s + conv(cost(t), t.currency, t.date), 0);
     const ticketBalance = ticketsWon - ticketsSpent;
 
     // Money columns stay pure cash so they can be checked against the source
@@ -2230,15 +2341,25 @@ const SEED_DATA = [];
     const profit = foldTicketsWon ? (cashProfit + ticketsWon) : cashProfit;
     const paidOut = foldTicketsWon ? (cashWon + ticketsWon) : cashWon;
     const profitWithTickets = cashProfit + Math.max(0, ticketBalance);
-    const roi = cashCostDone > 0 ? (profit / cashCostDone) * 100 : 0;
+
+    // фрироллы живут отдельно: во вложенном у них ноль, а выигрыш раздувал бы ROI
+    const freeDone = done.filter(isFreeroll);
+    const freeCount = list.filter(isFreeroll).length;
+    const freeProfit = freeDone.reduce((s,t)=> s + conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, t.date), 0);
+    const paidDone = done.filter(t=>!isFreeroll(t));
+    const roiStake = paidDone.filter(t=>!paidByTicket(t)).reduce((s,t)=> s + conv(cost(t), t.currency, t.date), 0);
+    const roiProfit = paidDone.reduce((s,t)=>
+      s + conv(t.result - (paidByTicket(t) ? 0 : cost(t)) + (foldTicketsWon ? (t.ticket || 0) : 0), t.currency, t.date), 0);
+    const roi = roiStake > 0 ? (roiProfit / roiStake) * 100 : 0;
 
     const counted = list.filter(isCountable);
     const countedDone = done.filter(isCountable);
     // ABI is the average stake actually played: only tournaments (never side
     // bets) in the denominator, and a ticket entry counts at its face value —
     // the seat cost that much even though no cash left the account.
-    const stakeCounted = counted.reduce((s,t)=> s + conv(cost(t), t.currency), 0);
-    const abi = counted.length ? (stakeCounted/counted.length) : 0;
+    const abiList = counted.filter(t=>!isFreeroll(t));
+    const stakeCounted = abiList.reduce((s,t)=> s + conv(cost(t), t.currency, t.date), 0);
+    const abi = abiList.length ? (stakeCounted/abiList.length) : 0;
     const sideCount = list.filter(isSide).length;
     const casinoCount = list.filter(isCasino).length;
     const outCounts = {};
@@ -2264,6 +2385,7 @@ const SEED_DATA = [];
             cashProfit, profitWithTickets, paidOut, foldTickets: !!foldTicketsWon,
             ticketsWon, ticketsSpent, ticketBalance,
             sessions, perSession, allSessions: allDays.size,
+            freeCount, freeProfit, roiStake,
             profit, roi, abi};
   }
 
@@ -3109,7 +3231,7 @@ const SEED_DATA = [];
     });
     // Same maths as the per-currency cards, so the total always agrees with them
     // (tickets included exactly once, converted at the current rate).
-    const total = computeStats(periodList, (amt, cur)=>convert(amt, cur, baseCurrency));
+    const total = computeStats(periodList, (amt, cur, when)=>convertAt(amt, cur, baseCurrency, when));
     const combined = total.profit;
     const cls = combined > 0 ? 'pos' : (combined < 0 ? 'neg' : 'neutral');
     html += `<div class="ledger-card" style="border-color:var(--felt-bright);"><div class="lbl">Итого (${baseCurrency})</div><div class="val ${cls}">${fmt(combined)} ${SYM[baseCurrency]}</div></div>`;
@@ -3163,25 +3285,43 @@ const SEED_DATA = [];
       return d !== 0 ? d : (order.get(b.id) - order.get(a.id));
     });
     const totalMatched = list.length;
+    // сменились фильтры — начинаем листать заново
+    const sig = [filterCurrency, tableRoomFilter, statusFilter, tableDateFilter, period, tagFilter].join('|');
+    if(sig !== tableSig){ tableSig = sig; tablePage = 1; tableExpanded = false; }
     let shown = list;
-    if(!tableDateFilter && list.length > 50){
-      shown = list.slice(0, 50);
+    const windowSize = PAGE_ROWS * tablePage;
+    if(!tableDateFilter && list.length > windowSize){
+      shown = list.slice(0, windowSize);
     }
+    const restInBase = totalMatched - shown.length;
     $('tableCount').textContent = tableDateFilter
       ? `(${totalMatched} за ${tableDateFilter})`
-      : (totalMatched > 50 ? `(последние 50 из ${totalMatched})` : `(${totalMatched})`);
+      : (restInBase > 0 ? `(последние ${shown.length} из ${totalMatched})` : `(${totalMatched})`);
     $('emptyMsg').style.display = shown.length ? 'none' : 'block';
 
     const hidden = Math.max(0, shown.length - COLLAPSED_ROWS);
     const visible = (!tableExpanded && hidden) ? shown.slice(0, COLLAPSED_ROWS) : shown;
     const more = $('tableMore');
     if(more){
-      more.innerHTML = hidden
-        ? `<button class="btn ghost" id="toggleRows" style="width:100%;margin-top:10px;">${
-            tableExpanded ? 'Свернуть список' : 'Показать ещё ' + hidden}</button>`
+      const parts = [];
+      if(hidden) parts.push(`<button class="btn ghost" id="toggleRows">${
+        tableExpanded ? 'Свернуть список' : 'Раскрыть ещё ' + hidden}</button>`);
+      if(tableExpanded && restInBase > 0){
+        const step = Math.min(PAGE_ROWS, restInBase);
+        parts.push(`<button class="btn ghost" id="moreRows">Подгрузить ещё ${step} (осталось ${restInBase})</button>`);
+      }
+      if(tableExpanded && restInBase > 0 && restInBase <= 500){
+        parts.push(`<button class="btn ghost" id="allRows">Показать все ${totalMatched}</button>`);
+      }
+      more.innerHTML = parts.length
+        ? `<div class="more-row">${parts.join('')}</div>`
         : '';
       const btn = $('toggleRows');
       if(btn) btn.addEventListener('click', ()=>{ tableExpanded = !tableExpanded; renderTable(); });
+      const mb = $('moreRows');
+      if(mb) mb.addEventListener('click', ()=>{ tablePage++; renderTable(); });
+      const ab = $('allRows');
+      if(ab) ab.addEventListener('click', ()=>{ tablePage = Math.ceil(totalMatched / PAGE_ROWS); renderTable(); });
     }
 
     $('tourBody').innerHTML = visible.map(t=>{
@@ -3522,7 +3662,7 @@ const SEED_DATA = [];
     const byDay = {};
     let total = 0;
     done.forEach(t=>{
-      const p = conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency);
+      const p = conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, t.date);
       byDay[t.date] = (byDay[t.date] || 0) + p;
       total += p;
     });
@@ -3578,7 +3718,7 @@ const SEED_DATA = [];
     else if(OUTSIDE_TAGS.some(o=>o.id === statSide)) periodList = periodList.filter(t=>(t.tags||[]).includes(statSide));
     else if(statSide === 'SAT')    periodList = periodList.filter(t=>(t.tags||[]).includes('SAT'));
     else if(statSide === 'NOSIDE') periodList = periodList.filter(t=>isCountable(t) && !(t.tags||[]).includes('SAT'));
-    const conv = (amt, cur) => convert(amt, cur, baseCurrency);
+    const conv = (amt, cur, when) => convertAt(amt, cur, baseCurrency, when);
     statList = periodList;          // график рисует этот же срез
 
     // --- summary tiles: always in baseCurrency across ALL currencies ---
@@ -3644,12 +3784,12 @@ const SEED_DATA = [];
         let known = 0, fin = 0, places = [], finProfit = 0;
         periodList.forEach(t=>{
           if(!isCountable(t)) return;
-          if(t.final){ fin++; finProfit += conv(t.result !== null ? t.result - (paidByTicket(t) ? 0 : cost(t)) : 0, t.currency); if(t.place) places.push(t.place); }
+          if(t.final){ fin++; finProfit += conv(t.result !== null ? t.result - (paidByTicket(t) ? 0 : cost(t)) : 0, t.currency, t.date); if(t.place) places.push(t.place); }
           const b = bustBucket(t);
           if(!b) return;
           known++;
           buckets[b].n++;
-          buckets[b].profit += conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency);
+          buckets[b].profit += conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, t.date);
         });
         const pc = (v)=> known ? (v / known * 100).toFixed(1) + '%' : '—';
         const sym = SYM[baseCurrency];
@@ -3688,15 +3828,15 @@ const SEED_DATA = [];
         // но вложенное с ребаями учитывается, иначе ROI был бы завышен
         const by = {};
         periodList.forEach(t=>{
-          if(!isCountable(t) || t.result === null) return;
+          if(!isCountable(t) || t.result === null || isFreeroll(t)) return;
           const bi = Math.round((t.buyin || 0) * 100) / 100;
           const re = (t.rebuy || 0) > 0;
           const key = t.currency + '|' + bi + (re ? '|R' : '');
           if(!by[key]) by[key] = {n: 0, profit: 0, stake: 0, reSum: 0, cur: t.currency, bi, re};
           by[key].n++;
           by[key].reSum += t.rebuy || 0;
-          by[key].profit += conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency);
-          if(!paidByTicket(t)) by[key].stake += conv(cost(t), t.currency);
+          by[key].profit += conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, t.date);
+          if(!paidByTicket(t)) by[key].stake += conv(cost(t), t.currency, t.date);
         });
         // «500 +» — тот же байин, но сыгранный с ребаями; в скобках средний ребай
         const biName = (r)=> `${fmtBi(r.bi)} ${SYM[r.cur]}${r.re ? ' +' : ''}`;
@@ -3746,7 +3886,208 @@ const SEED_DATA = [];
                   ? `Байин берётся по номиналу. Турниры с ребаями — отдельная строка «500 +», в скобках средний ребай на турнир; во вложенное ребаи входят полностью, иначе ROI был бы завышен. В зачёт идут байины, сыгранные больше ${MIN_ROI_N} раз — таких в выборке ${qual.length}. Вторая колонка — сколько турниров сыграно, дальше ROI и профит.`
                   : `Ни один байин не сыгран больше ${MIN_ROI_N} раз — показаны все, что есть. Байин берётся по номиналу, турниры с ребаями — отдельной строкой «500 +».`)
               : 'нет завершённых турниров'}</div></div>`;
-        })()}`;
+        })()}
+      ${(()=>{
+        // ——— достоверность ROI: сигма и 95% интервал в байинах ———
+        const live = periodList.filter(t=> t.result !== null && isCountable(t) && !paidByTicket(t) && !isFreeroll(t) && cost(t) > 0);
+        const rr = live.map(t=> (t.result - cost(t)) / cost(t));   // в байинах, валюта не важна
+        const nR = rr.length;
+        const mean = nR ? rr.reduce((a, b)=> a + b, 0) / nR : 0;
+        const sd = nR > 1 ? Math.sqrt(rr.reduce((a, b)=> a + (b - mean) * (b - mean), 0) / nR) : 0;
+        const se = nR ? sd / Math.sqrt(nR) : 0;
+        const lo = (mean - 1.96 * se) * 100, hi = (mean + 1.96 * se) * 100;
+        const need = sd > 0 ? Math.round(Math.pow(1.96 * sd / 0.05, 2)) : 0;
+        const zero = lo <= 0 && hi >= 0;
+        return `<div class="stat"><div class="lbl">ROI: 95% интервал</div>
+          <div class="val ${nR < 30 ? 'neutral' : (zero ? 'neutral' : (lo > 0 ? 'pos' : 'neg'))}" style="font-size:15px;">${
+            nR < 30 ? '—' : `${lo > 0 ? '+' : ''}${lo.toFixed(1)}% … ${hi > 0 ? '+' : ''}${hi.toFixed(1)}%`}</div>
+          <div class="stat-sub">${nR < 30
+            ? 'Нужно хотя бы 30 турниров с деньгами, чтобы интервал что-то значил.'
+            : `Средний ROI на турнир ${mean > 0 ? '+' : ''}${(mean * 100).toFixed(1)}%, разброс (сигма) ${sd.toFixed(2)} байина на ${nR} турнирах. ` +
+              `Интервал — где лежит настоящий ROI с вероятностью 95%. ` +
+              (zero ? 'Он захватывает ноль, значит на этой дистанции результат статистически неотличим от игры в ноль. ' : 'Ноль в него не попадает — плюс уже значим. ') +
+              `Чтобы сузить интервал до ±5%, нужно около ${need.toLocaleString('ru-RU')} турниров. Фрироллы и входы по билету в расчёт не идут.`}</div></div>`;
+      })()}
+      ${(()=>{
+        // ——— сколько профита делает верхушка ———
+        const done2 = periodList.filter(t=> t.result !== null && isCountable(t));
+        const ps = done2.map(t=> conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, t.date)).sort((a, b)=> b - a);
+        const totalP = ps.reduce((a, b)=> a + b, 0);
+        const n1 = Math.max(1, Math.round(ps.length * 0.01));
+        const top1 = ps.slice(0, n1).reduce((a, b)=> a + b, 0);
+        const plus = ps.filter(v=> v > 0).reduce((a, b)=> a + b, 0);
+        let acc = 0, half = 0;
+        for(const v of ps){ if(v <= 0) break; acc += v; half++; if(acc >= plus / 2) break; }
+        const paidLive = periodList.filter(t=> t.result !== null && isCountable(t) && !paidByTicket(t) && !isFreeroll(t) && cost(t) > 0);
+        const big = paidLive.filter(t=> (t.result - cost(t)) / cost(t) >= 10).length;
+        const rest = totalP - top1;
+        return `<div class="stat"><div class="lbl">Профит без топ-1%</div>
+          <div class="val ${rest > 0 ? 'pos' : (rest < 0 ? 'neg' : 'neutral')}">${ps.length ? `${rest > 0 ? '+' : ''}${fmt(rest)} ${sym}` : '—'}</div>
+          <div class="stat-sub">${ps.length
+            ? `Лучшие ${n1} ${plural(n1, ['турнир', 'турнира', 'турниров'])} принесли ${top1 > 0 ? '+' : ''}${fmt(top1)} ${sym} — без них остаётся ${rest > 0 ? '+' : ''}${fmt(rest)} ${sym}. ` +
+              `Половину всего плюса дают ${half} ${plural(half, ['турнир', 'турнира', 'турниров'])}. ` +
+              `Заносов от 10 байинов: ${big}${paidLive.length ? ` (${(big / paidLive.length * 100).toFixed(1)}% сыгранных)` : ''}. ` +
+              `Так и должно быть в MTT: редкие большие финиши тянут всю дистанцию.`
+            : 'нет завершённых турниров'}</div></div>`;
+      })()}
+      ${(()=>{
+        // ——— сателлиты: окупается ли охота за билетами ———
+        const sats = periodList.filter(t=> (t.tags || []).includes('SAT'));
+        const sd2 = sats.filter(t=> t.result !== null);
+        const stake = sats.filter(t=>!paidByTicket(t)).reduce((s,t)=> s + conv(cost(t), t.currency, t.date), 0);
+        const cash = sd2.reduce((s,t)=> s + conv(t.result, t.currency, t.date), 0);
+        const tick = sd2.reduce((s,t)=> s + conv(t.ticket || 0, t.currency, t.date), 0);
+        const net = cash + tick - stake;
+        const roiS = stake > 0 ? net / stake * 100 : 0;
+        const wonN = sd2.filter(t=> (t.ticket || 0) > 0).length;
+        return `<div class="stat"><div class="lbl">Сателлиты ${lblPeriod}</div>
+          <div class="val ${sats.length ? (net > 0 ? 'pos' : (net < 0 ? 'neg' : 'neutral')) : 'neutral'}">${
+            sats.length ? `${roiS > 0 ? '+' : ''}${roiS.toFixed(1)}%` : '—'}</div>
+          <div class="stat-sub">${sats.length
+            ? `${sats.length} ${plural(sats.length, ['сателлит', 'сателлита', 'сателлитов'])}, вложено ${fmt(stake)} ${sym}. ` +
+              `Вернулось деньгами ${fmt(cash)} ${sym} и билетами ${fmt(tick)} ${sym} (${wonN} ${plural(wonN, ['билет', 'билета', 'билетов'])}) — итого ${net > 0 ? '+' : ''}${fmt(net)} ${sym}. ` +
+              `Здесь билет считается выигрышем: иначе каждый сателлит выглядел бы чистым убытком. ` +
+              `Билеты от рейкбека и выигранные в турнирах без тега «Сателлит» сюда не входят — они в соседней плашке.`
+            : 'за период сателлитов не было'}</div></div>`;
+      })()}
+      ${(()=>{
+        // ——— билеты, пришедшие не из сателлитов ———
+        const rakeT = {}, otherT = {};
+        let rakeN = 0, otherN = 0, rakeBase = 0, otherBase = 0;
+        periodList.forEach(t=>{
+          const tk = t.ticket || 0;
+          if(t.result === null || tk <= 0) return;
+          const tags = t.tags || [];
+          if(tags.includes('SAT')) return;
+          if(tags.includes('RAKE')){
+            rakeN++; rakeT[t.currency] = (rakeT[t.currency] || 0) + tk;
+            rakeBase += conv(tk, t.currency, t.date);
+          } else {
+            otherN++; otherT[t.currency] = (otherT[t.currency] || 0) + tk;
+            otherBase += conv(tk, t.currency, t.date);
+          }
+        });
+        const inCur = (o)=> Object.keys(o).sort().map(c=> `${fmt(o[c])} ${SYM[c]}`).join(' + ');
+        const tot = rakeBase + otherBase;
+        const nAll = rakeN + otherN;
+        return `<div class="stat"><div class="lbl">Билеты вне сателлитов</div>
+          <div class="val ${nAll ? 'pos' : 'neutral'}">${nAll ? `${fmt(tot)} ${sym}` : '—'}</div>
+          <div class="stat-sub">${nAll
+            ? (rakeN ? `Рейкбеком — ${rakeN} ${plural(rakeN, ['билет', 'билета', 'билетов'])} на ${inCur(rakeT)}. ` : '') +
+              (otherN ? `Призом в обычных турнирах — ${otherN} ${plural(otherN, ['билет', 'билета', 'билетов'])} на ${inCur(otherT)}. ` : '') +
+              `В ROI сателлитов они не идут: эти билеты достались не за вход в сателлит, и считать их отдачей сателлитов было бы неправдой. ` +
+              `В общий баланс билетов входят полностью.`
+            : 'За период таких билетов не было. Сюда попадают билеты, начисленные рейкбеком, и билеты, выигранные призом в турнире без тега «Сателлит».'}</div></div>`;
+      })()}
+      ${(()=>{
+        // ——— как далеко доходим: место относительно поля ———
+        const wf = periodList.filter(t=> isCountable(t) && t.result !== null && (t.place || 0) > 0 && (t.field || 0) > 0);
+        const sh = wf.map(t=> t.place / t.field).sort((a, b)=> a - b);
+        const med = sh.length ? (sh.length % 2 ? sh[(sh.length - 1) / 2] : (sh[sh.length / 2 - 1] + sh[sh.length / 2]) / 2) : 0;
+        const t10 = sh.filter(v=> v <= 0.10).length;
+        const t1 = sh.filter(v=> v <= 0.01).length;
+        return `<div class="stat"><div class="lbl">Медианный финиш</div>
+          <div class="val ${sh.length ? '' : 'neutral'}">${sh.length ? (med * 100).toFixed(1) + '% поля' : '—'}</div>
+          <div class="stat-sub">${sh.length
+            ? `По ${sh.length} ${plural(sh.length, ['турниру', 'турнирам', 'турнирам'])}, где внесены и место, и поле. ` +
+              `В верхние 10% поля попали ${t10} (${(t10 / sh.length * 100).toFixed(0)}%), в верхний 1% — ${t1}. ` +
+              `Меньше процент — дальше дошли.`
+            : 'Вносите в строке турнира место и количество игроков — тогда появится медиана финиша и разбивка по глубине.'}</div></div>`;
+      })()}
+      ${(()=>{
+        // ——— текущая просадка: от последнего пика профита ———
+        const seq = periodList.filter(t=> t.result !== null && isCountable(t))
+          .slice().sort((a, b)=> (a.date || '').localeCompare(b.date || '') || (a.ts || 0) - (b.ts || 0));
+        const maxDD = seriesStats(periodList, conv).dd || 0;
+        let run = 0, peak = 0, peakAt = null, peakI = -1;
+        seq.forEach((t, i)=>{
+          run += conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, t.date);
+          if(run >= peak){ peak = run; peakAt = t.date; peakI = i; }
+        });
+        const dd = run - peak;
+        const since = seq.length ? seq.length - 1 - peakI : 0;
+        const inAbi = s.abi > 0 ? Math.abs(dd) / s.abi : 0;
+        return `<div class="stat"><div class="lbl">Текущая просадка</div>
+          <div class="val ${dd < 0 ? 'neg' : 'pos'}">${seq.length ? (dd < 0 ? `${fmt(dd)} ${sym}` : 'на пике') : '—'}</div>
+          <div class="stat-sub">${seq.length
+            ? (dd < 0
+                ? `Это ${inAbi.toFixed(1)} байина по текущему ABI. Последний максимум профита был ${peakAt || '—'}, с тех пор ${since} ${plural(since, ['турнир', 'турнира', 'турниров'])}. ` +
+                  `Максимальная просадка за период — ${fmt(maxDD)} ${sym}.`
+                : `Профит сейчас на максимуме за период. Максимальная просадка по дороге — ${fmt(maxDD)} ${sym}.`)
+            : 'нет завершённых турниров'}</div></div>`;
+      })()}
+      ${(()=>{
+        // ——— фрироллы отдельной строкой ———
+        return `<div class="stat"><div class="lbl">Фрироллы ${lblPeriod}</div>
+          <div class="val ${s.freeCount ? (s.freeProfit > 0 ? 'pos' : 'neutral') : 'neutral'}">${
+            s.freeCount ? `${s.freeProfit > 0 ? '+' : ''}${fmt(s.freeProfit)} ${sym}` : '—'}</div>
+          <div class="stat-sub">${s.freeCount
+            ? `${s.freeCount} ${plural(s.freeCount, ['турнир', 'турнира', 'турниров'])} без вложений. В ROI, ABI и разбивку по байинам они не входят: делить выигрыш на нулевой байин бессмысленно, а разброс от этого взлетает до небес.`
+            : 'За период фрироллов не было. Фриролл — это тег «Фриролл» или нулевой байин; такие турниры не искажают ROI и разброс.'}</div></div>`;
+      })()}
+      ${(()=>{
+        // ——— ROI по типам турниров ———
+        const g = {};
+        periodList.forEach(t=>{
+          if(!isCountable(t) || t.result === null || isFreeroll(t)) return;
+          const p = conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, t.date);
+          const st2 = paidByTicket(t) ? 0 : conv(cost(t), t.currency, t.date);
+          (t.tags || []).forEach(id=>{
+            if(OUTSIDE_TAGS.some(o=>o.id === id)) return;
+            if(!g[id]) g[id] = {id, n: 0, profit: 0, stake: 0};
+            g[id].n++; g[id].profit += p; g[id].stake += st2;
+          });
+        });
+        const MIN_TAG_N = 20;
+        const all = Object.values(g).filter(r=> r.stake > 0);
+        const qual = all.filter(r=> r.n >= MIN_TAG_N);
+        const use = (qual.length ? qual : all)
+          .map(r=>({...r, roi: r.profit / r.stake * 100}))
+          .sort((a, b)=> b.roi - a.roi).slice(0, 10);
+        const rowsT = use.map(r=>{
+          const roiT = r.roi;
+          const c = r.profit > 0 ? 'pos' : (r.profit < 0 ? 'neg' : 'neutral');
+          return `<div class="bi3-row" title="${escapeHtml(tagLabel(r.id))}"><b>${escapeHtml(rowShort(r.id))}</b><i>${r.n}</i>` +
+                 `<s class="${c}">${roiT > 0 ? '+' : ''}${roiT.toFixed(1)}%</s>` +
+                 `<em>${r.profit > 0 ? '+' : ''}${fmt(r.profit)} ${sym}</em></div>`;
+        }).join('');
+        return `<div class="stat wide"><div class="lbl">ROI по типам турниров</div>
+          ${use.length ? `<div class="bi3 ten">${rowsT}</div>` : '<div class="val neutral">—</div>'}
+          <div class="stat-sub">${use.length
+            ? `Турнир попадает в каждую свою группу, поэтому сумма по строкам больше общего числа турниров. В зачёт идут теги минимум с ${MIN_TAG_N} турнирами. Коды те же, что на кнопках в строке турнира; наведите на строку, чтобы увидеть полное название. Фрироллы сюда не входят.`
+            : 'Проставьте турнирам теги — и здесь появится ROI по типам: SpKO, PSKO, мистери, сателлиты, турбо.'}</div></div>`;
+      })()}
+      ${(()=>{
+        // ——— помесячно: турниров, ABI, ROI, профит ———
+        const m = {};
+        periodList.forEach(t=>{
+          if(!isCountable(t) || t.result === null) return;
+          const k = monthOf(t.date);
+          if(!k) return;
+          if(!m[k]) m[k] = {n: 0, profit: 0, stake: 0, abiSum: 0, abiN: 0};
+          const e = m[k];
+          e.n++;
+          e.profit += conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, t.date);
+          if(!isFreeroll(t)){
+            e.abiSum += conv(cost(t), t.currency, t.date); e.abiN++;
+            if(!paidByTicket(t)) e.stake += conv(cost(t), t.currency, t.date);
+          }
+        });
+        const keys = Object.keys(m).sort().reverse().slice(0, 12);
+        const rowsM = keys.map(k=>{
+          const e = m[k];
+          const roiM = e.stake > 0 ? e.profit / e.stake * 100 : 0;
+          const c = e.profit > 0 ? 'pos' : (e.profit < 0 ? 'neg' : 'neutral');
+          return `<div class="bi3-row"><b>${k}</b><i>${e.n}</i>` +
+                 `<s class="${c}">${e.profit > 0 ? '+' : ''}${fmt(e.profit)} ${sym}</s>` +
+                 `<em>ABI ${fmt(e.abiN ? e.abiSum / e.abiN : 0)} · ROI ${roiM > 0 ? '+' : ''}${roiM.toFixed(1)}%</em></div>`;
+        }).join('');
+        return `<div class="stat wide"><div class="lbl">По месяцам</div>
+          ${keys.length ? `<div class="bi3 ten">${rowsM}</div>` : '<div class="val neutral">—</div>'}
+          <div class="stat-sub">${keys.length
+            ? 'Последние 12 месяцев внутри выбранного периода и фильтров. Профит считается по курсу своего месяца, если он задан в «Курсах по месяцам».'
+            : 'нет завершённых турниров'}</div></div>`;
+      })()}`;
       })()}
       ${(()=>{
         const n = s.count || 0;
@@ -3773,9 +4114,17 @@ const SEED_DATA = [];
         const live = curs.filter(c=> Math.abs(net[c]) > 0.004);
         const parts = live.map(c=> `${net[c] > 0 ? '+' : '−'}${fmt(Math.abs(net[c]))} ${SYM[c]}`);
         const tCls = live.length ? (live.every(c=> net[c] >= 0) ? 'pos' : (live.every(c=> net[c] <= 0) ? 'neg' : 'neutral')) : 'neutral';
+        const src = {sat: 0, rake: 0, other: 0};
+        periodList.forEach(t=>{
+          const tk = t.ticket || 0;
+          if(t.result === null || tk <= 0) return;
+          const tags = t.tags || [];
+          src[tags.includes('SAT') ? 'sat' : (tags.includes('RAKE') ? 'rake' : 'other')]++;
+        });
         const detail = curs.length
           ? curs.map(c=> `${SYM[c]}: выиграно ${fmt(won[c] || 0)}, потрачено на входы ${fmt(spent[c] || 0)}`).join('; ') +
-            '. Билеты не конвертируются — они остаются в валюте рума, который их выдал.'
+            `. Откуда пришли: сателлиты ${src.sat}, рейкбек ${src.rake}, призом в обычных турнирах ${src.other}.` +
+            ' Билеты не конвертируются — они остаются в валюте рума, который их выдал.'
           : 'За период билеты не выигрывались и не тратились.';
         return `<div class="stat"><div class="lbl">Профит с билетами (${baseCurrency})</div>
           <div class="val ${s.profitWithTickets>0?'pos':(s.profitWithTickets<0?'neg':'neutral')}">${fmt(s.profitWithTickets)} ${SYM[baseCurrency]}</div>
@@ -4246,14 +4595,14 @@ const SEED_DATA = [];
   function renderTopWins(list, cur){
     const box = $('topWins');
     if(!box) return;
-    const conv = (amt, from) => chartMode === 'per' ? amt : convert(amt, from, cur);
+    const conv = (amt, from, when) => chartMode === 'per' ? amt : convertAt(amt, from, cur, when);
     const wins = list
       .filter(t => t.result !== null)
       .map(t=>({
         room: (t.note || '').trim() || 'без рума',
         date: t.date,
         currency: t.currency,
-        profit: conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency)
+        profit: conv(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, t.date)
       }))
       .filter(w => w.profit > 0)
       .sort((a,b)=> b.profit - a.profit)
@@ -4290,9 +4639,9 @@ const SEED_DATA = [];
     const cur = baseCurrency, d = {};
     const add = (date, v)=>{ d[date] = (d[date] || 0) + v; };
     tournaments.forEach(t=>{
-      if(isExpense(t)){ add(t.date, -convert(cost(t), t.currency, cur)); return; }
+      if(isExpense(t)){ add(t.date, -convertAt(cost(t), t.currency, cur, t.date)); return; }
       if(t.result === null) return;
-      add(t.date, convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur));
+      add(t.date, convertAt(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur, t.date));
     });
     cashflow.forEach(f=>{
       add(f.date, -convert(f.fee || 0, f.currency, cur));
@@ -4323,9 +4672,9 @@ const SEED_DATA = [];
     const cur = baseCurrency;
     const byDay = {};
     list.forEach(t=>{
-      if(isExpense(t)){ byDay[t.date] = (byDay[t.date] || 0) - convert(cost(t), t.currency, cur); return; }
+      if(isExpense(t)){ byDay[t.date] = (byDay[t.date] || 0) - convertAt(cost(t), t.currency, cur, t.date); return; }
       if(t.result === null) return;
-      byDay[t.date] = (byDay[t.date] || 0) + convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur);
+      byDay[t.date] = (byDay[t.date] || 0) + convertAt(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur, t.date);
     });
     const {from, to} = getPeriodRange();
     cashflow.forEach(f=>{
@@ -4336,7 +4685,7 @@ const SEED_DATA = [];
     let run = 0;
     const values = dates.map(d=>{ run += byDay[d]; return Math.round(run * 100) / 100; });
     const values2 = bankrollByDay(dates);
-    const st = computeStats(list.filter(t=>t.result !== null), (a, cc)=> convert(a, cc, cur));
+    const st = computeStats(list.filter(t=>t.result !== null), (a, cc, w)=> convertAt(a, cc, cur, w));
     $('chartNote').textContent = dates.length
       ? `${dates.length} игровых дней · игра ${values[values.length-1] > 0 ? '+' : ''}${fmt(values[values.length-1])} ${SYM[cur]} · ` +
         `банкролл на конец периода ${fmt(values2[values2.length-1])} ${SYM[cur]}`
@@ -4355,9 +4704,9 @@ const SEED_DATA = [];
     statList.forEach(t=>{
       const m = (t.date || '').slice(0, 7);
       if(!m) return;
-      if(isExpense(t)){ by[m] = (by[m] || 0) - convert(cost(t), t.currency, cur); return; }
+      if(isExpense(t)){ by[m] = (by[m] || 0) - convertAt(cost(t), t.currency, cur, t.date); return; }
       if(t.result === null) return;
-      by[m] = (by[m] || 0) + convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur);
+      by[m] = (by[m] || 0) + convertAt(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur, t.date);
     });
     const months = Object.keys(by).sort();
     const MN = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
@@ -4399,20 +4748,20 @@ const SEED_DATA = [];
     const dates = [];
     list.forEach(t=>{
       const net = t.result - (paidByTicket(t) ? 0 : cost(t));
-      const p = convert(net, t.currency, cur);
+      const p = convertAt(net, t.currency, cur, t.date);
       running += p;
       values.push(Math.round(running*100)/100);
       dates.push(t.date);
     });
 
     // топ заносов: самые крупные плюсы этого среза
-    const marks = list.map((t, i)=>({i, t, profit: convert(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur)}))
+    const marks = list.map((t, i)=>({i, t, profit: convertAt(t.result - (paidByTicket(t) ? 0 : cost(t)), t.currency, cur, t.date)}))
       .filter(m=> m.profit > 0)
       .sort((a, b)=> b.profit - a.profit)
       .slice(0, 5)
       .map(m=>({i: m.i, profit: m.profit, rec: m.t, sym: SYM[m.t.currency], color: COLOR[m.t.currency] || '#D4AF37'}));
 
-    const st = computeStats(list, (a,cc)=>convert(a,cc,cur));
+    const st = computeStats(list, (a,cc,w)=>convertAt(a,cc,cur,w));
     const dayCount = new Set(dates).size;
     $('chartNote').textContent = values.length
       ? `${chartMode === 'room' ? chartRoom + ': ' : ''}${st.count} турниров${st.sideCount ? ' + ' + st.sideCount + ' доп. ставок' : ''} за ${dayCount} дн. · итог ${fmt(running)} ${SYM[cur]}`
@@ -4795,6 +5144,246 @@ const SEED_DATA = [];
     });
   });
 
+  // ================= Резервные копии =================
+  // Снимок базы кладётся в localStorage окна — это отдельное хранилище от
+  // poker_data.json, поэтому копия переживает порчу основного файла.
+  const BK_PREFIX = 'ptbackup_';
+  const BK_KEEP = 10;
+
+  function bkList(){
+    const out = [];
+    for(let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if(!k || k.indexOf(BK_PREFIX) !== 0) continue;
+      const raw = localStorage.getItem(k) || '';
+      let at = '', n = 0, ops = 0;
+      try{ const o = JSON.parse(raw); at = o.at || ''; n = (o.tournaments || []).length; ops = (o.cashflow || []).length; }catch(e){}
+      out.push({key: k, at, n, ops, size: raw.length});
+    }
+    return out.sort((a, b)=> (b.at || '').localeCompare(a.at || ''));
+  }
+
+  function bkPayload(){
+    return {app:'poker-tracker', version:1, at: new Date().toISOString(),
+      rates, rateHist, rooms, tournaments, bankroll, roomBank, cashflow, wallets, customTags, opRates, presets};
+  }
+
+  function bkSave(manual){
+    const d = new Date();
+    const pad = (x)=> String(x).padStart(2, '0');
+    const day = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const key = BK_PREFIX + day + (manual ? '_' + d.getTime().toString(36) : '');
+    const txt = JSON.stringify(bkPayload());
+    for(let i = 0; i < 12; i++){
+      try{ localStorage.setItem(key, txt); break; }
+      catch(e){
+        const l = bkList().filter(x=>x.key !== key);
+        if(!l.length) return false;                 // места нет даже под одну копию
+        localStorage.removeItem(l[l.length - 1].key);
+      }
+    }
+    bkList().slice(BK_KEEP).forEach(x=>{ try{ localStorage.removeItem(x.key); }catch(e){} });
+    return true;
+  }
+
+  function bkAutoDaily(){
+    const d = new Date();
+    const pad = (x)=> String(x).padStart(2, '0');
+    const day = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    if(bkList().some(x=> x.key.indexOf(BK_PREFIX + day) === 0)) return;
+    if(!tournaments.length && !cashflow.length) return;       // пустую базу копировать незачем
+    bkSave(false);
+  }
+
+  function renderBackups(){
+    const l = bkList();
+    const kb = (n)=> (n / 1024).toFixed(0) + ' КБ';
+    const when = (iso)=>{
+      if(!iso) return '—';
+      const d = new Date(iso);
+      const pad = (x)=> String(x).padStart(2, '0');
+      return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    $('bkTable').innerHTML = l.length
+      ? `<thead><tr><th>Снята</th><th>Турниров</th><th>Операций</th><th>Размер</th><th></th></tr></thead><tbody>` +
+        l.map(x=>`<tr>
+          <td class="m">${when(x.at)}</td>
+          <td class="cnt">${x.n}</td>
+          <td class="cnt">${x.ops}</td>
+          <td class="cnt">${kb(x.size)}</td>
+          <td style="text-align:right;white-space:nowrap;">
+            <button class="btn ghost tiny" data-bkdl="${x.key}">скачать</button>
+            <button class="btn ghost tiny" data-bkrs="${x.key}">восстановить</button>
+          </td></tr>`).join('') + '</tbody>'
+      : `<tbody><tr><td class="cnt" style="padding:14px;">Копий пока нет — нажмите «Снять копию сейчас».</td></tr></tbody>`;
+  }
+
+  async function bkRestore(key){
+    const raw = localStorage.getItem(key);
+    if(!raw){ toast('Копия не найдена'); return; }
+    let o;
+    try{ o = JSON.parse(raw); }catch(e){ toast('Копия повреждена'); return; }
+    if(!o || !Array.isArray(o.tournaments)){ toast('В копии нет турниров'); return; }
+    if(!await uiConfirm(`Заменить текущую базу копией от ${new Date(o.at).toLocaleString('ru-RU')}?\n\nСейчас в базе ${tournaments.length} турниров, в копии ${o.tournaments.length}. Текущее состояние будет сохранено ещё одной копией.`)) return;
+    bkSave(true);                                   // не теряем то, что заменяем
+    tournaments = o.tournaments;
+    if(Array.isArray(o.cashflow)) cashflow = o.cashflow;
+    if(Array.isArray(o.rooms)) rooms = o.rooms;
+    if(Array.isArray(o.wallets)) wallets = o.wallets;
+    if(Array.isArray(o.customTags)) customTags = o.customTags;
+    if(Array.isArray(o.presets)) presets = o.presets;
+    if(o.rates) rates = o.rates;
+    if(o.rateHist) rateHist = o.rateHist;
+    if(o.roomBank) roomBank = o.roomBank;
+    if(o.opRates) opRates = o.opRates;
+    if(o.bankroll !== undefined) bankroll = o.bankroll;
+    await saveTournaments(); await saveCashflow(); await saveRooms(); await saveWallets();
+    await saveCustomTags(); await savePresets(); await saveRates(); await saveRateHist();
+    await saveRoomBank(); await saveOpRates(); await saveBankroll();
+    $('bkModal').classList.remove('open');
+    renderAll();
+    toast(`База восстановлена: ${tournaments.length} турниров`, 'ok');
+  }
+
+  function bkDownload(key){
+    const raw = localStorage.getItem(key);
+    if(!raw){ toast('Копия не найдена'); return; }
+    const blob = new Blob([raw], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = key.replace(BK_PREFIX, 'poker-backup-') + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }
+
+  $('bkBtn').addEventListener('click', ()=>{ renderBackups(); $('bkModal').classList.add('open'); });
+  $('bkClose').addEventListener('click', ()=> $('bkModal').classList.remove('open'));
+  $('bkModal').addEventListener('click', (e)=>{
+    if(e.target.id === 'bkModal'){ $('bkModal').classList.remove('open'); return; }
+    const dl = e.target.closest('[data-bkdl]');
+    if(dl){ bkDownload(dl.getAttribute('data-bkdl')); return; }
+    const rs = e.target.closest('[data-bkrs]');
+    if(rs){ bkRestore(rs.getAttribute('data-bkrs')); return; }
+  });
+  $('bkNow').addEventListener('click', ()=>{
+    const ok = bkSave(true);
+    renderBackups();
+    toast(ok ? 'Копия снята' : 'Не хватило места в хранилище окна', ok ? 'ok' : '');
+  });
+
+  // ================= Проверка базы =================
+  function ckFindings(){
+    // 1. Случайные двойные записи: всё совпадает и добавлены почти одновременно.
+    //    Одинаковые турниры в один день — норма, поэтому дублем считаем только
+    //    записи, созданные в пределах 10 секунд друг от друга.
+    const sig = (t)=> [t.date, t.currency, +t.buyin || 0, +t.rebuy || 0,
+                       t.result === null ? 'null' : +t.result, +t.ticket || 0,
+                       (t.note || '').trim(), (t.tags || []).slice().sort().join('|')].join('~');
+    const groups = {};
+    tournaments.forEach(t=>{ (groups[sig(t)] = groups[sig(t)] || []).push(t); });
+    const dups = [];
+    Object.values(groups).forEach(arr=>{
+      if(arr.length < 2) return;
+      const withTs = arr.filter(t=> t.ts).slice().sort((a, b)=> a.ts - b.ts);
+      for(let i = 1; i < withTs.length; i++){
+        if(withTs[i].ts - withTs[i - 1].ts < 10000) dups.push(withTs[i]);
+      }
+    });
+    // 2. Фрирольные «копейки»: байин меньше единицы валюты и нет тега «Фриролл».
+    const pennies = tournaments.filter(t=> !isExpense(t) && cost(t) > 0 && cost(t) < 1 && !(t.tags || []).includes('FREE'));
+    // 3. Завершённые турниры без типа
+    const noTag = tournaments.filter(t=> isCountable(t) && t.result !== null && !(t.tags || []).length);
+    return {dups, pennies, noTag};
+  }
+
+  function renderCheck(){
+    const f = ckFindings();
+    const card = (title, n, note, btn)=>
+      `<div class="stat" style="margin-bottom:10px;">
+         <div class="lbl">${title}</div>
+         <div class="val ${n ? 'neg' : 'pos'}">${n}</div>
+         <div class="bd-note" style="margin:4px 0 0;">${note}</div>
+         ${n && btn ? `<div style="margin-top:8px;">${btn}</div>` : ''}
+       </div>`;
+    $('ckBody').innerHTML =
+      card('Случайные двойные записи', f.dups.length,
+        'Полностью одинаковые турниры, добавленные в пределах десяти секунд друг от друга — похоже на двойной клик. Одинаковые турниры, сыгранные в один день по-настоящему, сюда не попадают.',
+        `<button class="btn ghost" id="ckFixDup">Удалить ${f.dups.length}</button>`) +
+      card('Байины-копейки', f.pennies.length,
+        'Байин меньше единицы валюты — обычно так записан фриролл. Делить выигрыш на копейку бессмысленно: такая запись раздувает разброс и ROI по байину. Исправление обнуляет байин и ставит тег «Фриролл».',
+        `<button class="btn ghost" id="ckFixFree">Пометить фрироллами (${f.pennies.length})</button>`) +
+      card('Завершённые турниры без типа', f.noTag.length,
+        'У них нет ни одного тега, поэтому в разрез «ROI по типам турниров» они не попадают. Это импорт из Excel; проставить тип можно кнопками прямо в строке турнира.',
+        '');
+    const d = $('ckFixDup');
+    if(d) d.addEventListener('click', async ()=>{
+      if(!await uiConfirm(`Удалить ${f.dups.length} повторных записей? Останется по одной из каждой пары.`)) return;
+      bkSave(true);
+      const kill = new Set(f.dups.map(t=>t.id));
+      tournaments = tournaments.filter(t=> !kill.has(t.id));
+      await saveTournaments();
+      renderAll(); renderCheck();
+      toast(`Удалено записей: ${kill.size}`, 'ok');
+    });
+    const fr = $('ckFixFree');
+    if(fr) fr.addEventListener('click', async ()=>{
+      if(!await uiConfirm(`Пометить ${f.pennies.length} записей фрироллами? Байин станет нулевым, добавится тег «Фриролл». Выигрыш не изменится.`)) return;
+      bkSave(true);
+      f.pennies.forEach(t=>{
+        t.buyin = 0; t.rebuy = 0;
+        t.tags = withDefaultTag((t.tags || []).concat('FREE'));
+      });
+      await saveTournaments();
+      renderAll(); renderCheck();
+      toast('Готово', 'ok');
+    });
+  }
+
+  $('checkBtn').addEventListener('click', ()=>{ renderCheck(); $('ckModal').classList.add('open'); });
+  $('ckClose').addEventListener('click', ()=> $('ckModal').classList.remove('open'));
+  $('ckModal').addEventListener('click', (e)=>{ if(e.target.id === 'ckModal') $('ckModal').classList.remove('open'); });
+
+  // --- курсы по месяцам ---
+  function renderRateHist(){
+    const now = monthOf(pokerToday());
+    const cnt = {};
+    tournaments.forEach(t=>{ const m = monthOf(t.date); if(m) cnt[m] = (cnt[m] || 0) + 1; });
+    const rows = monthsInBase().map(m=>{
+      const h = rateHist[m] || {};
+      return `<tr class="${m === now ? 'now' : ''}">
+        <td class="m">${m}${m === now ? ' · текущий' : ''}</td>
+        <td class="cnt">${cnt[m] || 0} зап.</td>
+        <td><input type="number" step="0.0001" data-rh="${m}" data-f="eurUsd" value="${h.eurUsd || ''}" placeholder="${rates.eurUsd}"></td>
+        <td><input type="number" step="0.01" data-rh="${m}" data-f="usdRub" value="${h.usdRub || ''}" placeholder="${rates.usdRub}"></td>
+      </tr>`;
+    }).join('');
+    $('rhTable').innerHTML = `<thead><tr><th>Месяц</th><th></th><th>1 EUR = ? USD</th><th>1 USD = ? RUB</th></tr></thead><tbody>${rows}</tbody>`;
+  }
+  $('openRateHist').addEventListener('click', ()=>{ renderRateHist(); $('rhModal').classList.add('open'); });
+  $('rhClose').addEventListener('click', ()=> $('rhModal').classList.remove('open'));
+  $('rhModal').addEventListener('click', (e)=>{ if(e.target.id === 'rhModal') $('rhModal').classList.remove('open'); });
+  $('rhFill').addEventListener('click', ()=>{
+    document.querySelectorAll('#rhTable input[data-rh]').forEach(inp=>{
+      if(!String(inp.value).trim()) inp.value = inp.getAttribute('data-f') === 'eurUsd' ? rates.eurUsd : rates.usdRub;
+    });
+  });
+  $('rhSave').addEventListener('click', async ()=>{
+    const next = {};
+    document.querySelectorAll('#rhTable input[data-rh]').forEach(inp=>{
+      const m = inp.getAttribute('data-rh'), f = inp.getAttribute('data-f');
+      const v = parseFloat(String(inp.value).replace(',', '.'));
+      if(v > 0){ (next[m] = next[m] || {})[f] = v; }
+    });
+    // пара неполная — такой месяц считаем незаданным
+    Object.keys(next).forEach(m=>{ if(!(next[m].eurUsd > 0 && next[m].usdRub > 0)) delete next[m]; });
+    rateHist = next;
+    await saveRateHist();
+    $('rhModal').classList.remove('open');
+    renderAll();
+    toast(`Курсы по месяцам сохранены: ${Object.keys(rateHist).length}`, 'ok');
+  });
+
   // --- rates ---
   $('saveRates').addEventListener('click', async ()=>{
     const eu = parseFloat($('rateEurUsd').value);
@@ -4805,7 +5394,10 @@ const SEED_DATA = [];
       const v = parseFloat(inp.value);
       rates.assets[inp.getAttribute('data-arate')] = v > 0 ? v : 0;
     });
+    const nowM = monthOf(pokerToday());
+    rateHist[nowM] = {eurUsd: eu, usdRub: ur};
     await saveRates();
+    await saveRateHist();
     renderRates();
     renderAll();
   });
@@ -4824,7 +5416,7 @@ const SEED_DATA = [];
     const payload = {
       app:'poker-tracker', version:1,
       exportedAt: new Date().toISOString(),
-      rates, rooms, tournaments,
+      rates, rateHist, rooms, tournaments,
       bankroll, roomBank, cashflow, wallets, customTags, opRates, presets
     };
     const blob = new Blob([JSON.stringify(payload, null, 1)], {type:'application/json'});
@@ -5092,7 +5684,13 @@ const SEED_DATA = [];
           ticket: Number(t.ticket) || 0,
           result: (t.result === null || t.result === undefined) ? null : Number(t.result),
           note: t.note || '', tags: Array.isArray(t.tags) ? t.tags : [],
-          imported: !!t.imported
+          imported: !!t.imported,
+          ts: t.ts || 0,
+          resTs: t.resTs || undefined,
+          payFrom: t.payFrom || undefined,
+          final: t.final || undefined,
+          place: t.place || undefined,
+          field: t.field || undefined
         }));
         const mode = await uiAsk({
           title: 'Загрузка из файла',
@@ -5175,6 +5773,10 @@ const SEED_DATA = [];
           if(!rates.assets) rates.assets = {};
           if(!rates.assetsInit){ DEFAULT_CRYPTO.forEach(c=>{ if(!(c in rates.assets)) rates.assets[c] = 0; }); rates.assetsInit = true; }
           await saveRates();
+        }
+        if(data.rateHist && typeof data.rateHist === 'object'){
+          rateHist = data.rateHist;
+          await saveRateHist();
         }
         if(Array.isArray(data.rooms) && data.rooms.length){
           rooms = data.rooms.map(r=> typeof r === 'string' ? {name:r, currency:null} : r);
@@ -6375,6 +6977,7 @@ const SEED_DATA = [];
           '«Сохранить копию в файл».';
       }
     })();
+    try{ bkAutoDaily(); }catch(e){}      // копия раз в день, молча
     renderAll();
   })();
 })();
