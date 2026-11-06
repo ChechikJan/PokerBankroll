@@ -67,7 +67,7 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inte
 .chip-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
 
 /* panels */
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;}
+.panel{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;}
 .panel h2{font-family:'Fraunces',Georgia,'Times New Roman',serif;font-size:15px;font-weight:600;margin:0 0 14px;color:var(--text);}
 .panel h2 .n{color:var(--text-faint);font-weight:400;font-size:12px;}
 .bank-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
@@ -563,6 +563,19 @@ td .row-fin{margin-left:10px;}
 .bust-c b{font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;font-size:16px;font-weight:600;}
 .bust-c i{font-style:normal;font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;}
 .stat.wide{grid-column:1 / -1;}
+.tour-counter{position:absolute;top:18px;right:20px;display:flex;gap:7px;}
+.tc{min-width:84px;padding:7px 11px;border-radius:9px;background:var(--surface-2);
+  border:1px solid var(--border);text-align:center;}
+.tc b{display:block;font-family:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;
+  font-size:19px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;}
+.tc i{display:block;font-style:normal;font-size:9px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--text-faint);margin-top:2px;}
+.tc.live{border-color:#4E6B5C;background:rgba(78,107,92,.18);}
+.tc.live b{color:#9FD9C0;}
+.tc.wait b{color:var(--gold);}
+@media (max-width:860px){
+  .tour-counter{position:static;margin:-4px 0 12px;flex-wrap:wrap;}
+}
 .more-row{display:flex;gap:8px;margin-top:10px;}
 .more-row .btn{flex:1;}
 .wide-modal{max-width:640px;}
@@ -706,7 +719,7 @@ td .row-fin{margin-left:10px;}
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v58 · 06.11.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v60 · 06.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger" id="ledger"></div>
@@ -953,6 +966,7 @@ td .row-fin{margin-left:10px;}
   </div>
   <div class="panel">
     <h2>Турниры <span class="n" id="tableCount"></span></h2>
+    <div class="tour-counter" id="tourCounter"></div>
     <div class="rate-row" style="margin-bottom:12px;">
       <div class="field">
         <label>Показать турниры за дату</label>
@@ -3229,12 +3243,8 @@ const SEED_DATA = [];
       const cls = s.profit > 0 ? 'pos' : (s.profit < 0 ? 'neg' : 'neutral');
       html += `<div class="ledger-card"><div class="lbl">${cur}</div><div class="val ${cls}">${fmt(s.profit)} ${SYM[cur]}</div></div>`;
     });
-    // Same maths as the per-currency cards, so the total always agrees with them
-    // (tickets included exactly once, converted at the current rate).
-    const total = computeStats(periodList, (amt, cur, when)=>convertAt(amt, cur, baseCurrency, when));
-    const combined = total.profit;
-    const cls = combined > 0 ? 'pos' : (combined < 0 ? 'neg' : 'neutral');
-    html += `<div class="ledger-card" style="border-color:var(--felt-bright);"><div class="lbl">Итого (${baseCurrency})</div><div class="val ${cls}">${fmt(combined)} ${SYM[baseCurrency]}</div></div>`;
+    // Сводная сумма живёт в плашке «Профит в покере» на вкладке «Покер» —
+    // здесь оставлены только валюты, чтобы не дублировать одно и то же.
     el.innerHTML = html;
   }
 
@@ -3261,6 +3271,25 @@ const SEED_DATA = [];
        <button type="button" class="btn ghost tiny" id="arAdd">+ Добавить курс</button></div>`;
   }
   function cleanCode(v){ return String(v || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+
+  // Счётчик в углу панели: сколько сыграно сегодня, сколько попало под фильтры
+  // и сколько записей ещё ждут результата.
+  function renderTourCounter(){
+    const box = $('tourCounter');
+    if(!box) return;
+    const inPeriod = filterByPeriod(tournaments).filter(isCountable);
+    const pend = inPeriod.filter(t=> t.result === null).length;
+    const waiting = tournaments.filter(t=> t.result === null && !isExpense(t)).length;
+    const lbl = PERIOD_LABEL[period] || 'за период';
+    box.innerHTML =
+      `<div class="tc${inPeriod.length ? ' live' : ''}" data-tip="Турниров ${PERIOD_LABEL[period] || 'за период'} — вместе с незавершёнными${
+         pend ? ` (их ${pend})` : ''}. Период выбирается плашкой выше; расходы и прочие записи вне зачёта сюда не идут.">
+         <b>${inPeriod.length}</b><i>${escapeHtml(lbl)}</i></div>` +
+      `<div class="tc${waiting ? ' wait' : ''}" data-tip="${waiting
+         ? 'Записи без результата по всей базе — впишите его в строке и нажмите галочку.'
+         : 'Все турниры завершены — записей без результата нет.'}">
+         <b>${waiting}</b><i>ждут результата</i></div>`;
+  }
 
   function renderTable(){
     let list = filterByTag(filterByPeriod(tournaments))
@@ -3294,6 +3323,7 @@ const SEED_DATA = [];
       shown = list.slice(0, windowSize);
     }
     const restInBase = totalMatched - shown.length;
+    renderTourCounter();
     $('tableCount').textContent = tableDateFilter
       ? `(${totalMatched} за ${tableDateFilter})`
       : (restInBase > 0 ? `(последние ${shown.length} из ${totalMatched})` : `(${totalMatched})`);
