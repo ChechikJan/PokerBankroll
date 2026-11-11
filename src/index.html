@@ -762,7 +762,7 @@ body.rv4 .c-bi{display:inline-block;padding:3px 9px;border-radius:7px;font-size:
       <h1><span class="chip-logo"></span>Банкролл</h1>
       <div class="sub">Учёт турниров в трёх валютах — с конвертацией по вашему курсу</div>
       <div class="sub mono" style="font-size:11px;color:var(--text-faint);margin-top:3px;">
-        сборка <b id="buildTag" style="color:var(--gold);">v64 · 10.11.2026</b> · записей в базе: <b id="dbCount">…</b>
+        сборка <b id="buildTag" style="color:var(--gold);">v65 · 11.11.2026</b> · записей в базе: <b id="dbCount">…</b>
       </div>
     </div>
     <div class="ledger-wrap">
@@ -1802,7 +1802,9 @@ const SEED_DATA = [];
     return t ? t.label : id;
   }
   // short codes for the table; the full name stays in the tooltip
-  const TAG_SHORT = {SAT:'sat', TICKET:'Tiket', C_mtzpa28g:'PSKO', C_mtzp9ax3:'MysKO', C_mtzp9hfc:'SpKO'};
+  const TAG_SHORT = {SAT:'sat', TICKET:'Tiket', LATE:'LR', FREE:'Free', FLIGHT:'FL', RE:'RE',
+    C_mtzpa28g:'PSKO', C_mtzp9ax3:'MysKO', C_mtzp9hfc:'SpKO',
+    C_mtzp940f:'FR', C_mtzvs6ft:'T', C_mtzvska9:'GT'};
   function tagShort(id){ return TAG_SHORT[id] || tagLabel(id); }
 
   const FREEZE_ID = 'C_mtzp940f';          // «Фризаут» — ставится, когда тип турнира не выбран
@@ -1819,9 +1821,9 @@ const SEED_DATA = [];
   function rowTagIds(){
     return allTags().filter(t=> t.id !== FREEZE_ID && !ROW_TAG_SKIP.includes(t.id)).map(t=>t.id);
   }
-  const ROW_SHORT = {SAT:'SAT', TICKET:'Tiket', FREE:'Фри', RE:'RE', FLIGHT:'FL', LATE:'ЛР',
+  const ROW_SHORT = {SAT:'SAT', TICKET:'Tiket', FREE:'Free', RE:'RE', FLIGHT:'FL', LATE:'LR',
     C_mtzpa28g:'PSKO', C_mtzp9ax3:'MysKO', C_mtzp9hfc:'SpKO', C_mtzp9nhc:'TRI',
-    C_mtzvs6ft:'Т', C_mtzvska9:'ГТ'};
+    C_mtzvs6ft:'T', C_mtzvska9:'GT'};
   function rowShort(id){ return ROW_SHORT[id] || tagShort(id); }
   // свой цвет для каждого тега; неактивная кнопка просто обесцвечивается
   const ROW_COLOR = {
@@ -2375,6 +2377,11 @@ const SEED_DATA = [];
   // Фриролл: вход ничего не стоил. Любая статистика «в байинах» на нём ломается —
   // делёж на ноль или на копейку даёт тысячи процентов, поэтому ROI, ABI и сигма
   // считаются без фрироллов, а их профит показывается отдельной плашкой.
+  // В сателлите все места в деньгах платят одинаково — билетом, поэтому
+  // попадание в восьмёрку там не означает финальный стол.
+  function isSat(t){ return (t.tags || []).includes('SAT'); }
+  function satTicket(t){ return isSat(t) && (t.ticket || 0) > 0; }
+
   function isFreeroll(t){
     return (t.tags || []).includes('FREE') || cost(t) < 0.05;
   }
@@ -3468,7 +3475,7 @@ const SEED_DATA = [];
                  title="Выигранный билет. Можно писать «5.5 x 4».">
                 <input type="number" min="1" step="1" class="res-in sm ylw${t.place ? ' has' : ''}" data-plin="${t.id}" data-rowin="${t.id}"
                  value="${t.place || ''}" placeholder="место"
-                 title="Занятое место. Место с 1-го по 8-е отмечает турнир как финалку.">
+                 title="Занятое место. Место с 1-го по 8-е отмечает турнир как финалку — кроме сателлитов с выигранным билетом: там все места в деньгах платят одинаково.">
                 <input type="number" min="0" step="1" class="res-in sm ylw${t.field ? ' has' : ''}" data-afs="${t.id}" data-rowin="${t.id}"
                  value="${t.field || ''}" placeholder="AFS"
                  title="Сколько игроков было в турнире — поле.">
@@ -3715,7 +3722,7 @@ const SEED_DATA = [];
       if(raw === '' || isNaN(v) || v <= 0){ delete t.place; }
       else {
         t.place = v;
-        if(v <= FINAL_PLACE) t.final = true; else delete t.final;
+        if(v <= FINAL_PLACE && !satTicket(t)) t.final = true; else delete t.final;
       }
     }
     const ri = document.querySelector(`[data-resin="${id}"]`);
@@ -5407,7 +5414,10 @@ const SEED_DATA = [];
     const pennies = tournaments.filter(t=> !isExpense(t) && cost(t) > 0 && cost(t) < 1 && !(t.tags || []).includes('FREE'));
     // 3. Завершённые турниры без типа
     const noTag = tournaments.filter(t=> isCountable(t) && t.result !== null && !(t.tags || []).length);
-    return {dups, pennies, noTag};
+    // 4. Сателлиты с билетом, помеченные финалкой: выплаты там равные,
+    //    финального стола как достижения в них нет.
+    const satFin = tournaments.filter(t=> t.final && satTicket(t));
+    return {dups, pennies, noTag, satFin};
   }
 
   function renderCheck(){
@@ -5426,6 +5436,9 @@ const SEED_DATA = [];
       card('Байины-копейки', f.pennies.length,
         'Байин меньше единицы валюты — обычно так записан фриролл. Делить выигрыш на копейку бессмысленно: такая запись раздувает разброс и ROI по байину. Исправление обнуляет байин и ставит тег «Фриролл».',
         `<button class="btn ghost" id="ckFixFree">Пометить фрироллами (${f.pennies.length})</button>`) +
+      card('Финалки в сателлитах', f.satFin.length,
+        'Сателлиты с выигранным билетом, помеченные финальным столом. В сателлите все места в деньгах платят одинаково — билетом, поэтому восьмое место там не достижение и статистику финалок только размывает. Исправление снимает отметку, место и билет остаются как есть.',
+        `<button class="btn ghost" id="ckFixSat">Снять отметку (${f.satFin.length})</button>`) +
       card('Завершённые турниры без типа', f.noTag.length,
         'У них нет ни одного тега, поэтому в разрез «ROI по типам турниров» они не попадают. Это импорт из Excel; проставить тип можно кнопками прямо в строке турнира.',
         '');
@@ -5438,6 +5451,15 @@ const SEED_DATA = [];
       await saveTournaments();
       renderAll(); renderCheck();
       toast(`Удалено записей: ${kill.size}`, 'ok');
+    });
+    const sf = $('ckFixSat');
+    if(sf) sf.addEventListener('click', async ()=>{
+      if(!await uiConfirm(`Снять отметку «финалка» с ${f.satFin.length} сателлитов? Место и билет останутся на месте.`)) return;
+      bkSave(true);
+      f.satFin.forEach(t=>{ delete t.final; });
+      await saveTournaments();
+      renderAll(); renderCheck();
+      toast('Готово', 'ok');
     });
     const fr = $('ckFixFree');
     if(fr) fr.addEventListener('click', async ()=>{
